@@ -1,7 +1,31 @@
-#ifndef _EVENT_HPP_INCLUDED
-#define _EVENT_HPP_INCLUDED
+/**
+ * @author Sergey Zelenkin (https://github.com/vssense)
+ * @file event.hpp
+ * @date 2022-04-27
+ * 
+ * The MIT License (MIT)
+ * Copyright (c) vulture-project
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ */
 
-// Study what is Text input. What is codepoints? Didn't get it.
+#pragma once
 
 #include <queue>
 
@@ -76,7 +100,7 @@ struct KeyEventData
     KeyEventData() = default;
     KeyEventData(int key, int scancode, int action, int mods);
 
-    int key;              // Actually ascii codes
+    int key;
     int scancode;
     Action action;
     ButtonMods mods;
@@ -85,10 +109,10 @@ struct KeyEventData
 union EventData
 {
     EventData() = default;
-    EventData(const MouseMoveEventData&   data) : move(data) {}
-    EventData(const MouseButtonEventData& data) : button(data) {}
-    EventData(const KeyEventData&         data) : key(data) {}
-    EventData(const ScrollEventData&      data) : scroll(data) {}
+    explicit EventData(const MouseMoveEventData&   data) : move(data) {}
+    explicit EventData(const MouseButtonEventData& data) : button(data) {}
+    explicit EventData(const KeyEventData&         data) : key(data) {}
+    explicit EventData(const ScrollEventData&      data) : scroll(data) {}
 
     MouseMoveEventData   move;
     MouseButtonEventData button;
@@ -100,7 +124,7 @@ class Event
 {
   public:
     Event() = default;
-    Event(EventType type) : type_(type) {}
+    explicit Event(EventType type) : type_(type) {}
     Event(EventType type, const EventData& data)
         : type_(type), data_(data) {}
 
@@ -163,6 +187,4 @@ class EventQueue
     static std::queue<Event> queue_;
 };
 
-} // namespace event
-
-#endif // _EVENT_HPP_INCLUDED
+} // namespace input
