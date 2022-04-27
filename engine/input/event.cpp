@@ -58,7 +58,7 @@ void EventQueue::KeyCallback(GLFWwindow* window, int key, int scancode, int acti
 void EventQueue::MouseMoveCallback(GLFWwindow* window, double xpos, double ypos)
 {
     queue_.emplace(kMouseMove, MouseMoveEventData{static_cast<int>(xpos),
-                                                  static_cast<int>(xpos)});
+                                                  static_cast<int>(ypos)});
 
     // std::cout << '[' << xpos << ';' << ypos << ']' << '\n';
 }
