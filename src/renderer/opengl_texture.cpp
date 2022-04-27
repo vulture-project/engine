@@ -1,7 +1,7 @@
 /**
  * @author Nikita Mochalov (github.com/tralf-strues)
- * @file buffer.cpp
- * @date 2022-04-27
+ * @file opengl_texture.cpp
+ * @date 2022-04-28
  *
  * The MIT License (MIT)
  * Copyright (c) vulture-project
@@ -25,36 +25,14 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "renderer/opengl_buffer.hpp"
-#include "renderer/renderer_api.hpp"
+#include "renderer/opengl_texture.hpp"
 
-const BufferDataTypeSpec BufferDataTypeSpec::Get(BufferDataType type) {
-  return kShaderDataTypeSpecs[static_cast<uint8_t>(type)];
-}
+OpenGLTexture::OpenGLTexture(const std::string& filename) {}
 
-SharedPtr<VertexBuffer> VertexBuffer::Create(void* data, uint32_t size) {
-  switch (RendererAPI::GetAPI()) {
-    case RendererAPI::API::kOpenGL: { return CreateShared<OpenGLVertexBuffer>(data, size); }
-    default:                        { assert(false); }
-  }
+OpenGLTexture::~OpenGLTexture() {}
 
-  return nullptr;
-}
+uint32_t OpenGLTexture::GetWidth() const {}
+uint32_t OpenGLTexture::GetHeight() const {}
+uint32_t OpenGLTexture::GetID() const {}
 
-SharedPtr<IndexBuffer> IndexBuffer::Create(uint32_t* indices, uint32_t count) {
-  switch (RendererAPI::GetAPI()) {
-    case RendererAPI::API::kOpenGL: { return CreateShared<OpenGLIndexBuffer>(indices, count); }
-    default:                        { assert(false); }
-  }
-
-  return nullptr;
-}
-
-SharedPtr<VertexArray> VertexArray::Create() {
-  switch (RendererAPI::GetAPI()) {
-    case RendererAPI::API::kOpenGL: { return CreateShared<OpenGLVertexArray>(); }
-    default:                        { assert(false); }
-  }
-
-  return nullptr;
-}
+void OpenGLTexture::Bind(uint32_t slot) const {}

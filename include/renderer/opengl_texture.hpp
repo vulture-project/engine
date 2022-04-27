@@ -1,7 +1,7 @@
 /**
  * @author Nikita Mochalov (github.com/tralf-strues)
- * @file buffer.cpp
- * @date 2022-04-27
+ * @file opengl_texture.hpp
+ * @date 2022-04-28
  *
  * The MIT License (MIT)
  * Copyright (c) vulture-project
@@ -25,36 +25,23 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "renderer/opengl_buffer.hpp"
-#include "renderer/renderer_api.hpp"
+#pragma once
 
-const BufferDataTypeSpec BufferDataTypeSpec::Get(BufferDataType type) {
-  return kShaderDataTypeSpecs[static_cast<uint8_t>(type)];
-}
+#include "renderer/texture.hpp"
 
-SharedPtr<VertexBuffer> VertexBuffer::Create(void* data, uint32_t size) {
-  switch (RendererAPI::GetAPI()) {
-    case RendererAPI::API::kOpenGL: { return CreateShared<OpenGLVertexBuffer>(data, size); }
-    default:                        { assert(false); }
-  }
+class OpenGLTexture : public Texture {
+ public:
+  OpenGLTexture(const std::string& filename);
+  virtual ~OpenGLTexture();
 
-  return nullptr;
-}
+  virtual uint32_t GetWidth() const override;
+  virtual uint32_t GetHeight() const override;
+  virtual uint32_t GetID() const override;
 
-SharedPtr<IndexBuffer> IndexBuffer::Create(uint32_t* indices, uint32_t count) {
-  switch (RendererAPI::GetAPI()) {
-    case RendererAPI::API::kOpenGL: { return CreateShared<OpenGLIndexBuffer>(indices, count); }
-    default:                        { assert(false); }
-  }
+  virtual void Bind(uint32_t slot = 0) const override;
 
-  return nullptr;
-}
-
-SharedPtr<VertexArray> VertexArray::Create() {
-  switch (RendererAPI::GetAPI()) {
-    case RendererAPI::API::kOpenGL: { return CreateShared<OpenGLVertexArray>(); }
-    default:                        { assert(false); }
-  }
-
-  return nullptr;
-}
+ private:
+  uint32_t width_;
+  uint32_t height_;
+  uint32_t id_;
+};
