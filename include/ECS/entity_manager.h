@@ -5,8 +5,8 @@
 #include <memory>
 #include <cassert>
 
-#include "ECS/Entity.h"
-#include "ECS/TypeIdGenerator.h"
+#include "ECS/entity.h"
+#include "ECS/type_id_generator.h"
 
 namespace ecs {
 

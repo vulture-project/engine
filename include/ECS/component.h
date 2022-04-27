@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ECS/TypeIdGenerator.h"
+#include "ECS/type_id_generator.h"
 
 
 namespace ecs {

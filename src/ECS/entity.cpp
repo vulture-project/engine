@@ -1,4 +1,4 @@
-#include "ECS/Entity.h"
+#include "ECS/entity.h"
 
 
 namespace ecs {

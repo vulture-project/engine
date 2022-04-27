@@ -3,8 +3,8 @@
 #include <unordered_map>
 #include <cassert>
 
-#include "ECS/TypeIdGenerator.h"
-#include "ECS/Component.h"
+#include "ECS/type_id_generator.h"
+#include "ECS/component.h"
 
 namespace ecs {
 

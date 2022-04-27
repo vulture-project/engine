@@ -3,8 +3,8 @@
 #include <unordered_map>
 #include <functional>
 
-#include "ECS/Entity.h"
-#include "ECS/EntityManager.h"
+#include "ECS/entity.h"
+#include "ECS/entity_manager.h"
 
 namespace ecs {
 

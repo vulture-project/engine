@@ -3,11 +3,11 @@ set(ECS_SOURCE_DIR ${ENGINE_SOURCE_DIR}/src/ECS)
 
 target_sources(engine
   PUBLIC
-    ${ECS_INCLUDE_DIR}/Component.h
-    ${ECS_INCLUDE_DIR}/ComponentFactory.h
-    ${ECS_INCLUDE_DIR}/Entity.h
-    ${ECS_INCLUDE_DIR}/EntityFactory.h
-    ${ECS_INCLUDE_DIR}/TypeIdGenerator.h
+    ${ECS_INCLUDE_DIR}/component.h
+    ${ECS_INCLUDE_DIR}/component_factory.h
+    ${ECS_INCLUDE_DIR}/entity.h
+    ${ECS_INCLUDE_DIR}/entity_factory.h
+    ${ECS_INCLUDE_DIR}/type_id_generator.h
   PRIVATE
-    ${ECS_SOURCE_DIR}/Entity.cpp
+    ${ECS_SOURCE_DIR}/entity.cpp
   )
