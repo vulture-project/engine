@@ -29,6 +29,7 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <cstring>
 
 #include "renderer/resource_loader.hpp"
 
