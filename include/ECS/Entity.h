@@ -3,7 +3,6 @@
 #include <unordered_map>
 #include <cassert>
 
-//#include "stdafx.h"
 #include "TypeIdGenerator.h"
 #include "Component.h"
 

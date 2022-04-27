@@ -1,8 +1,6 @@
 #pragma once
 
 #include "TypeIdGenerator.h"
-#include "stdafx.h"
-#include "Logger.h"
 
 /*
 namespace ECS {

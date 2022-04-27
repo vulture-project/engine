@@ -2,9 +2,6 @@
 
 #include "Component.h"
 #include "Entity.h"
-#include "ComponentManager.h"
-#include "TestComponents.h"
-#include "Logger.h"
 
 /*
 namespace ECS {
