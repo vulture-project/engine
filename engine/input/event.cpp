@@ -58,35 +58,22 @@ void EventQueue::ScrollCallback(GLFWwindow* window, double dx, double dy)
 {
     queue_.emplace(kMouseScroll, EventData(ScrollEventData{static_cast<int>(dx),
                                                            static_cast<int>(dy)}));
-
-    // std::cout << '[' << dx << ';' << dy << ']' << '\n';
 }
 
 void EventQueue::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
     queue_.emplace(kMouseButton, MouseButtonEventData(button, action, mods));
-
-    // std::cout << "button = " << button << '\n';
-    // std::cout << "action = " << action << '\n';
-    // std::cout << "mods   = " << mods << '\n';
 }
 
 void EventQueue::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     queue_.emplace(kKey, KeyEventData(key, scancode, action, mods));
-
-    // std::cout << "key      = " << char(key) << '\n';
-    // std::cout << "scancode = " << scancode << '\n';
-    // std::cout << "action   = " << action << '\n';
-    // std::cout << "mods     = " << mods << '\n';
 }
 
 void EventQueue::MouseMoveCallback(GLFWwindow* window, double xpos, double ypos)
 {
     queue_.emplace(kMouseMove, MouseMoveEventData{static_cast<int>(xpos),
                                                   static_cast<int>(ypos)});
-
-    // std::cout << '[' << xpos << ';' << ypos << ']' << '\n';
 }
 
 void EventQueue::CloseCallback(GLFWwindow* window)
