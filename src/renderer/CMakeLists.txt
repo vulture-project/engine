@@ -4,6 +4,7 @@ set(RENDERER_SOURCE_DIR ${ENGINE_SOURCE_DIR}/src/renderer)
 target_sources(engine
   PUBLIC
     ${RENDERER_INCLUDE_DIR}/buffer.hpp
+    ${RENDERER_INCLUDE_DIR}/camera.hpp
     ${RENDERER_INCLUDE_DIR}/core.hpp
     ${RENDERER_INCLUDE_DIR}/opengl_buffer.hpp
     ${RENDERER_INCLUDE_DIR}/opengl_renderer_api.hpp
@@ -17,6 +18,7 @@ target_sources(engine
     ${RENDERER_INCLUDE_DIR}/texture.hpp
   PRIVATE
     ${RENDERER_SOURCE_DIR}/buffer.cpp
+    ${RENDERER_SOURCE_DIR}/camera.cpp
     ${RENDERER_SOURCE_DIR}/core.cpp
     ${RENDERER_SOURCE_DIR}/opengl_buffer.cpp
     ${RENDERER_SOURCE_DIR}/opengl_renderer_api.cpp

@@ -26,8 +26,3 @@
  */
 
 #include "renderer/scene.hpp"
-
-glm::mat4 Camera::GetProjectionView(float width, float height) const {
-  return glm::perspectiveFov<float>(glm::degrees(0.78f), width, height, 0.1, 600) *
-         glm::lookAt(props.position, props.position + forward, glm::vec3{0, 1, 0});
-}
