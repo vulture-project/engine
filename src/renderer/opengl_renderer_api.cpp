@@ -1,21 +1,21 @@
 /**
- * @author Sergey Zelenkin (https://github.com/vssense)
- * @file window.cpp
+ * @author Nikita Mochalov (github.com/tralf-strues)
+ * @file opengl_renderer_api.cpp
  * @date 2022-04-27
- * 
+ *
  * The MIT License (MIT)
  * Copyright (c) vulture-project
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
  * the rights to use, copy, modify, merge, publish, distribute, sublicense,
  * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,43 +25,28 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include <cassert>
-#include <GLFW/glfw3.h>
+#include <glad/glad.h>
 
-#include "window.hpp"
+#include "renderer/opengl_renderer_api.hpp"
 
-const char* Window::kDefaultTitle = "Success is inevitable";
-
-Window::Window(size_t width, size_t height, const char* title)
-{
-    if (!glfwInit())
-    {
-        assert(!"Can't init glfw while creating a window");
-    }
-
-    window_ = glfwCreateWindow(width, height, title, NULL, NULL);
-    assert(window_ && "Can't create a window");
-
-    glfwMakeContextCurrent(window_);
+void OpenGLRendererAPI::Init() {
+  // TODO:
+  glEnable(GL_DEPTH_TEST);
 }
 
-void Window::SetTitle(const char* title)
-{
-    assert(window_);
-    assert(title);
-
-    glfwSetWindowTitle(window_, title);
+void OpenGLRendererAPI::SetViewport(const Viewport& viewport) {
+  glViewport(viewport.x, viewport.y, viewport.width, viewport.height);
+  viewport_ = viewport;
 }
 
-GLFWwindow* Window::GetNativeWindow()
-{
-    return window_;
+Viewport OpenGLRendererAPI::GetViewport() const { return viewport_; }
+
+void OpenGLRendererAPI::Clear(const glm::vec4& color) {
+  glClearColor(color.r, color.g, color.b, color.a);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-Window::~Window()
-{
-    assert(window_);
-    glfwDestroyWindow(window_);
-
-    glfwTerminate();
+void OpenGLRendererAPI::Draw(const VertexArray& vertexArray) {
+  glDrawElements(GL_TRIANGLES, vertexArray.GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+  glBindTexture(GL_TEXTURE_2D, 0);  // TODO: enable several textures
 }
