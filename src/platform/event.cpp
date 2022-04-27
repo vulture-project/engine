@@ -33,8 +33,12 @@
 namespace input
 {
 
+// Static fields initialization
 Window* EventQueue::window_ = nullptr;
 std::queue<Event> EventQueue::queue_{};
+
+std::vector<bool> Keyboard::keys_pressed_(kMaxKey + 1, false);
+
 
 ButtonMods::ButtonMods(int mods)
 {
@@ -74,6 +78,15 @@ void EventQueue::KeyCallback(GLFWwindow* window, int key, int scancode, int acti
     assert(window);
 
     queue_.emplace(kKey, EventData(KeyEventData(key, scancode, action, mods)));
+
+    if (action == GLFW_PRESS)
+    {
+        Keyboard::GetKeys()[key] = true;
+    }
+    else if (action == GLFW_RELEASE)
+    {
+        Keyboard::GetKeys()[key] = false;
+    }
 }
 
 void EventQueue::MouseMoveCallback(GLFWwindow* window, double xpos, double ypos)
