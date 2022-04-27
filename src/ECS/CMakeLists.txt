@@ -1,5 +1,5 @@
-set(ECS_INCLUDE_DIR ${ECS_SOURCE_DIR}/include/ECS)
-set(ECS_SOURCE_DIR ${ECS_SOURCE_DIR}/src/ECS)
+set(ECS_INCLUDE_DIR ${ENGINE_SOURCE_DIR}/include/ECS)
+set(ECS_SOURCE_DIR ${ENGINE_SOURCE_DIR}/src/ECS)
 
 target_sources(engine
   PUBLIC

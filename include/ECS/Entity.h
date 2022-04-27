@@ -3,81 +3,8 @@
 #include <unordered_map>
 #include <cassert>
 
-#include "TypeIdGenerator.h"
-#include "Component.h"
-
-/*
-namespace ECS {
-
-	class IEntity {
-	public:
-		IEntity();
-		virtual ~IEntity();
-
-		bool operator==(const IEntity& rhs) {
-			return id_ == rhs.id_;
-		}
-		bool operator<(const IEntity& rhs) {
-			return id_ < rhs.id_;
-		}
-
-		using EntityId = size_t;
-		using EntityTypeId = utility::TypeIdGenerator<IEntity>::TypeId;
-
-		virtual const EntityTypeId& GetEntityTypeId() const = 0;
-		const EntityId& GetEntityId();
-
-	private:
-		EntityId id_;
-	};
-
-	template <typename T>
-	class Entity : public IEntity {
-	public:
-		Entity();
-		virtual ~Entity();
-
-		virtual const EntityTypeId& GetEntityTypeId() const override;
-
-	private:
-		static const EntityTypeId type_id_;
-	};
-
-	//to make custom entities u need to make derived classes from Entyty<\"You class name\">
-
-	class EntityIdGenerator {
-	public:
-		EntityIdGenerator();
-		~EntityIdGenerator();
-
-		static const IEntity::EntityId& Get();
-
-	private:
-		static IEntity::EntityId id_counter;
-	};
-
-
-	template <typename T>
-	const IEntity::EntityTypeId Entity<T>::type_id_ = utility::TypeIdGenerator<IEntity>::Get<T>();
-
-	template<typename T>
-	inline Entity<T>::Entity() {
-
-	}
-
-	template<typename T>
-	inline Entity<T>::~Entity() {
-
-	}
-
-	template<typename T>
-	inline const IEntity::EntityTypeId& Entity<T>::GetEntityTypeId() const {
-		return type_id_;
-	}
-
-}	//namespace ECS
-
-*/
+#include "ECS/TypeIdGenerator.h"
+#include "ECS/Component.h"
 
 namespace ecs {
 
@@ -144,17 +71,5 @@ namespace ecs {
 	private:
 		static Entity::EntityId id_counter;
 	};
-
-	//-----------------------------------------------------------------------------
-
-	/*
-	class MovingBox : public Entity {
-	public:
-		MovingBox(PosMoveComponent* move, BasicRenderComponent* render_comp) {
-			AddComponent(move);
-			AddComponent(render_comp);
-		};
-	};
-	*/
 
 } //namespace ecs

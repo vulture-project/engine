@@ -1,81 +1,12 @@
 #pragma once
 
-#include "stdafx.h"
 #include <unordered_map>
 #include <utility>
 #include <memory>
 #include <cassert>
 
-#include "Entity.h"
-#include "TypeIdGenerator.h"
-/*
-namespace ECS {
-
-	class EntityManager {
-	public:
-		EntityManager();
-		~EntityManager();
-
-		template <typename T, typename... Args>
-		IEntity::EntityId CreateEntity(Args... args);
-
-		IEntity* GetEntity(IEntity::EntityId id);
-
-		template <typename T>
-		T* GetEntity(IEntity::EntityId id);
-
-		void DestroyEntity(IEntity::EntityId id);
-
-		template <typename T>
-		void DestroyEntity(IEntity::EntityId id);
-
-	private:
-		std::unordered_map<IEntity::EntityTypeId, std::unordered_map<IEntity::EntityId, IEntity*>> entities_;
-	};
-
-	template<typename T, typename ...Args>
-	inline IEntity::EntityId EntityManager::CreateEntity(Args ...args) {
-		IEntity::EntityTypeId curr_type_id = utility::TypeIdGenerator<IEntity>::Get<T>();
-
-		T* entity = new T(std::forward<Args>(args)...);
-
-		IEntity::EntityId id = entity->GetEntityId();
-
-		assert(entities_[curr_type_id].find(id) == entities_[curr_type_id].end());
-
-		entities_[curr_type_id].insert({id, entity});
-
-		return id;
-	}
-
-	template<typename T>
-	inline T* EntityManager::GetEntity(IEntity::EntityId id) {
-		IEntity::EntityTypeId curr_type_id = utility::TypeIdGenerator<IEntity>::Get<T>();
-		auto it = components_[curr_type_id].find(id);
-
-		if (it != components_[curr_type_id].end()) {
-			return reinterpret_cast<T*>(it->second);
-		}
-		else {
-			return nullptr;
-		}
-	}
-
-	template <typename T>
-	inline void EntityManager::DestroyEntity(IEntity::EntityId id) {
-		IEntity::EntityTypeId curr_type_id = utility::TypeIdGenerator<IEntity>::Get<T>();
-
-		auto it = entities_[curr_type_id].find(id);
-		IEntity* data = it->second;
-
-		assert(entities_[curr_type_id].find(id) != entities_[curr_type_id].end());
-		
-		entities_[curr_type_id].erase(id);
-		delete data;
-	}
-
-} //namespace ECS
-*/
+#include "ECS/Entity.h"
+#include "ECS/TypeIdGenerator.h"
 
 namespace ecs {
 
