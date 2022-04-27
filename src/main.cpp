@@ -22,7 +22,7 @@ Scene g_Scene;
 
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    float speed = 2;
+    float speed = 0.5;
 
     if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT))
     {
@@ -124,9 +124,9 @@ int main(int argc, const char* argv[])
 
     g_Scene.camera = CreateShared<Camera>(glm::vec3{10, 5, 10}, glm::vec3{-1, -0.5, -1});
     g_Scene.light = CreateShared<LightSource>(glm::vec3{10, 0, 15}, glm::vec3{1, 1, 0});
-    g_Scene.meshes.push_back(CreateShared<MeshInstance>(glm::vec3{0, 0, 0}, ParseMeshObj("../res/meshes/skameiki.obj")));
+    g_Scene.meshes.push_back(CreateShared<MeshInstance>(glm::vec3{0, 0, 0}, ParseMeshObj("res/meshes/skameiki.obj")));
 
-    SharedPtr<Shader> shader = Shader::Create("../res/shaders/basic.shader");
+    SharedPtr<Shader> shader = Shader::Create("res/shaders/basic.shader");
 
     Renderer3D::Init();
     Renderer3D::SetViewport(Viewport{0, 0, static_cast<uint32_t>(frameBufferWidth),
