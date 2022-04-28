@@ -30,7 +30,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
+#include <list>
 #include <memory>
+#include <vector>
 
 #include "platform/window.hpp"
 
@@ -63,3 +65,9 @@ template <typename T, typename... Args>
 constexpr ScopePtr<T> CreateScope(Args&&... args) {
   return std::make_unique<T>(std::forward<Args>(args)...);
 }
+
+template<typename T>
+using Vector = std::vector<T>;
+
+template<typename T>
+using List = std::list<T>;

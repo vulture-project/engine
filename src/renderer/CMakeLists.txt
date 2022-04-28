@@ -6,6 +6,7 @@ target_sources(engine
     ${RENDERER_INCLUDE_DIR}/buffer.hpp
     ${RENDERER_INCLUDE_DIR}/camera.hpp
     ${RENDERER_INCLUDE_DIR}/core.hpp
+    ${RENDERER_INCLUDE_DIR}/mesh.hpp
     ${RENDERER_INCLUDE_DIR}/opengl_buffer.hpp
     ${RENDERER_INCLUDE_DIR}/opengl_renderer_api.hpp
     ${RENDERER_INCLUDE_DIR}/opengl_shader.hpp
@@ -14,6 +15,7 @@ target_sources(engine
     ${RENDERER_INCLUDE_DIR}/renderer3d.hpp
     ${RENDERER_INCLUDE_DIR}/resource_loader.hpp
     ${RENDERER_INCLUDE_DIR}/scene.hpp
+    ${RENDERER_INCLUDE_DIR}/scene_node.hpp
     ${RENDERER_INCLUDE_DIR}/shader.hpp
     ${RENDERER_INCLUDE_DIR}/texture.hpp
   PRIVATE

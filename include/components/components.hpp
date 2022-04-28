@@ -4,7 +4,7 @@
 
 #include "ECS/component.h"
 #include "renderer/core.hpp"
-#include "renderer/scene.hpp"
+#include "renderer/mesh.hpp"
 
 class TransformComponent : ecs::Component<TransformComponent> {
   public:

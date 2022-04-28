@@ -17,6 +17,7 @@
 #include "renderer/renderer3d.hpp"
 #include "renderer/scene.hpp"
 #include "renderer/resource_loader.hpp"
+#include "scene/scene.hpp"
 
 Scene g_Scene;
 
