@@ -27,12 +27,34 @@
 
 #include "renderer/opengl_texture.hpp"
 
-OpenGLTexture::OpenGLTexture(const std::string& filename) {}
+#include <glad/glad.h>
+#include <stb_image/stb_image.h>
 
-OpenGLTexture::~OpenGLTexture() {}
+OpenGLTexture::OpenGLTexture(const std::string& filename) {
+  int32_t width, height, channels;
+  uint8_t* data = stbi_load(filename.c_str(), &width, &height, &channels, /*desired_channels=*/0);
+  assert(data);
 
-uint32_t OpenGLTexture::GetWidth() const {}
-uint32_t OpenGLTexture::GetHeight() const {}
-uint32_t OpenGLTexture::GetID() const {}
+  glGenTextures(1, &id_);
+  glBindTexture(GL_TEXTURE_2D, id_);
 
-void OpenGLTexture::Bind(uint32_t slot) const {}
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  glTexImage2D(GL_TEXTURE_2D, /*level=*/0, GL_RGB, width, height, /*border=*/0, GL_RGB, GL_UNSIGNED_BYTE, data);
+  glGenerateMipmap(GL_TEXTURE_2D);
+
+  stbi_image_free(data);
+}
+
+OpenGLTexture::~OpenGLTexture() { glDeleteTextures(1, &id_); }
+
+uint32_t OpenGLTexture::GetWidth() const { return width_; }
+uint32_t OpenGLTexture::GetHeight() const { return height_; }
+uint32_t OpenGLTexture::GetID() const { return id_; }
+
+void OpenGLTexture::Bind(uint32_t slot) const {
+  glBindTextureUnit(slot, id_);
+}
