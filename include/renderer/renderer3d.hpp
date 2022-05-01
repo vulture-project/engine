@@ -25,12 +25,12 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#pragma once
+
 #include "renderer/core.hpp"
 #include "renderer/renderer_api.hpp"
 #include "renderer/scene.hpp"
 #include "renderer/shader.hpp"
-
-#pragma once
 
 class Renderer3D {
  public:

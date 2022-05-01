@@ -23,14 +23,14 @@ namespace ecs {
 		};
 
 		template <typename T, typename... Args>
-		Entity* CreateEntity(Args... args);
+		T* CreateComponent(Args... args);
 
 	private:
 		std::unordered_map<std::string, construct_p> construct_functions_;
 	};
 
 	template<typename T, typename ...Args>
-	inline Entity* ComponentFactory::CreateEntity(Args ...args) {
+	inline T* ComponentFactory::CreateComponent(Args ...args) {
 		return new T(std::forward<Args>(args)...);
 	}
 

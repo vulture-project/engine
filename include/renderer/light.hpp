@@ -1,6 +1,6 @@
 /**
  * @author Nikita Mochalov (github.com/tralf-strues)
- * @file camera.hpp
+ * @file light.hpp
  * @date 2022-04-28
  *
  * The MIT License (MIT)
@@ -29,15 +29,8 @@
 
 #include <glm/glm.hpp>
 
-#include "renderer/core.hpp"
-
-struct PerspectiveCameraSpecs {
-  float fov = 45.0f;
-  float near = 0.01f;
-  float far = 1000.0f;
-  float aspect_ratio = 0.0f;
-
-  PerspectiveCameraSpecs(float aspect_ratio = 0.0f) : aspect_ratio(aspect_ratio) {}
-
-  glm::mat4 CalculateProjectionTransform() const;
+struct PointLightSpecs {
+  glm::vec3 ambient;
+  glm::vec3 diffuse;
+  glm::vec3 specular;
 };

@@ -1,235 +1,212 @@
 /**
  * @author Nikita Mochalov (github.com/tralf-strues)
  * @file main.cpp
- * @date 2022-04-13
- * 
- * @copyright Copyright (c) 2022
+ * @date 2022-04-26
+ *
+ * The MIT License (MIT)
+ * Copyright (c) vulture-project
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
  */
 
-#include <alloca.h>
-#include <fstream>
-#include <string>
-#include <sstream>
-
-#include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <alloca.h>
+#include <glad/glad.h>
 
-#include "renderer/renderer3d.hpp"
-#include "renderer/scene.hpp"
-#include "renderer/resource_loader.hpp"
-#include "scene/scene.hpp"
+#include <fstream>
+#include <sstream>
+#include <string>
 
-Scene g_Scene;
-
-void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-    float speed = 0.5;
-
-    if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT))
-    {
-        g_Scene.camera->props.position += speed * g_Scene.camera->forward;
-        g_Scene.camera->props.RecalculateModelTransform(); // FIXME:
-    }
-
-    if (key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT))
-    {
-        g_Scene.camera->props.position -= speed * g_Scene.camera->forward;
-        g_Scene.camera->props.RecalculateModelTransform(); // FIXME:
-    }
-
-    if (key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT))
-    {
-        g_Scene.camera->props.position -= speed * glm::cross(g_Scene.camera->forward, glm::vec3{0, 1, 0});
-        g_Scene.camera->props.RecalculateModelTransform(); // FIXME:
-    }
-
-    if (key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT))
-    {
-        g_Scene.camera->props.position += speed * glm::cross(g_Scene.camera->forward, glm::vec3{0, 1, 0});
-        g_Scene.camera->props.RecalculateModelTransform(); // FIXME:
-    }
-
-    if (key == GLFW_KEY_Q && (action == GLFW_PRESS || action == GLFW_REPEAT))
-    {
-        g_Scene.camera->props.position.y += 1;
-        g_Scene.camera->props.RecalculateModelTransform(); // FIXME:
-    }
-
-    if (key == GLFW_KEY_E && (action == GLFW_PRESS || action == GLFW_REPEAT))
-    {
-        g_Scene.camera->props.position.y -= 1;
-        g_Scene.camera->props.RecalculateModelTransform(); // FIXME:
-    }
-}
-
-void mouseMoveCallback(GLFWwindow* window, double newX, double newY)
-{
-    static bool skip = true;
-    if (skip)
-    {
-        glfwSetCursorPos(window, 0, 0);
-        skip = false;
-        return;
-    }
-
-    float dx = -newX;
-    float dy = -newY;
-
-    g_Scene.camera->forward = glm::normalize(glm::rotate(glm::identity<glm::mat4>(), 0.001f * dx, glm::vec3{0, 1, 0}) * glm::vec4(g_Scene.camera->forward, 1));
-    g_Scene.camera->forward.y += 0.001f * dy;
-    g_Scene.camera->forward = glm::normalize(g_Scene.camera->forward);
-    // g_Scene.camera->forward = glm::normalize(glm::rotate(glm::identity<glm::mat4>(), 0.001f * dy, glm::vec3{1, 0, 1}) * glm::vec4(g_Scene.camera->forward, 1));
-
-    // prevX = newX;
-    // prevY = newY;
-
-    glfwSetCursorPos(window, 0, 0);
-}
-
-#include "platform/window.hpp"
+// #include "ECS/component_factory.h"
+// #include "ECS/entity_factory.h"
+// #include "ECS/entity_manager.h"
+// #include "components/components.hpp"
 #include "platform/event.hpp"
+#include "platform/window.hpp"
+#include "renderer/renderer3d.hpp"
+#include "renderer/resource_loader.hpp"
+#include "renderer/scene.hpp"
 
 using namespace input;
 
-void ProcessMoveEvent(Event* event)
-{
-    assert(event);
+Scene g_Scene;
 
-    static float prev_x = 0;
-    static float prev_y = 0;
+constexpr PointLightSpecs kPointLightSpecs = {glm::vec3{1, 0, 0}, glm::vec3{0.5}, glm::vec3{1, 1, 1}};
 
-    float dx = prev_x - event->GetMove().x;
-    float dy = prev_y - event->GetMove().y;
-    std::cout << dx << ' ' << dy << '\n';
+void ProcessMoveEvent(Event* event) {
+  assert(event);
 
-    g_Scene.camera->forward = glm::normalize(glm::rotate(glm::identity<glm::mat4>(), 0.001f * dx, glm::vec3{0, 1, 0}) * glm::vec4(g_Scene.camera->forward, 1));
-    g_Scene.camera->forward.y += 0.001f * dy;
-    g_Scene.camera->forward = glm::normalize(g_Scene.camera->forward);
+  static float prev_x = 0;
+  static float prev_y = 0;
 
-    prev_x = event->GetMove().x;
-    prev_y = event->GetMove().y;
+  float dx = prev_x - event->GetMove().x;
+  float dy = prev_y - event->GetMove().y;
+  // std::cout << dx << ' ' << dy << '\n';
+
+  // CameraComponent* cameraComponent = g_Scene.camera->GetComponent<CameraComponent>();
+
+  // cameraComponent->forward = glm::normalize(glm::rotate(glm::identity<glm::mat4>(), 0.001f * dx, glm::vec3{0, 1, 0})
+  // *
+  //                                           glm::vec4(cameraComponent->forward, 1));
+  // cameraComponent->forward.y += 0.001f * dy;
+  // cameraComponent->forward = glm::normalize(cameraComponent->forward);
+
+  g_Scene.camera->forward =
+      glm::normalize(glm::rotate(glm::identity<glm::mat4>(), 0.001f * dx, glm::vec3{0, 1, 0}) * glm::vec4(g_Scene.camera->forward, 1));
+
+  g_Scene.camera->forward.y += 0.001f * dy;
+  g_Scene.camera->forward = glm::normalize(g_Scene.camera->forward);
+
+  prev_x = event->GetMove().x;
+  prev_y = event->GetMove().y;
 }
 
-void ProcessKeyEvent(Event* event)
-{
-    assert(event);
+void ProcessKeyEvent(Event* event) {
+  assert(event);
 
-    int key = event->GetKey().key;
-    int action = (int)event->GetKey().action;
+  int key = event->GetKey().key;
+  int action = (int)event->GetKey().action;
 
-    float speed = 0.5;
+  float speed = 0.5;
 
-    if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT))
-    {
-        g_Scene.camera->props.position += speed * g_Scene.camera->forward;
-        g_Scene.camera->props.RecalculateModelTransform(); // FIXME:
-    }
+  // CameraComponent* cameraComponent = g_Scene.camera->GetComponent<CameraComponent>();
+  // TransformComponent* transformComponent = g_Scene.camera->GetComponent<TransformComponent>();
 
-    if (key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT))
-    {
-        g_Scene.camera->props.position -= speed * g_Scene.camera->forward;
-        g_Scene.camera->props.RecalculateModelTransform(); // FIXME:
-    }
+  if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+    // transformComponent->translation += speed * cameraComponent->forward;
+    g_Scene.camera->pos += speed * g_Scene.camera->forward;
+  }
 
-    if (key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT))
-    {
-        g_Scene.camera->props.position -= speed * glm::cross(g_Scene.camera->forward, glm::vec3{0, 1, 0});
-        g_Scene.camera->props.RecalculateModelTransform(); // FIXME:
-    }
+  if (key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+    // transformComponent->translation -= speed * cameraComponent->forward;
+    g_Scene.camera->pos -= speed * g_Scene.camera->forward;
+  }
 
-    if (key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT))
-    {
-        g_Scene.camera->props.position += speed * glm::cross(g_Scene.camera->forward, glm::vec3{0, 1, 0});
-        g_Scene.camera->props.RecalculateModelTransform(); // FIXME:
-    }
+  if (key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+    // transformComponent->translation -= speed * glm::cross(cameraComponent->forward, glm::vec3{0, 1, 0});
+    g_Scene.camera->pos -= speed * glm::cross(g_Scene.camera->forward, glm::vec3{0, 1, 0});
+  }
 
-    if (key == GLFW_KEY_Q && (action == GLFW_PRESS || action == GLFW_REPEAT))
-    {
-        g_Scene.camera->props.position.y += 1;
-        g_Scene.camera->props.RecalculateModelTransform(); // FIXME:
-    }
+  if (key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+    // transformComponent->translation += speed * glm::cross(cameraComponent->forward, glm::vec3{0, 1, 0});
+    g_Scene.camera->pos += speed * glm::cross(g_Scene.camera->forward, glm::vec3{0, 1, 0});
+  }
 
-    if (key == GLFW_KEY_E && (action == GLFW_PRESS || action == GLFW_REPEAT))
-    {
-        g_Scene.camera->props.position.y -= 1;
-        g_Scene.camera->props.RecalculateModelTransform(); // FIXME:
-    }
+  if (key == GLFW_KEY_Q && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+    // transformComponent->translation.y += 1;
+    g_Scene.camera->pos.y += 1;
+  }
+
+  if (key == GLFW_KEY_E && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+    // transformComponent->translation.y -= 1;
+    g_Scene.camera->pos.y -= 1;
+  }
 }
 
-void ProcessEvent(Event* event, bool* running)
-{
-    assert(event);
-    assert(running);
+void ProcessEvent(Event* event, bool* running) {
+  assert(event);
+  assert(running);
 
-    switch (event->GetType())
-    {
+  switch (event->GetType()) {
     case kQuit:
-        *running = false;
-        break;
-    
+      *running = false;
+      break;
+
     case kKey:
-        ProcessKeyEvent(event);
-        break;
+      ProcessKeyEvent(event);
+      break;
 
     case kMouseMove:
-        ProcessMoveEvent(event);
-        break;
+      ProcessMoveEvent(event);
+      break;
 
     default:
-        break;
-    }
+      break;
+  }
 }
 
-int main()
-{
-    Window _window{};
-    EventQueue::SetWindow(&_window);
-    NativeWindow* window = _window.GetNativeWindow();
+int main() {
+  Window _window{};
+  EventQueue::SetWindow(&_window);
+  NativeWindow* window = _window.GetNativeWindow();
 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  int32_t frameBufferWidth = 0;
+  int32_t frameBufferHeight = 0;
+  glfwGetFramebufferSize(window, &frameBufferWidth, &frameBufferHeight);
 
-    int32_t frameBufferWidth = 0;
-    int32_t frameBufferHeight = 0;
-    glfwGetFramebufferSize(window, &frameBufferWidth, &frameBufferHeight);
+  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+    std::cout << "Failed to initialize GLAD" << std::endl;
+    return -1;
+  }
 
-    glfwMakeContextCurrent(window);
+  // ecs::EntityFactory entity_factory;
+  // ecs::EntityManager entity_manager;
+  // ecs::ComponentFactory component_factory;
 
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
+  // g_Scene.camera = entity_factory.CreateEntity<ecs::Entity>();
+  // entity_manager.AddEntity(g_Scene.camera);
+  // g_Scene.camera->AddComponent(component_factory.CreateComponent<TransformComponent>(10, 5, 10));
+  // g_Scene.camera->AddComponent(component_factory.CreateComponent<CameraComponent>(glm::vec3{-1, -0.5, -1}));
+
+  // ecs::Entity* light = entity_factory.CreateEntity<ecs::Entity>();
+  // entity_manager.AddEntity(light);
+  // light->AddComponent(component_factory.CreateComponent<TransformComponent>(10, 0, 15));
+  // light->AddComponent(component_factory.CreateComponent<PointLightComponent>(glm::vec3{0.5}, glm::vec3{0.5},
+  // glm::vec3{0.5})); g_Scene.light_sources.push_back(light);
+
+  // ecs::Entity* skameiki = entity_factory.CreateEntity<ecs::Entity>();
+  // entity_manager.AddEntity(skameiki);
+  // skameiki->AddComponent(component_factory.CreateComponent<TransformComponent>(0, 0, 0));
+  // skameiki->AddComponent(component_factory.CreateComponent<MeshComponent>(CreateShared<Mesh>(ParseMeshObj("res/meshes/skameiki.obj"))));
+
+  // g_Scene.root = new SceneNode(skameiki);
+  // g_Scene.root->AddChild(new SceneNode(g_Scene.camera));
+  // g_Scene.root->AddChild(new SceneNode(light));
+
+  g_Scene.camera = CreateShared<CameraNode>(PerspectiveCameraSpecs((float)frameBufferWidth / (float)frameBufferHeight),
+                                            glm::vec3{10, 5, 10}, glm::vec3{-1, -0.5, -1});
+
+  g_Scene.light = CreateShared<PointLightNode>(kPointLightSpecs, glm::vec3{10, 0, 15});
+  g_Scene.meshes.emplace_back(ParseMeshObj("res/meshes/skameiki.obj"), glm::vec3{0});
+
+  SharedPtr<Shader> shader = Shader::Create("res/shaders/basic.shader");
+
+  Renderer3D::Init();
+  Renderer3D::SetViewport(
+      Viewport{0, 0, static_cast<uint32_t>(frameBufferWidth), static_cast<uint32_t>(frameBufferHeight)});
+
+  // FIXME:
+  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+  Event event{};
+  bool running = true;
+
+  while (running) {
+    while (PollEvent(&event)) {
+      ProcessEvent(&event, &running);
     }
 
-    g_Scene.camera = CreateShared<Camera>(glm::vec3{10, 5, 10}, glm::vec3{-1, -0.5, -1});
-    g_Scene.light = CreateShared<LightSource>(glm::vec3{10, 0, 15}, glm::vec3{1, 1, 0});
-    g_Scene.meshes.push_back(CreateShared<MeshInstance>(glm::vec3{0, 0, 0}, ParseMeshObj("res/meshes/skameiki.obj")));
+    Renderer3D::RenderScene(g_Scene, shader);
+    glfwSwapBuffers(window);
+  }
 
-    SharedPtr<Shader> shader = Shader::Create("res/shaders/basic.shader");
-
-    Renderer3D::Init();
-    Renderer3D::SetViewport(Viewport{0, 0, static_cast<uint32_t>(frameBufferWidth),
-                                           static_cast<uint32_t>(frameBufferHeight)});
-
-    //FIXME:
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-    Event event{};
-    bool running = true;
-
-    while (running)
-    {
-        while (PollEvent(&event))
-        {
-            ProcessEvent(&event, &running);
-        }
-
-        Renderer3D::RenderScene(g_Scene, shader);
-        glfwSwapBuffers(window);
-    }
-
-    return 0;
+  return 0;
 }
 
 // int main(int argc, const char* argv[])
@@ -271,7 +248,8 @@ int main()
 
 //     g_Scene.camera = CreateShared<Camera>(glm::vec3{10, 5, 10}, glm::vec3{-1, -0.5, -1});
 //     g_Scene.light = CreateShared<LightSource>(glm::vec3{10, 0, 15}, glm::vec3{1, 1, 0});
-//     g_Scene.meshes.push_back(CreateShared<MeshInstance>(glm::vec3{0, 0, 0}, ParseMeshObj("res/meshes/skameiki.obj")));
+//     g_Scene.meshes.push_back(CreateShared<MeshInstance>(glm::vec3{0, 0, 0},
+//     ParseMeshObj("res/meshes/skameiki.obj")));
 
 //     SharedPtr<Shader> shader = Shader::Create("res/shaders/basic.shader");
 

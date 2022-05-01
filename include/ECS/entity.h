@@ -45,6 +45,15 @@ namespace ecs {
 		};
 
 		template <typename T>
+		const T* GetComponent() const {
+			auto it = components_.find(T::TypeId);
+			if (it != components_.end()) {
+				return reinterpret_cast<const T*>(it->second);
+			}
+			return nullptr;
+		};
+
+		template <typename T>
 		void DestroyComponent() {
 			IComponent::ComponentTypeId type_id = T::TypeId;
 

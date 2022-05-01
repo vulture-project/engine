@@ -25,6 +25,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#pragma once
+
 #include "renderer/buffer.hpp"
 #include "renderer/core.hpp"
 

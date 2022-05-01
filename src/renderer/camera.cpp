@@ -27,6 +27,6 @@
 
 #include "renderer/camera.hpp"
 
-glm::mat4 PerspectiveCamera::GetProjectionTransform() const {
-  return glm::perspective<float>(fov, aspectRatio, near, far);
+glm::mat4 PerspectiveCameraSpecs::CalculateProjectionTransform() const {
+  return glm::perspective<float>(fov, aspect_ratio, near, far);
 }

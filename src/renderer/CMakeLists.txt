@@ -6,6 +6,7 @@ target_sources(engine
     ${RENDERER_INCLUDE_DIR}/buffer.hpp
     ${RENDERER_INCLUDE_DIR}/camera.hpp
     ${RENDERER_INCLUDE_DIR}/core.hpp
+    ${RENDERER_INCLUDE_DIR}/light.hpp
     ${RENDERER_INCLUDE_DIR}/mesh.hpp
     ${RENDERER_INCLUDE_DIR}/opengl_buffer.hpp
     ${RENDERER_INCLUDE_DIR}/opengl_renderer_api.hpp

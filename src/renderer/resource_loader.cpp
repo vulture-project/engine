@@ -80,11 +80,14 @@ SharedPtr<Mesh> ParseMeshObj(const std::string& filename) {
 
     if (std::sscanf(cur_line.c_str(), "v %f %f %f", &values[0], &values[1], &values[2]) == 3) {
       positions.emplace_back(values[0], values[1], values[2]);
-    } else if (std::sscanf(cur_line.c_str(), "vt %f %f", &values[0], &values[1]) == 2) {
+    }
+    else if (std::sscanf(cur_line.c_str(), "vt %f %f", &values[0], &values[1]) == 2) {
       uvs.emplace_back(values[0], values[1]);
-    } else if (std::sscanf(cur_line.c_str(), "vn %f %f %f", &values[0], &values[1], &values[2]) == 3) {
+    }
+    else if (std::sscanf(cur_line.c_str(), "vn %f %f %f", &values[0], &values[1], &values[2]) == 3) {
       normals.emplace_back(values[0], values[1], values[2]);
-    } else if (cur_line[0] == 'f' && cur_line[1] == ' ') {
+    }
+    else if (cur_line[0] == 'f' && cur_line[1] == ' ') {
       uint32_t indices[9];
       std::sscanf(cur_line.c_str(), "f %u/%u/%u %u/%u/%u %u/%u/%u", &indices[0], &indices[1], &indices[2],
                                                                     &indices[3], &indices[4], &indices[5],

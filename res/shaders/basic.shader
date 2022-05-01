@@ -33,6 +33,6 @@ const vec3 k_Camera = vec3(0, 0, 0);
 
 void main()
 {
-    color = vec4(0.1, 0.1, 0.1, 1) * dot(u_wsLightPos - wsPos, wsNormal);
+    color = vec4(vec3(0.3, 0, 0.3) + (vec3(0.1, 0.9, 0.1) * max(0, dot(normalize(u_wsLightPos - wsPos), normalize(wsNormal)))), 1);
     // color = vec4(1, 0, 1, 1);
 }

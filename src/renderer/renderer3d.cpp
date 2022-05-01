@@ -27,6 +27,8 @@
 
 #include "renderer/renderer3d.hpp"
 
+#include "components/components.hpp"
+
 ScopePtr<RendererAPI> Renderer3D::rendererAPI_;
 
 void Renderer3D::Init() {
@@ -38,13 +40,17 @@ void Renderer3D::SetViewport(const Viewport& viewport) { rendererAPI_->SetViewpo
 
 void Renderer3D::RenderScene(const Scene& scene, const SharedPtr<Shader>& shader) {
   shader->Bind();
-  shader->LoadUniformFloat3("u_wsLightPos", scene.light->props.position);
-  shader->LoadUniformMat4("u_ProjectionView", scene.camera->GetProjectionView(rendererAPI_->GetViewport().width,
-                                                                              rendererAPI_->GetViewport().height));
+  shader->LoadUniformFloat3("u_wsLightPos", scene.light->pos);
+  shader->LoadUniformMat4("u_ProjectionView", scene.camera->CalculateTransform());
+
+  glm::mat4 projectionView = scene.camera->CalculateTransform();
 
   rendererAPI_->Clear(glm::vec4{0, 0, 0, 0});
   for (const auto& mesh : scene.meshes) {
-    shader->LoadUniformMat4("u_Model", mesh->props.model_transform);
-    rendererAPI_->Draw(*mesh->mesh->vertex_array);
+    shader->LoadUniformMat4("u_Model", mesh.CalculateModelTransform());
+
+    glm::mat4 model = mesh.CalculateModelTransform();
+
+    rendererAPI_->Draw(*mesh.mesh->vertex_array);
   }
 }

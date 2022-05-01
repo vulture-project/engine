@@ -40,6 +40,14 @@ Window::Window(size_t width, size_t height, const char* title)
         assert(!"Can't init glfw while creating a window");
     }
 
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+#ifdef __APPLE__
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, 1);
+#endif
+
     window_ = glfwCreateWindow(width, height, title, NULL, NULL);
     assert(window_ && "Can't create a window");
 
