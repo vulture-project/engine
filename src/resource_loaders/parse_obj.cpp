@@ -1,7 +1,7 @@
 /**
  * @author Nikita Mochalov (github.com/tralf-strues)
- * @file resource_loader.cpp
- * @date 2022-04-27
+ * @file parse_obj.cpp
+ * @date 2022-05-01
  * 
  * The MIT License (MIT)
  * Copyright (c) vulture-project
@@ -31,7 +31,9 @@
 #include <string>
 #include <cstring>
 
-#include "renderer/resource_loader.hpp"
+#include "resource_loaders/parse_obj.hpp"
+
+using namespace vulture;
 
 struct PackedVertex {
   glm::vec3 position;
@@ -56,7 +58,7 @@ bool GetSimilarVertexIndex(const PackedVertex& packed, const MapVertexToIndex& m
   return found;
 }
 
-SharedPtr<Mesh> ParseMeshObj(const std::string& filename) {
+SharedPtr<Mesh> vulture::ParseMeshObj(const std::string& filename) {
   struct Vertex {
     uint32_t index_position;
     uint32_t index_uv;
@@ -73,7 +75,11 @@ SharedPtr<Mesh> ParseMeshObj(const std::string& filename) {
   std::vector<Face>      faces;
 
   std::ifstream stream(filename);
-  std::string   cur_line;
+  if (stream.fail()) {
+    assert(!"File doesn't exist!");
+  }
+
+  std::string cur_line;
 
   while (std::getline(stream, cur_line)) {
     float values[3];

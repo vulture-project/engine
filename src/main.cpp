@@ -39,15 +39,16 @@
 // #include "components/components.hpp"
 #include "platform/event.hpp"
 #include "platform/window.hpp"
-#include "renderer/renderer3d.hpp"
-#include "renderer/resource_loader.hpp"
-#include "renderer/scene.hpp"
+#include "renderer/3d/renderer3d.hpp"
+#include "resource_loaders/parse_obj.hpp"
 
+using namespace vulture;
 using namespace input;
 
-Scene g_Scene;
+Scene3D g_Scene;
 
-constexpr PointLightSpecs kPointLightSpecs = {glm::vec3{1, 0, 0}, glm::vec3{0.5}, glm::vec3{1, 1, 1}};
+static const LightSourceSpecs kPointLightSpecs{LightSourceSpecs::Type::kPoint, glm::vec3{1, 0, 0}, glm::vec3{0.5},
+                                               glm::vec3{1, 1, 1}};
 
 void ProcessMoveEvent(Event* event) {
   assert(event);
@@ -67,11 +68,15 @@ void ProcessMoveEvent(Event* event) {
   // cameraComponent->forward.y += 0.001f * dy;
   // cameraComponent->forward = glm::normalize(cameraComponent->forward);
 
-  g_Scene.camera->forward =
-      glm::normalize(glm::rotate(glm::identity<glm::mat4>(), 0.001f * dx, glm::vec3{0, 1, 0}) * glm::vec4(g_Scene.camera->forward, 1));
+  g_Scene.GetMainCamera()->transform.rotation.y += 0.001f * dx;
+  g_Scene.GetMainCamera()->transform.rotation.x += 0.001f * dy;
 
-  g_Scene.camera->forward.y += 0.001f * dy;
-  g_Scene.camera->forward = glm::normalize(g_Scene.camera->forward);
+  // g_Scene.camera->forward =
+  //     glm::normalize(glm::rotate(glm::identity<glm::mat4>(), 0.001f * dx, glm::vec3{0, 1, 0}) *
+  //     glm::vec4(g_Scene.camera->forward, 1));
+
+  // g_Scene.camera->forward.y += 0.001f * dy;
+  // g_Scene.camera->forward = glm::normalize(g_Scene.camera->forward);
 
   prev_x = event->GetMove().x;
   prev_y = event->GetMove().y;
@@ -88,34 +93,43 @@ void ProcessKeyEvent(Event* event) {
   // CameraComponent* cameraComponent = g_Scene.camera->GetComponent<CameraComponent>();
   // TransformComponent* transformComponent = g_Scene.camera->GetComponent<TransformComponent>();
 
+  glm::vec3 forward = g_Scene.GetMainCamera()->CalculateForwardVector();
+  glm::vec3 right = g_Scene.GetMainCamera()->CalculateRightVector();
+
   if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
     // transformComponent->translation += speed * cameraComponent->forward;
-    g_Scene.camera->pos += speed * g_Scene.camera->forward;
+    // g_Scene.camera->pos += speed * g_Scene.camera->forward;
+    g_Scene.GetMainCamera()->transform.translation += speed * forward;
   }
 
   if (key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
     // transformComponent->translation -= speed * cameraComponent->forward;
-    g_Scene.camera->pos -= speed * g_Scene.camera->forward;
+    // g_Scene.camera->pos -= speed * g_Scene.camera->forward;
+    g_Scene.GetMainCamera()->transform.translation -= speed * forward;
   }
 
   if (key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
     // transformComponent->translation -= speed * glm::cross(cameraComponent->forward, glm::vec3{0, 1, 0});
-    g_Scene.camera->pos -= speed * glm::cross(g_Scene.camera->forward, glm::vec3{0, 1, 0});
+    // g_Scene.camera->pos -= speed * glm::cross(g_Scene.camera->forward, glm::vec3{0, 1, 0});
+    g_Scene.GetMainCamera()->transform.translation -= speed * right;
   }
 
   if (key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
     // transformComponent->translation += speed * glm::cross(cameraComponent->forward, glm::vec3{0, 1, 0});
-    g_Scene.camera->pos += speed * glm::cross(g_Scene.camera->forward, glm::vec3{0, 1, 0});
+    // g_Scene.camera->pos += speed * glm::cross(g_Scene.camera->forward, glm::vec3{0, 1, 0});
+    g_Scene.GetMainCamera()->transform.translation += speed * right;
   }
 
   if (key == GLFW_KEY_Q && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
     // transformComponent->translation.y += 1;
-    g_Scene.camera->pos.y += 1;
+    // g_Scene.camera->pos.y += 1;
+    g_Scene.GetMainCamera()->transform.translation.y -= 1;
   }
 
   if (key == GLFW_KEY_E && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
     // transformComponent->translation.y -= 1;
-    g_Scene.camera->pos.y -= 1;
+    // g_Scene.camera->pos.y -= 1;
+    g_Scene.GetMainCamera()->transform.translation.y += 1;
   }
 }
 
@@ -179,11 +193,22 @@ int main() {
   // g_Scene.root->AddChild(new SceneNode(g_Scene.camera));
   // g_Scene.root->AddChild(new SceneNode(light));
 
-  g_Scene.camera = CreateShared<CameraNode>(PerspectiveCameraSpecs((float)frameBufferWidth / (float)frameBufferHeight),
-                                            glm::vec3{10, 5, 10}, glm::vec3{-1, -0.5, -1});
+  // g_Scene.camera = CreateShared<CameraNode>(PerspectiveCameraSpecs((float)frameBufferWidth /
+  // (float)frameBufferHeight),
+  //                                           glm::vec3{10, 5, 10}, glm::vec3{-1, -0.5, -1});
 
-  g_Scene.light = CreateShared<PointLightNode>(kPointLightSpecs, glm::vec3{10, 0, 15});
-  g_Scene.meshes.emplace_back(ParseMeshObj("res/meshes/skameiki.obj"), glm::vec3{0});
+  // g_Scene.light = CreateShared<PointLightNode>(kPointLightSpecs, glm::vec3{10, 0, 15});
+  // g_Scene.meshes.emplace_back(ParseMeshObj("res/meshes/skameiki.obj"), glm::vec3{0});
+
+  CameraNode3D* cameraNode = new CameraNode3D(
+      PerspectiveCameraSpecs((float)frameBufferWidth / (float)frameBufferHeight), Transform(glm::vec3{10, 2, 10}));
+
+  g_Scene.AddCamera(cameraNode);
+  g_Scene.SetMainCamera(cameraNode);
+
+  g_Scene.AddLightSource(new LightSourceNode3D(kPointLightSpecs, Transform(glm::vec3{10, 10, 15})));
+
+  g_Scene.AddModel(new ModelNode3D(ParseMeshObj("res/meshes/skameiki.obj")));
 
   SharedPtr<Shader> shader = Shader::Create("res/shaders/basic.shader");
 
@@ -193,6 +218,7 @@ int main() {
 
   // FIXME:
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  glfwSetCursorPos(window, frameBufferWidth / 2, frameBufferHeight / 2);
 
   Event event{};
   bool running = true;
@@ -202,7 +228,7 @@ int main() {
       ProcessEvent(&event, &running);
     }
 
-    Renderer3D::RenderScene(g_Scene, shader);
+    Renderer3D::RenderScene(&g_Scene, shader);
     glfwSwapBuffers(window);
   }
 

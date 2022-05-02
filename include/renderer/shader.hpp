@@ -30,7 +30,9 @@
 #include <glm/glm.hpp>
 #include <string>
 
-#include "renderer/core.hpp"
+#include "core.hpp"
+
+namespace vulture {
 
 class Shader {
  public:
@@ -72,3 +74,5 @@ class Shader {
    */
   virtual void LoadUniformMat4(const std::string& name, const glm::mat4& value) = 0;
 };
+
+}  // namespace vulture

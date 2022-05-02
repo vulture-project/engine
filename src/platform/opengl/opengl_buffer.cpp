@@ -27,7 +27,9 @@
 
 #include <glad/glad.h>
 
-#include "renderer/opengl_buffer.hpp"
+#include "platform/opengl/opengl_buffer.hpp"
+
+using namespace vulture;
 
 GLenum GetOpenGLType(BufferDataType type) {
   switch (type)

@@ -33,7 +33,9 @@
 #include <sstream>
 #include <string>
 
-#include "renderer/opengl_shader.hpp"
+#include "platform/opengl/opengl_shader.hpp"
+
+using namespace vulture;
 
 struct ShaderProgramSource {
   std::string vertex_source;

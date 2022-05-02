@@ -1,6 +1,6 @@
 /**
  * @author Nikita Mochalov (github.com/tralf-strues)
- * @file light.hpp
+ * @file mesh.hpp
  * @date 2022-04-28
  *
  * The MIT License (MIT)
@@ -27,10 +27,15 @@
 
 #pragma once
 
-#include <glm/glm.hpp>
+#include "core.hpp"
+#include "renderer/buffer.hpp"
 
-struct PointLightSpecs {
-  glm::vec3 ambient;
-  glm::vec3 diffuse;
-  glm::vec3 specular;
+namespace vulture {
+
+struct Mesh {
+  SharedPtr<VertexArray> vertex_array;
+
+  Mesh(const SharedPtr<VertexArray>& vertex_array) : vertex_array(vertex_array) {}
 };
+
+}  // namespace vulture

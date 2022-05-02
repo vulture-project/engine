@@ -29,6 +29,8 @@
 
 #include "renderer/buffer.hpp"
 
+namespace vulture {
+
 class OpenGLVertexBuffer : public VertexBuffer {
  public:
   OpenGLVertexBuffer(void* data, uint32_t size);
@@ -82,3 +84,5 @@ class OpenGLVertexArray : public VertexArray {
   std::vector<SharedPtr<VertexBuffer>> vertex_buffers_;
   SharedPtr<IndexBuffer> index_buffer_;
 };
+
+}  // namespace vulture

@@ -1,6 +1,6 @@
 /**
  * @author Nikita Mochalov (github.com/tralf-strues)
- * @file renderer3d.cpp
+ * @file opengl_shader.hpp
  * @date 2022-04-27
  *
  * The MIT License (MIT)
@@ -25,32 +25,31 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "renderer/renderer3d.hpp"
+#pragma once
 
-#include "components/components.hpp"
+#include "renderer/shader.hpp"
 
-ScopePtr<RendererAPI> Renderer3D::rendererAPI_;
+namespace vulture {
 
-void Renderer3D::Init() {
-  rendererAPI_ = RendererAPI::Create();
-  rendererAPI_->Init();
-}
+class OpenGLShader : public Shader {
+ public:
+  OpenGLShader(const std::string& filename);
+  OpenGLShader(const std::string& vertex_shader, const std::string& fragment_shader);
 
-void Renderer3D::SetViewport(const Viewport& viewport) { rendererAPI_->SetViewport(viewport); }
+  virtual ~OpenGLShader();
 
-void Renderer3D::RenderScene(const Scene& scene, const SharedPtr<Shader>& shader) {
-  shader->Bind();
-  shader->LoadUniformFloat3("u_wsLightPos", scene.light->pos);
-  shader->LoadUniformMat4("u_ProjectionView", scene.camera->CalculateTransform());
+  virtual void Bind() const override;
+  virtual void Unbind() const override;
 
-  glm::mat4 projectionView = scene.camera->CalculateTransform();
+  virtual void LoadUniformInt(const std::string& name, int value) override;
+  virtual void LoadUniformFloat(const std::string& name, float value) override;
+  virtual void LoadUniformFloat2(const std::string& name, const glm::vec2& value) override;
+  virtual void LoadUniformFloat3(const std::string& name, const glm::vec3& value) override;
+  virtual void LoadUniformFloat4(const std::string& name, const glm::vec4& value) override;
+  virtual void LoadUniformMat4(const std::string& name, const glm::mat4& value) override;
 
-  rendererAPI_->Clear(glm::vec4{0, 0, 0, 0});
-  for (const auto& mesh : scene.meshes) {
-    shader->LoadUniformMat4("u_Model", mesh.CalculateModelTransform());
+ private:
+  uint32_t id_{0};
+};
 
-    glm::mat4 model = mesh.CalculateModelTransform();
-
-    rendererAPI_->Draw(*mesh.mesh->vertex_array);
-  }
-}
+}  // namespace vulture

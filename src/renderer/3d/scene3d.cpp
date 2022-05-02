@@ -1,21 +1,21 @@
 /**
  * @author Nikita Mochalov (github.com/tralf-strues)
- * @file shader.cpp
- * @date 2022-04-27
- * 
+ * @file scene3d.cpp
+ * @date 2022-05-01
+ *
  * The MIT License (MIT)
  * Copyright (c) vulture-project
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
  * the rights to use, copy, modify, merge, publish, distribute, sublicense,
  * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,26 +25,35 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "platform/opengl/opengl_shader.hpp"
-#include "renderer/renderer_api.hpp"
-#include "renderer/shader.hpp"
+#include "renderer/3d/scene3d.hpp"
 
 using namespace vulture;
 
-SharedPtr<Shader> Shader::Create(const std::string& filename) {
-  switch (RendererAPI::GetAPI()) {
-    case RendererAPI::API::kOpenGL: { return CreateShared<OpenGLShader>(filename); }
-    default:                        { assert(false); }
+Scene3D::~Scene3D() {
+  for (auto camera : cameras_) {
+    delete camera;
   }
 
-  return nullptr;
-}
-
-SharedPtr<Shader> Shader::Create(const std::string& vertexShader, const std::string& fragmentShader) {
-  switch (RendererAPI::GetAPI()) {
-    case RendererAPI::API::kOpenGL: { return CreateShared<OpenGLShader>(vertexShader, fragmentShader); }
-    default:                        { assert(false); }
+  for (auto light_source : light_sources_) {
+    delete light_source;
   }
 
-  return nullptr;
+  for (auto model : models_) {
+    delete model;
+  }
 }
+
+void Scene3D::SetMainCamera(CameraNode3D* camera) { main_camera_ = camera; }
+CameraNode3D* Scene3D::GetMainCamera() { return main_camera_; }
+
+void Scene3D::AddCamera(CameraNode3D* camera) { cameras_.push_back(camera); }
+void Scene3D::RemoveCamera(CameraNode3D* camera) { cameras_.remove(camera); }
+const std::list<CameraNode3D*>& Scene3D::GetCameras() const { return cameras_; }
+
+void Scene3D::AddLightSource(LightSourceNode3D* light_source) { light_sources_.push_back(light_source); }
+void Scene3D::RemoveLightSource(LightSourceNode3D* light_source) { light_sources_.remove(light_source); }
+const std::list<LightSourceNode3D*>& Scene3D::GetLightSources() const { return light_sources_; }
+
+void Scene3D::AddModel(ModelNode3D* model) { models_.push_back(model); }
+void Scene3D::RemoveModel(ModelNode3D* model) { models_.remove(model); }
+const std::list<ModelNode3D*>& Scene3D::GetModels() const { return models_; }

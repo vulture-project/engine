@@ -1,7 +1,7 @@
 /**
  * @author Nikita Mochalov (github.com/tralf-strues)
- * @file mesh.hpp
- * @date 2022-04-28
+ * @file renderer3d.cpp
+ * @date 2022-04-27
  *
  * The MIT License (MIT)
  * Copyright (c) vulture-project
@@ -25,13 +25,28 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#pragma once
+#include "renderer/3d/renderer3d.hpp"
 
-#include "renderer/buffer.hpp"
-#include "renderer/core.hpp"
+using namespace vulture;
 
-struct Mesh {
-  SharedPtr<VertexArray> vertex_array;
+ScopePtr<RendererAPI> Renderer3D::rendererAPI_;
 
-  Mesh(const SharedPtr<VertexArray>& vertex_array) : vertex_array(vertex_array) {}
-};
+void Renderer3D::Init() {
+  rendererAPI_ = RendererAPI::Create();
+  rendererAPI_->Init();
+}
+
+void Renderer3D::SetViewport(const Viewport& viewport) { rendererAPI_->SetViewport(viewport); }
+
+void Renderer3D::RenderScene(Scene3D* scene, const SharedPtr<Shader>& shader) {
+  shader->Bind();
+  shader->LoadUniformFloat3("u_wsLightPos", (*scene->GetLightSources().begin())->transform.translation);
+  shader->LoadUniformMat4("u_ProjectionView", scene->GetMainCamera()->CalculateProjectionMatrix() *
+                                                  scene->GetMainCamera()->CalculateViewMatrix());
+
+  rendererAPI_->Clear(glm::vec4{0, 0, 0, 0});
+  for (const auto& model : scene->GetModels()) {
+    shader->LoadUniformMat4("u_Model", model->transform.CalculateMatrix());
+    rendererAPI_->Draw(*model->mesh->vertex_array);
+  }
+}

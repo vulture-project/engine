@@ -1,7 +1,7 @@
 /**
  * @author Nikita Mochalov (github.com/tralf-strues)
- * @file camera.cpp
- * @date 2022-04-28
+ * @file opengl_renderer_api.cpp
+ * @date 2022-04-27
  *
  * The MIT License (MIT)
  * Copyright (c) vulture-project
@@ -25,8 +25,30 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "renderer/camera.hpp"
+#include <glad/glad.h>
 
-glm::mat4 PerspectiveCameraSpecs::CalculateProjectionTransform() const {
-  return glm::perspective<float>(fov, aspect_ratio, near, far);
+#include "platform/opengl/opengl_renderer_api.hpp"
+
+using namespace vulture;
+
+void OpenGLRendererAPI::Init() {
+  // TODO:
+  glEnable(GL_DEPTH_TEST);
+}
+
+void OpenGLRendererAPI::SetViewport(const Viewport& viewport) {
+  glViewport(viewport.x, viewport.y, viewport.width, viewport.height);
+  viewport_ = viewport;
+}
+
+Viewport OpenGLRendererAPI::GetViewport() const { return viewport_; }
+
+void OpenGLRendererAPI::Clear(const glm::vec4& color) {
+  glClearColor(color.r, color.g, color.b, color.a);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+void OpenGLRendererAPI::Draw(const VertexArray& vertexArray) {
+  glDrawElements(GL_TRIANGLES, vertexArray.GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+  glBindTexture(GL_TEXTURE_2D, 0);  // TODO: enable several textures
 }

@@ -1,7 +1,7 @@
 /**
  * @author Nikita Mochalov (github.com/tralf-strues)
- * @file core.hpp
- * @date 2022-04-27
+ * @file camera.hpp
+ * @date 2022-04-28
  *
  * The MIT License (MIT)
  * Copyright (c) vulture-project
@@ -28,46 +28,22 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <iostream>
-#include <list>
-#include <memory>
-#include <vector>
 
-#include "platform/window.hpp"
+#include "core.hpp"
 
-#define ASSERT(x)                                                                                                   \
-  if (!(x)) {                                                                                                       \
-    std::cout << "Assertion failed in " << __PRETTY_FUNCTION__ << " on line " << std::dec << __LINE__ << std::endl; \
+namespace vulture {
+
+struct PerspectiveCameraSpecs {
+  float fov = 45.0f;
+  float near = 0.01f;
+  float far = 1000.0f;
+  float aspect_ratio = 0.0f;
+
+  PerspectiveCameraSpecs(float aspect_ratio = 0.0f) : aspect_ratio(aspect_ratio) {}
+
+  glm::mat4 CalculateProjectionMatrix() const {
+    return glm::perspective(fov, aspect_ratio, near, far);
   }
+};
 
-#define GL_CALL(x)     \
-  OpenglClearErrors(); \
-  x;                   \
-  ASSERT(OpenglLogCall());
-
-void OpenglClearErrors();
-
-bool OpenglLogCall();
-
-template <typename T>
-using SharedPtr = std::shared_ptr<T>;
-
-template <typename T, typename... Args>
-constexpr SharedPtr<T> CreateShared(Args&&... args) {
-  return std::make_shared<T>(std::forward<Args>(args)...);
-}
-
-template <typename T>
-using ScopePtr = std::unique_ptr<T>;
-
-template <typename T, typename... Args>
-constexpr ScopePtr<T> CreateScope(Args&&... args) {
-  return std::make_unique<T>(std::forward<Args>(args)...);
-}
-
-template<typename T>
-using Vector = std::vector<T>;
-
-template<typename T>
-using List = std::list<T>;
+}  // namespace vulture

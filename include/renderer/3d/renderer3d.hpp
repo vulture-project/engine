@@ -1,6 +1,6 @@
 /**
  * @author Nikita Mochalov (github.com/tralf-strues)
- * @file opengl_renderer_api.cpp
+ * @file renderer3d.hpp
  * @date 2022-04-27
  *
  * The MIT License (MIT)
@@ -25,28 +25,23 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include <glad/glad.h>
+#pragma once
 
-#include "renderer/opengl_renderer_api.hpp"
+#include "core.hpp"
+#include "renderer/renderer_api.hpp"
+#include "renderer/shader.hpp"
+#include "renderer/3d/scene3d.hpp"
 
-void OpenGLRendererAPI::Init() {
-  // TODO:
-  glEnable(GL_DEPTH_TEST);
-}
+namespace vulture {
 
-void OpenGLRendererAPI::SetViewport(const Viewport& viewport) {
-  glViewport(viewport.x, viewport.y, viewport.width, viewport.height);
-  viewport_ = viewport;
-}
+class Renderer3D {
+ public:
+  static void Init();
+  static void SetViewport(const Viewport& viewport);
+  static void RenderScene(Scene3D* scene, /*FIXME:*/ const SharedPtr<Shader>& shader);
 
-Viewport OpenGLRendererAPI::GetViewport() const { return viewport_; }
+ private:
+  static ScopePtr<RendererAPI> rendererAPI_;
+};
 
-void OpenGLRendererAPI::Clear(const glm::vec4& color) {
-  glClearColor(color.r, color.g, color.b, color.a);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-}
-
-void OpenGLRendererAPI::Draw(const VertexArray& vertexArray) {
-  glDrawElements(GL_TRIANGLES, vertexArray.GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
-  glBindTexture(GL_TEXTURE_2D, 0);  // TODO: enable several textures
-}
+}  // namespace vulture

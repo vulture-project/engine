@@ -1,6 +1,6 @@
 /**
  * @author Nikita Mochalov (github.com/tralf-strues)
- * @file resource_loader.hpp
+ * @file opengl_renderer_api.h
  * @date 2022-04-27
  *
  * The MIT License (MIT)
@@ -25,10 +25,21 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#pragma once
+#include "renderer/renderer_api.hpp"
 
-#include <string>
+namespace vulture {
 
-#include "renderer/scene.hpp"
+class OpenGLRendererAPI : public RendererAPI {
+ public:
+  void Init() override;
+  void SetViewport(const Viewport& viewport) override;
+  Viewport GetViewport() const override;
 
-SharedPtr<Mesh> ParseMeshObj(const std::string& filename);
+  void Clear(const glm::vec4& color) override;
+  void Draw(const VertexArray& vertex_array) override;
+
+ private:
+  Viewport viewport_;
+};
+
+}  // namespace vulture

@@ -31,7 +31,9 @@
 #include <string>
 #include <vector>
 
-#include "renderer/core.hpp"
+#include "core.hpp"
+
+namespace vulture {
 
 //================================================================
 // BufferDataType
@@ -227,3 +229,5 @@ class VertexArray {
   virtual const std::vector<SharedPtr<VertexBuffer>>& GetVertexBuffers() const = 0;
   virtual const SharedPtr<IndexBuffer>& GetIndexBuffer() const = 0;
 };
+
+}  // namespace vulture

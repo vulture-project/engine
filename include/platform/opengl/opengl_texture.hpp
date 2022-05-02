@@ -1,6 +1,6 @@
 /**
  * @author Nikita Mochalov (github.com/tralf-strues)
- * @file camera.hpp
+ * @file opengl_texture.hpp
  * @date 2022-04-28
  *
  * The MIT License (MIT)
@@ -27,17 +27,25 @@
 
 #pragma once
 
-#include <glm/glm.hpp>
+#include "renderer/texture.hpp"
 
-#include "renderer/core.hpp"
+namespace vulture {
 
-struct PerspectiveCameraSpecs {
-  float fov = 45.0f;
-  float near = 0.01f;
-  float far = 1000.0f;
-  float aspect_ratio = 0.0f;
+class OpenGLTexture : public Texture {
+ public:
+  OpenGLTexture(const std::string& filename);
+  virtual ~OpenGLTexture();
 
-  PerspectiveCameraSpecs(float aspect_ratio = 0.0f) : aspect_ratio(aspect_ratio) {}
+  virtual uint32_t GetWidth() const override;
+  virtual uint32_t GetHeight() const override;
+  virtual uint32_t GetID() const override;
 
-  glm::mat4 CalculateProjectionTransform() const;
+  virtual void Bind(uint32_t slot = 0) const override;
+
+ private:
+  uint32_t width_;
+  uint32_t height_;
+  uint32_t id_;
 };
+
+}  // namespace vulture

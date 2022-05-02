@@ -1,6 +1,6 @@
 /**
  * @author Nikita Mochalov (github.com/tralf-strues)
- * @file renderer_api.hpp
+ * @file core.hpp
  * @date 2022-04-27
  *
  * The MIT License (MIT)
@@ -27,39 +27,51 @@
 
 #pragma once
 
-#include "core.hpp"
-#include "renderer/buffer.hpp"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <iostream>
+#include <list>
+#include <memory>
+#include <vector>
+
+#include "platform/window.hpp"
+
+#define ASSERT(x)                                                                                                   \
+  if (!(x)) {                                                                                                       \
+    std::cout << "Assertion failed in " << __PRETTY_FUNCTION__ << " on line " << std::dec << __LINE__ << std::endl; \
+  }
+
+#define GL_CALL(x)     \
+  OpenglClearErrors(); \
+  x;                   \
+  ASSERT(OpenglLogCall());
 
 namespace vulture {
 
-struct Viewport {
-  uint32_t x{0};
-  uint32_t y{0};
-  uint32_t width{0};
-  uint32_t height{0};
-};
+void OpenglClearErrors();
 
-class RendererAPI {
- public:
-  enum class API { kInvalid = 0, kOpenGL };
+bool OpenglLogCall();
 
-  static ScopePtr<RendererAPI> Create();
-  static API GetAPI();
-  static void SetAPI(API api);
+template <typename T>
+using SharedPtr = std::shared_ptr<T>;
 
- public:
-  virtual ~RendererAPI() = default;
+template <typename T, typename... Args>
+constexpr SharedPtr<T> CreateShared(Args&&... args) {
+  return std::make_shared<T>(std::forward<Args>(args)...);
+}
 
-  virtual void Init() = 0;
+template <typename T>
+using ScopePtr = std::unique_ptr<T>;
 
-  virtual void SetViewport(const Viewport& viewport) = 0;
-  virtual Viewport GetViewport() const = 0;
+template <typename T, typename... Args>
+constexpr ScopePtr<T> CreateScope(Args&&... args) {
+  return std::make_unique<T>(std::forward<Args>(args)...);
+}
 
-  virtual void Clear(const glm::vec4& color) = 0;
-  virtual void Draw(const VertexArray& vertex_array) = 0;
+template<typename T>
+using Vector = std::vector<T>;
 
- private:
-  static API api_;
-};
+template<typename T>
+using List = std::list<T>;
 
 }  // namespace vulture

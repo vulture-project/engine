@@ -27,7 +27,9 @@
 
 #pragma once
 
-#include "renderer/core.hpp"
+#include "core.hpp"
+
+namespace vulture {
 
 class Texture {
  public:
@@ -41,3 +43,5 @@ class Texture {
 
   static SharedPtr<Texture> Create(const std::string &filename);
 };
+
+}  // namespace vulture

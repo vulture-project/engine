@@ -1,6 +1,6 @@
 /**
  * @author Nikita Mochalov (github.com/tralf-strues)
- * @file opengl_texture.cpp
+ * @file light.hpp
  * @date 2022-04-28
  *
  * The MIT License (MIT)
@@ -25,36 +25,28 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "renderer/opengl_texture.hpp"
+#pragma once
 
-#include <glad/glad.h>
-#include <stb_image/stb_image.h>
+#include <glm/glm.hpp>
 
-OpenGLTexture::OpenGLTexture(const std::string& filename) {
-  int32_t width, height, channels;
-  uint8_t* data = stbi_load(filename.c_str(), &width, &height, &channels, /*desired_channels=*/0);
-  assert(data);
+namespace vulture {
 
-  glGenTextures(1, &id_);
-  glBindTexture(GL_TEXTURE_2D, id_);
+struct LightSourceSpecs {
+  enum class Type {
+    kAmbient,
+    kPoint,
 
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    kTotal
+  };
 
-  glTexImage2D(GL_TEXTURE_2D, /*level=*/0, GL_RGB, width, height, /*border=*/0, GL_RGB, GL_UNSIGNED_BYTE, data);
-  glGenerateMipmap(GL_TEXTURE_2D);
+  Type type;
 
-  stbi_image_free(data);
-}
+  glm::vec3 ambient;
+  glm::vec3 diffuse;
+  glm::vec3 specular;
 
-OpenGLTexture::~OpenGLTexture() { glDeleteTextures(1, &id_); }
+  LightSourceSpecs(Type type, const glm::vec3 ambient, const glm::vec3 diffuse, const glm::vec3 specular)
+      : type(type), ambient(ambient), diffuse(diffuse), specular(specular) {}
+};
 
-uint32_t OpenGLTexture::GetWidth() const { return width_; }
-uint32_t OpenGLTexture::GetHeight() const { return height_; }
-uint32_t OpenGLTexture::GetID() const { return id_; }
-
-void OpenGLTexture::Bind(uint32_t slot) const {
-  glBindTextureUnit(slot, id_);
-}
+}  // namespace vulture

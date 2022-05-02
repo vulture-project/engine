@@ -1,21 +1,21 @@
 /**
  * @author Nikita Mochalov (github.com/tralf-strues)
- * @file opengl_renderer_api.h
+ * @file core.cpp
  * @date 2022-04-27
- *
+ * 
  * The MIT License (MIT)
  * Copyright (c) vulture-project
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
  * the rights to use, copy, modify, merge, publish, distribute, sublicense,
  * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,17 +25,24 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "renderer/renderer_api.hpp"
+#include <glad/glad.h>
 
-class OpenGLRendererAPI : public RendererAPI {
- public:
-  void Init() override;
-  void SetViewport(const Viewport& viewport) override;
-  Viewport GetViewport() const override;
+#include "core.hpp"
 
-  void Clear(const glm::vec4& color) override;
-  void Draw(const VertexArray& vertex_array) override;
+using namespace vulture;
 
- private:
-  Viewport viewport_;
-};
+void OpenglClearErrors()
+{
+    while (glGetError());
+}
+
+bool OpenglLogCall()
+{
+    while (GLenum error = glGetError())
+    {
+        std::cout << "[OpenGL error] Error code 0x" << std::hex << error << std::endl;
+        return false;
+    }
+
+    return true;
+}

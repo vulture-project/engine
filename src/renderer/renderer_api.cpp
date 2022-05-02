@@ -25,8 +25,10 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "renderer/opengl_renderer_api.hpp"
+#include "platform/opengl/opengl_renderer_api.hpp"
 #include "renderer/renderer_api.hpp"
+
+using namespace vulture;
 
 RendererAPI::API RendererAPI::api_ = RendererAPI::API::kOpenGL;
 

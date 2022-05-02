@@ -25,8 +25,10 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "renderer/opengl_buffer.hpp"
+#include "platform/opengl/opengl_buffer.hpp"
 #include "renderer/renderer_api.hpp"
+
+using namespace vulture;
 
 const BufferDataTypeSpec BufferDataTypeSpec::Get(BufferDataType type) {
   return kShaderDataTypeSpecs[static_cast<uint8_t>(type)];
