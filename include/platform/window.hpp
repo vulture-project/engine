@@ -33,28 +33,27 @@ struct GLFWwindow;
 
 typedef GLFWwindow NativeWindow;
 
-class Window
-{
-  public:
-    explicit Window(size_t width = kDefaultWidth, size_t height = kDefaultHeight,
-           const char* title = kDefaultTitle);
-    ~Window();
+class Window {
+ public:
+  explicit Window(size_t width = kDefaultWidth, size_t height = kDefaultHeight,
+                  const char* title = kDefaultTitle);
+  ~Window();
 
-    Window(const Window&) = delete;
-    Window(Window&&) = delete;
+  Window(const Window&) = delete;
+  Window(Window&&) = delete;
 
-    Window& operator=(const Window&) = delete;
-    Window& operator=(Window&&) = delete;
+  Window& operator=(const Window&) = delete;
+  Window& operator=(Window&&) = delete;
 
-    NativeWindow* GetNativeWindow();
-    void SetTitle(const char* title);
+  NativeWindow* GetNativeWindow();
+  void SetTitle(const char* title);
 
-  public:
-    static const size_t kDefaultWidth = 640;
-    static const size_t kDefaultHeight = 480;
+ public:
+  static const size_t kDefaultWidth = 640;
+  static const size_t kDefaultHeight = 480;
     
-    static const char* kDefaultTitle;
+  static const char* kDefaultTitle;
 
-  private:
-    NativeWindow* window_;
+ private:
+  NativeWindow* window_;
 };

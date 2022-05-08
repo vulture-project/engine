@@ -33,44 +33,39 @@
 
 const char* Window::kDefaultTitle = "Success is inevitable";
 
-Window::Window(size_t width, size_t height, const char* title)
-{
-    if (!glfwInit())
-    {
-        assert(!"Can't init glfw while creating a window");
-    }
+Window::Window(size_t width, size_t height, const char* title) {
+  if (!glfwInit()) {
+    assert(!"Can't init glfw while creating a window");
+  }
 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 #ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, 1);
+  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, 1);
 #endif
 
-    window_ = glfwCreateWindow(width, height, title, NULL, NULL);
-    assert(window_ && "Can't create a window");
+  window_ = glfwCreateWindow(width, height, title, NULL, NULL);
+  assert(window_ && "Can't create a window");
 
-    glfwMakeContextCurrent(window_);
+  glfwMakeContextCurrent(window_);
 }
 
-void Window::SetTitle(const char* title)
-{
-    assert(window_);
-    assert(title);
+void Window::SetTitle(const char* title) {
+  assert(window_);
+  assert(title);
 
-    glfwSetWindowTitle(window_, title);
+  glfwSetWindowTitle(window_, title);
 }
 
-GLFWwindow* Window::GetNativeWindow()
-{
-    return window_;
+GLFWwindow* Window::GetNativeWindow() {
+  return window_;
 }
 
-Window::~Window()
-{
-    assert(window_);
-    glfwDestroyWindow(window_);
+Window::~Window() {
+  assert(window_);
+  glfwDestroyWindow(window_);
 
-    glfwTerminate();
+  glfwTerminate();
 }
