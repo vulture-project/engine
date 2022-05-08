@@ -36,10 +36,12 @@ class OpenGLShader : public Shader {
   OpenGLShader(const std::string& filename);
   OpenGLShader(const std::string& vertex_shader, const std::string& fragment_shader);
 
-  virtual ~OpenGLShader();
+  virtual ~OpenGLShader() override;
 
   virtual void Bind() const override;
   virtual void Unbind() const override;
+
+  virtual const AttributeLocationMap& GetAttributeLocations() const override;
 
   virtual void LoadUniformInt(const std::string& name, int value) override;
   virtual void LoadUniformFloat(const std::string& name, float value) override;
@@ -49,7 +51,11 @@ class OpenGLShader : public Shader {
   virtual void LoadUniformMat4(const std::string& name, const glm::mat4& value) override;
 
  private:
+  void SetAttributeLocations();
+
+ private:
   uint32_t id_{0};
+  AttributeLocationMap attribute_locations_;
 };
 
 }  // namespace vulture

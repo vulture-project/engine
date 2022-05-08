@@ -49,6 +49,7 @@ void OpenGLRendererAPI::Clear(const glm::vec4& color) {
 }
 
 void OpenGLRendererAPI::Draw(const VertexArray& vertexArray) {
+  vertexArray.Bind();
   glDrawElements(GL_TRIANGLES, vertexArray.GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
   glBindTexture(GL_TEXTURE_2D, 0);  // TODO: enable several textures
 }

@@ -27,6 +27,8 @@
 
 #include "renderer/3d/renderer3d.hpp"
 
+#include "renderer/3d/3d_default_shader_names.hpp"
+
 using namespace vulture;
 
 ScopePtr<RendererAPI> Renderer3D::rendererAPI_;
@@ -38,15 +40,66 @@ void Renderer3D::Init() {
 
 void Renderer3D::SetViewport(const Viewport& viewport) { rendererAPI_->SetViewport(viewport); }
 
-void Renderer3D::RenderScene(Scene3D* scene, const SharedPtr<Shader>& shader) {
-  shader->Bind();
-  shader->LoadUniformFloat3("u_wsLightPos", (*scene->GetLightSources().begin())->transform.translation);
-  shader->LoadUniformMat4("u_ProjectionView", scene->GetMainCamera()->CalculateProjectionMatrix() *
-                                                  scene->GetMainCamera()->CalculateViewMatrix());
-
+void Renderer3D::RenderScene(Scene3D* scene) {
   rendererAPI_->Clear(glm::vec4{0, 0, 0, 0});
+
   for (const auto& model : scene->GetModels()) {
-    shader->LoadUniformMat4("u_Model", model->transform.CalculateMatrix());
-    rendererAPI_->Draw(*model->mesh->vertex_array);
+    auto shader = model->mesh->GetMaterial()->GetShader();
+    shader->Bind();
+
+    SetUpCamera(scene, shader);
+    SetUpLights(scene, shader);
+
+    /* Setting up transformation matrices */
+    shader->LoadUniformMat4(kUniformNameProjectionView, scene->GetMainCamera()->CalculateProjectionMatrix() *
+                                                            scene->GetMainCamera()->CalculateViewMatrix());
+
+    shader->LoadUniformMat4(kUniformNameModel, model->transform.CalculateMatrix());
+
+    /* Setting up material info */
+    model->mesh->GetMaterial()->LoadUniformsToShader();
+
+    /* Drawing */
+    rendererAPI_->Draw(*model->mesh->GetVertexArray());
   }
+}
+
+void Renderer3D::SetUpCamera(Scene3D* scene, const SharedPtr<Shader>& shader) {
+  assert(scene->GetMainCamera());
+  shader->LoadUniformFloat3(kUniformNameWSCamera, scene->GetMainCamera()->transform.translation);
+}
+
+void Renderer3D::SetUpLights(Scene3D* scene, const SharedPtr<Shader>& shader) {
+  static char uniform_name[kMaxUniformNameLength];  // NOTE: Not needed once start using uniform buffers
+
+  uint32_t i = 0;
+  for (const auto& light_source : scene->GetLightSources()) {
+    std::snprintf(uniform_name, kMaxUniformNameLength, "%s[%u].%s", kUniformNamePointLights, i,
+                  kStructMemberNameAmbientColor);
+    shader->LoadUniformFloat3(uniform_name, light_source->specs.ambient);
+
+    std::snprintf(uniform_name, kMaxUniformNameLength, "%s[%u].%s", kUniformNamePointLights, i,
+                  kStructMemberNameDiffuseColor);
+    shader->LoadUniformFloat3(uniform_name, light_source->specs.diffuse);
+
+    std::snprintf(uniform_name, kMaxUniformNameLength, "%s[%u].%s", kUniformNamePointLights, i,
+                  kStructMemberNameSpecularColor);
+    shader->LoadUniformFloat3(uniform_name, light_source->specs.specular);
+
+    std::snprintf(uniform_name, kMaxUniformNameLength, "%s[%u].%s", kUniformNamePointLights, i,
+                  kStructMemberNameWSPosition);
+    shader->LoadUniformFloat3(uniform_name, light_source->transform.translation);
+
+    std::snprintf(uniform_name, kMaxUniformNameLength, "%s[%u].%s", kUniformNamePointLights, i,
+                  kStructMemberNameAttenuationLinear);
+    shader->LoadUniformFloat(uniform_name, light_source->specs.attenuation_linear);
+
+    std::snprintf(uniform_name, kMaxUniformNameLength, "%s[%u].%s", kUniformNamePointLights, i,
+                  kStructMemberNameAttenuationQuadratic);
+    shader->LoadUniformFloat(uniform_name, light_source->specs.attenuation_quadratic);
+
+    ++i;
+  }
+
+  shader->LoadUniformInt(kUniformNamePointLightsCount, scene->GetLightSources().size());
 }

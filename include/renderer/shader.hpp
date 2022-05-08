@@ -31,6 +31,7 @@
 #include <string>
 
 #include "core/core.hpp"
+#include "renderer/buffer.hpp"
 
 namespace vulture {
 
@@ -43,6 +44,8 @@ class Shader {
 
   virtual void Bind() const = 0;
   virtual void Unbind() const = 0;
+
+  virtual const AttributeLocationMap& GetAttributeLocations() const = 0;
 
   /**
    * @attention Uniform loading functions bind Shader!

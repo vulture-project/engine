@@ -38,7 +38,11 @@ class Renderer3D {
  public:
   static void Init();
   static void SetViewport(const Viewport& viewport);
-  static void RenderScene(Scene3D* scene, /*FIXME:*/ const SharedPtr<Shader>& shader);
+  static void RenderScene(Scene3D* scene);
+
+ private:
+  static void SetUpCamera(Scene3D* scene, const SharedPtr<Shader>& shader);
+  static void SetUpLights(Scene3D* scene, const SharedPtr<Shader>& shader);
 
  private:
   static ScopePtr<RendererAPI> rendererAPI_;
