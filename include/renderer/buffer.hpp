@@ -32,7 +32,7 @@
 #include <string>
 #include <vector>
 
-#include "core.hpp"
+#include "core/core.hpp"
 
 namespace vulture {
 

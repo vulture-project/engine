@@ -29,7 +29,7 @@
 
 #include <vector>
 
-#include "core.hpp"
+#include "core/core.hpp"
 #include "renderer/buffer.hpp"
 #include "renderer/material.hpp"
 

@@ -27,7 +27,7 @@
 
 #pragma once
 
-#include "core.hpp"
+#include "core/core.hpp"
 #include "renderer/renderer_api.hpp"
 #include "renderer/shader.hpp"
 #include "renderer/3d/scene3d.hpp"
