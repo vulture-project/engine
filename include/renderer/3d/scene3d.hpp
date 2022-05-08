@@ -50,6 +50,10 @@ constexpr glm::vec3 kDefaultCameraForwardVector{0, 0, -1};
 constexpr glm::vec3 kDefaultCameraUpVector{0, 1, 0};
 constexpr glm::vec3 kDefaultCameraRightVector{1, 0, 0};
 
+/**
+ * @brief Specifies a 3D camera.
+ * @warning There must be one main camera selected in the scene @see Scene3D::SetMainCamera() to render!
+ */
 struct CameraNode3D : public SceneNode3D {
   PerspectiveCameraSpecs specs;
 
@@ -72,11 +76,62 @@ struct CameraNode3D : public SceneNode3D {
   }
 };
 
-struct LightSourceNode3D : public SceneNode3D {
-  LightSourceSpecs specs;
+constexpr uint32_t kMaxPointLightSources = 4;
+constexpr uint32_t kMaxSpotLightSources = 4;
 
-  LightSourceNode3D(const LightSourceSpecs& specs, const Transform& transform = Transform())
-      : SceneNode3D(transform), specs(specs) {}
+/**
+ * @brief Represents on of the three types of light sources: Directional, Point and Spot lights.
+ *
+ * @attention There are currently limitations on the numbers of different type light sources you can
+ * use for rendering (Renderer3D will just use the maximum number of light sources possible, you can
+ * still have as much LightSourceNode3D instances in a scene as you want)!
+ * 1) There can be only ONE Directional Light
+ * 2) There can be @see kMaxPointLightSources Point Lights
+ * 3) There can be @see kMaxSpotLightSources Spot Lights
+ */
+class LightSourceNode3D : public SceneNode3D {
+ public:
+  union LightSourceSpecs {
+    DirectionalLightSpecs directional;
+    PointLightSpecs point;
+    SpotLightSpecs spot;
+
+    LightSourceSpecs(const DirectionalLightSpecs& directional) : directional(directional) {}
+    LightSourceSpecs(const PointLightSpecs& point) : point(point) {}
+    LightSourceSpecs(const SpotLightSpecs& spot) : spot(spot) {}
+  };
+
+  LightSourceNode3D(const DirectionalLightSpecs& specs, const Transform& transform = Transform())
+      : SceneNode3D(transform), specs_(specs), type_(LightType::kDirectional) {}
+
+  LightSourceNode3D(const PointLightSpecs& specs, const Transform& transform = Transform())
+      : SceneNode3D(transform), specs_(specs), type_(LightType::kPoint) {}
+
+  LightSourceNode3D(const SpotLightSpecs& specs, const Transform& transform = Transform())
+      : SceneNode3D(transform), specs_(specs), type_(LightType::kSpot) {}
+
+  LightType GetType() const { return type_; }
+
+  const LightSourceSpecs& GetLightSpecs() const { return specs_; }
+
+  void SetLightSpecs(const DirectionalLightSpecs& specs) {
+    specs_.directional = specs;
+    type_ = LightType::kDirectional;
+  }
+
+  void SetLightSpecs(const PointLightSpecs& specs) {
+    specs_.point = specs;
+    type_ = LightType::kPoint;
+  }
+
+  void SetLightSpecs(const SpotLightSpecs& specs) {
+    specs_.spot = specs;
+    type_ = LightType::kSpot;
+  }
+
+ private:
+  LightSourceSpecs specs_;
+  LightType type_{LightType::kInvalid};
 };
 
 struct ModelNode3D : public SceneNode3D {

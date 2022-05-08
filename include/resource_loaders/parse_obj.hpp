@@ -33,6 +33,12 @@
 
 namespace vulture {
 
+/**
+ * @brief Loads a Mesh from the specified Wavefront file.
+ * 
+ * @param filename
+ * @return SharedPtr<Mesh> 
+ */
 SharedPtr<Mesh> ParseMeshObj(const std::string& filename);
 
 }  // namespace vulture

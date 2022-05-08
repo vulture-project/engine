@@ -25,6 +25,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#include "platform/opengl/opengl_shader.hpp"
+
 #include <alloca.h>
 #include <glad/glad.h>
 
@@ -32,8 +34,6 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <sstream>
 #include <string>
-
-#include "platform/opengl/opengl_shader.hpp"
 
 using namespace vulture;
 
@@ -121,10 +121,12 @@ OpenGLShader::OpenGLShader(const std::string& filename) {
   std::cout << "Fragment Shader:\n" << src.fragment_source << "\n";
 
   id_ = CreateShader(src.vertex_source.c_str(), src.fragment_source.c_str());
+  SetAttributeLocations();
 }
 
 OpenGLShader::OpenGLShader(const std::string& vertex_shader, const std::string& fragment_shader) {
   id_ = CreateShader(vertex_shader, fragment_shader);
+  SetAttributeLocations();
 }
 
 OpenGLShader::~OpenGLShader() { glDeleteProgram(id_); }
@@ -133,38 +135,87 @@ void OpenGLShader::Bind() const { glUseProgram(id_); }
 
 void OpenGLShader::Unbind() const { glUseProgram(0); }
 
+const AttributeLocationMap& OpenGLShader::GetAttributeLocations() const { return attribute_locations_; }
+
+void OpenGLShader::SetAttributeLocations() {
+  int32_t attribs_count = 0;
+  glGetProgramiv(id_, GL_ACTIVE_ATTRIBUTES, &attribs_count);
+
+  const uint32_t kAttribNameMaxLength = 128;
+  char attrib_name[kAttribNameMaxLength];
+  int32_t attrib_name_length = 0;
+
+  int32_t attrib_size = 0;
+  GLenum attrib_type;
+
+  for (int32_t i = 0; i < attribs_count; i++) {
+    glGetActiveAttrib(id_, static_cast<uint32_t>(i), kAttribNameMaxLength, &attrib_name_length, &attrib_size,
+                      &attrib_type, attrib_name);
+    assert(attrib_name_length != 0);
+
+    int32_t location = glGetAttribLocation(id_, attrib_name);
+    assert(location != -1);
+
+    attribute_locations_[attrib_name] = static_cast<uint32_t>(location);
+  }
+}
+
+static void CheckUniformLoadSuccess(GLint uniform_location, const std::string& uniform_name) {
+  if (uniform_location == -1) {
+    printf("Failed to load uniform \"%s\"!\n", uniform_name.c_str());
+  }
+}
+
 void OpenGLShader::LoadUniformInt(const std::string& name, int value) {
   Bind();
   GLint location = glGetUniformLocation(id_, name.c_str());
+
+  CheckUniformLoadSuccess(location, name);
+
   glUniform1i(location, value);
 }
 
 void OpenGLShader::LoadUniformFloat(const std::string& name, float value) {
   Bind();
   GLint location = glGetUniformLocation(id_, name.c_str());
+
+  CheckUniformLoadSuccess(location, name);
+
   glUniform1f(location, value);
 }
 
 void OpenGLShader::LoadUniformFloat2(const std::string& name, const glm::vec2& value) {
   Bind();
   GLint location = glGetUniformLocation(id_, name.c_str());
+
+  CheckUniformLoadSuccess(location, name);
+
   glUniform2f(location, value.x, value.y);
 }
 
 void OpenGLShader::LoadUniformFloat3(const std::string& name, const glm::vec3& value) {
   Bind();
   GLint location = glGetUniformLocation(id_, name.c_str());
+
+  CheckUniformLoadSuccess(location, name);
+
   glUniform3f(location, value.x, value.y, value.z);
 }
 
 void OpenGLShader::LoadUniformFloat4(const std::string& name, const glm::vec4& value) {
   Bind();
   GLint location = glGetUniformLocation(id_, name.c_str());
+
+  CheckUniformLoadSuccess(location, name);
+
   glUniform4f(location, value.x, value.y, value.z, value.w);
 }
 
 void OpenGLShader::LoadUniformMat4(const std::string& name, const glm::mat4& value) {
   Bind();
   GLint location = glGetUniformLocation(id_, name.c_str());
+
+  CheckUniformLoadSuccess(location, name);
+
   glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
 }

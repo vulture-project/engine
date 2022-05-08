@@ -32,6 +32,7 @@
 #include <cstring>
 
 #include "resource_loaders/parse_obj.hpp"
+#include "renderer/3d/3d_default_shader_names.hpp"
 
 using namespace vulture;
 
@@ -131,9 +132,9 @@ SharedPtr<Mesh> vulture::ParseMeshObj(const std::string& filename) {
   }
 
   SharedPtr<VertexBuffer> vbo{VertexBuffer::Create(out_vertices.data(), out_vertices.size() * sizeof(out_vertices[0]))};
-  vbo->SetLayout(VertexBufferLayout{{BufferDataType::kFloat3, "msPos"},
-                                    {BufferDataType::kFloat2, "uv"},
-                                    {BufferDataType::kFloat3, "msNormal"}});
+  vbo->SetLayout(VertexBufferLayout{{BufferDataType::kFloat3, kAttribNameMSPosition},
+                                    {BufferDataType::kFloat2, kAttribNameUV},
+                                    {BufferDataType::kFloat3, kAttribNameMSNormal}});
 
   SharedPtr<IndexBuffer> ibo{IndexBuffer::Create(out_indices.data(), out_indices.size())};
 
@@ -141,5 +142,12 @@ SharedPtr<Mesh> vulture::ParseMeshObj(const std::string& filename) {
   vao->AddVertexBuffer(vbo);
   vao->SetIndexBuffer(ibo);
 
-  return CreateShared<Mesh>(vao);
+  /* FIXME: */
+  SharedPtr<Material> material = CreateShared<Material>(Shader::Create("res/shaders/basic.glsl"));
+  material->SetUniform(std::string(kUniformNameMaterial) + "." + std::string(kStructMemberNameAmbientColor),  glm::vec3{5.0});
+  material->SetUniform(std::string(kUniformNameMaterial) + "." + std::string(kStructMemberNameDiffuseColor),  glm::vec3{0.8});
+  material->SetUniform(std::string(kUniformNameMaterial) + "." + std::string(kStructMemberNameSpecularColor), glm::vec3{0.0});
+  material->SetUniform(std::string(kUniformNameMaterial) + "." + std::string(kStructMemberNameSpecularExponent), 1.0f);
+
+  return CreateShared<Mesh>(vao, material);
 }

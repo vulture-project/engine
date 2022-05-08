@@ -47,9 +47,6 @@ using namespace input;
 
 Scene3D g_Scene;
 
-static const LightSourceSpecs kPointLightSpecs{LightSourceSpecs::Type::kPoint, glm::vec3{1, 0, 0}, glm::vec3{0.5},
-                                               glm::vec3{1, 1, 1}};
-
 void ProcessMoveEvent(Event* event) {
   assert(event);
 
@@ -156,7 +153,7 @@ void ProcessEvent(Event* event, bool* running) {
 }
 
 int main() {
-  Window _window{};
+  Window _window{1280, 960};
   EventQueue::SetWindow(&_window);
   NativeWindow* window = _window.GetNativeWindow();
 
@@ -169,48 +166,34 @@ int main() {
     return -1;
   }
 
-  // ecs::EntityFactory entity_factory;
-  // ecs::EntityManager entity_manager;
-  // ecs::ComponentFactory component_factory;
-
-  // g_Scene.camera = entity_factory.CreateEntity<ecs::Entity>();
-  // entity_manager.AddEntity(g_Scene.camera);
-  // g_Scene.camera->AddComponent(component_factory.CreateComponent<TransformComponent>(10, 5, 10));
-  // g_Scene.camera->AddComponent(component_factory.CreateComponent<CameraComponent>(glm::vec3{-1, -0.5, -1}));
-
-  // ecs::Entity* light = entity_factory.CreateEntity<ecs::Entity>();
-  // entity_manager.AddEntity(light);
-  // light->AddComponent(component_factory.CreateComponent<TransformComponent>(10, 0, 15));
-  // light->AddComponent(component_factory.CreateComponent<PointLightComponent>(glm::vec3{0.5}, glm::vec3{0.5},
-  // glm::vec3{0.5})); g_Scene.light_sources.push_back(light);
-
-  // ecs::Entity* skameiki = entity_factory.CreateEntity<ecs::Entity>();
-  // entity_manager.AddEntity(skameiki);
-  // skameiki->AddComponent(component_factory.CreateComponent<TransformComponent>(0, 0, 0));
-  // skameiki->AddComponent(component_factory.CreateComponent<MeshComponent>(CreateShared<Mesh>(ParseMeshObj("res/meshes/skameiki.obj"))));
-
-  // g_Scene.root = new SceneNode(skameiki);
-  // g_Scene.root->AddChild(new SceneNode(g_Scene.camera));
-  // g_Scene.root->AddChild(new SceneNode(light));
-
-  // g_Scene.camera = CreateShared<CameraNode>(PerspectiveCameraSpecs((float)frameBufferWidth /
-  // (float)frameBufferHeight),
-  //                                           glm::vec3{10, 5, 10}, glm::vec3{-1, -0.5, -1});
-
-  // g_Scene.light = CreateShared<PointLightNode>(kPointLightSpecs, glm::vec3{10, 0, 15});
-  // g_Scene.meshes.emplace_back(ParseMeshObj("res/meshes/skameiki.obj"), glm::vec3{0});
-
   CameraNode3D* cameraNode = new CameraNode3D(
       PerspectiveCameraSpecs((float)frameBufferWidth / (float)frameBufferHeight), Transform(glm::vec3{10, 2, 10}));
 
   g_Scene.AddCamera(cameraNode);
   g_Scene.SetMainCamera(cameraNode);
 
-  g_Scene.AddLightSource(new LightSourceNode3D(kPointLightSpecs, Transform(glm::vec3{10, 10, 15})));
+  g_Scene.AddLightSource(new LightSourceNode3D(LightSourceSpecs(LightSourceSpecs::Type::kPoint, glm::vec3{0.1},
+                                                                glm::vec3{0.8, 0.7, 0}, glm::vec3{0.2}, 0.35, 0.65),
+                                               Transform(glm::vec3{4, 3, 0})));
+
+  g_Scene.AddLightSource(new LightSourceNode3D(LightSourceSpecs(LightSourceSpecs::Type::kPoint, glm::vec3{0.1},
+                                                                glm::vec3{0.8, 0.4, 0.4}, glm::vec3{0.2}, 0.35, 0.65),
+                                               Transform(glm::vec3{-4, 3, 0})));
+
+  g_Scene.AddLightSource(new LightSourceNode3D(
+      LightSourceSpecs(LightSourceSpecs::Type::kPoint, glm::vec3{0}, glm::vec3{0.8, 0.6, 0.8}, glm::vec3{0}, 0.7, 1.8),
+      Transform(glm::vec3{10, 1, 10})));
 
   g_Scene.AddModel(new ModelNode3D(ParseMeshObj("res/meshes/skameiki.obj")));
+  g_Scene.AddModel(new ModelNode3D(ParseMeshObj("res/meshes/wooden watch tower.obj"), Transform(glm::vec3{0, -0.75, 0})));
 
-  SharedPtr<Shader> shader = Shader::Create("res/shaders/basic.shader");
+  g_Scene.AddModel(new ModelNode3D(ParseMeshObj("res/meshes/street_lamp.obj"),
+                                   Transform(glm::vec3{3, 0, 0}, glm::vec3{0}, glm::vec3{0.2})));
+
+  g_Scene.AddModel(new ModelNode3D(ParseMeshObj("res/meshes/street_lamp.obj"),
+                                   Transform(glm::vec3{-3, 0, 0}, glm::vec3{0}, glm::vec3{0.2})));
+
+  // SharedPtr<Shader> shader = Shader::Create("res/shaders/basic.shader");
 
   Renderer3D::Init();
   Renderer3D::SetViewport(
@@ -228,74 +211,9 @@ int main() {
       ProcessEvent(&event, &running);
     }
 
-    Renderer3D::RenderScene(&g_Scene, shader);
+    Renderer3D::RenderScene(&g_Scene);
     glfwSwapBuffers(window);
   }
 
   return 0;
 }
-
-// int main(int argc, const char* argv[])
-// {
-//     GLFWwindow* window = nullptr;
-//     if (!glfwInit())
-//     {
-//         std::cout << "Failed to initialize GLFW" << std::endl;
-//         return -1;
-//     }
-
-//     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-//     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-//     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-// #ifdef __APPLE__
-//     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-// #endif
-
-//     window = glfwCreateWindow(640, 480, "Hello, OpenGL!", /*monitor=*/nullptr, /*share=*/nullptr);
-//     if (!window)
-//     {
-//         std::cout << "Failed to create window" << std::endl;
-//         glfwTerminate();
-//         return -1;
-//     }
-
-//     int32_t frameBufferWidth, frameBufferHeight;
-//     glfwGetFramebufferSize(window, &frameBufferWidth, &frameBufferHeight);
-
-//     glfwMakeContextCurrent(window);
-
-//     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-//     {
-//         std::cout << "Failed to initialize GLAD" << std::endl;
-//         glfwTerminate();
-//         return -1;
-//     }
-
-//     g_Scene.camera = CreateShared<Camera>(glm::vec3{10, 5, 10}, glm::vec3{-1, -0.5, -1});
-//     g_Scene.light = CreateShared<LightSource>(glm::vec3{10, 0, 15}, glm::vec3{1, 1, 0});
-//     g_Scene.meshes.push_back(CreateShared<MeshInstance>(glm::vec3{0, 0, 0},
-//     ParseMeshObj("res/meshes/skameiki.obj")));
-
-//     SharedPtr<Shader> shader = Shader::Create("res/shaders/basic.shader");
-
-//     Renderer3D::Init();
-//     Renderer3D::SetViewport(Viewport{0, 0, static_cast<uint32_t>(frameBufferWidth),
-//                                            static_cast<uint32_t>(frameBufferHeight)});
-
-//     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-//     glfwSetKeyCallback(window, keyCallback);
-//     glfwSetCursorPosCallback(window, mouseMoveCallback);
-
-//     while (!glfwWindowShouldClose(window))
-//     {
-//         Renderer3D::RenderScene(g_Scene, shader);
-
-//         glfwSwapBuffers(window);
-//         glfwPollEvents();
-//     }
-
-//     glfwTerminate();
-
-//     return 0;
-// }
