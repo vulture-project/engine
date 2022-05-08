@@ -42,6 +42,8 @@
 #include "renderer/3d/renderer3d.hpp"
 #include "resource_loaders/parse_obj.hpp"
 
+#include "core/logger.hpp"
+
 using namespace vulture;
 using namespace input;
 
@@ -156,6 +158,9 @@ void ProcessEvent(Event* event, bool* running) {
 }
 
 int main() {
+  Logger::OpenLogFile();
+  LOG_INFO(main, "Hi from main {}", 24);
+
   Window _window{};
   EventQueue::SetWindow(&_window);
   NativeWindow* window = _window.GetNativeWindow();
@@ -231,6 +236,8 @@ int main() {
     Renderer3D::RenderScene(&g_Scene, shader);
     glfwSwapBuffers(window);
   }
+
+  Logger::Close();
 
   return 0;
 }

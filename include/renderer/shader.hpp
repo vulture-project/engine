@@ -30,7 +30,7 @@
 #include <glm/glm.hpp>
 #include <string>
 
-#include "core.hpp"
+#include "core/core.hpp"
 
 namespace vulture {
 

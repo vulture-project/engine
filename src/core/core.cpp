@@ -1,21 +1,21 @@
 /**
  * @author Nikita Mochalov (github.com/tralf-strues)
- * @file camera.hpp
- * @date 2022-04-28
- *
+ * @file core.cpp
+ * @date 2022-04-27
+ * 
  * The MIT License (MIT)
  * Copyright (c) vulture-project
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
  * the rights to use, copy, modify, merge, publish, distribute, sublicense,
  * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,25 +25,24 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#pragma once
-
-#include <glm/glm.hpp>
+#include <glad/glad.h>
 
 #include "core/core.hpp"
 
-namespace vulture {
+using namespace vulture;
 
-struct PerspectiveCameraSpecs {
-  float fov = 45.0f;
-  float near = 0.01f;
-  float far = 1000.0f;
-  float aspect_ratio = 0.0f;
+void OpenglClearErrors()
+{
+    while (glGetError());
+}
 
-  PerspectiveCameraSpecs(float aspect_ratio = 0.0f) : aspect_ratio(aspect_ratio) {}
+bool OpenglLogCall()
+{
+    while (GLenum error = glGetError())
+    {
+        std::cout << "[OpenGL error] Error code 0x" << std::hex << error << std::endl;
+        return false;
+    }
 
-  glm::mat4 CalculateProjectionMatrix() const {
-    return glm::perspective(fov, aspect_ratio, near, far);
-  }
-};
-
-}  // namespace vulture
+    return true;
+}
