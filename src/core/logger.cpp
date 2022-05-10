@@ -51,3 +51,25 @@ void Logger::Close() {
     log_file_ = stdout;
   }
 }
+
+const char* Logger::LevelToString(LoggingLevel level) {
+  switch (level)
+  {
+    case kInfo:  { return "[info]"; }
+    case kWarn:  { return "[warn]"; }
+    case kError: { return "[error]"; }
+    case kDebug: { return "[debug]"; }
+    default:     { return "[unknown]"; }
+  }
+}
+
+fmt::text_style Logger::LevelToTextStyle(LoggingLevel level) {
+  switch (level)
+  {
+    case kInfo:  { return kInfoStyle; }
+    case kWarn:  { return kWarnStyle; }
+    case kError: { return kErrorStyle; }
+    case kDebug: { return kDebugStyle; }
+    default:     { return fmt::emphasis::italic | fg(fmt::color::purple); }
+  }
+}

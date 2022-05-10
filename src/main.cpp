@@ -58,27 +58,11 @@ void ProcessMoveEvent(Event* event) {
 
   float dx = prev_x - event->GetMove().x;
   float dy = prev_y - event->GetMove().y;
-  // std::cout << dx << ' ' << dy << '\n';
-
-  // CameraComponent* cameraComponent = g_Scene.camera->GetComponent<CameraComponent>();
-
-  // cameraComponent->forward = glm::normalize(glm::rotate(glm::identity<glm::mat4>(), 0.001f * dx, glm::vec3{0, 1, 0})
-  // *
-  //                                           glm::vec4(cameraComponent->forward, 1));
-  // cameraComponent->forward.y += 0.001f * dy;
-  // cameraComponent->forward = glm::normalize(cameraComponent->forward);
 
   g_Scene.GetMainCamera()->transform.rotation.y += 0.001f * dx;
   g_Scene.GetMainCamera()->transform.rotation.x += 0.001f * dy;
 
   g_SpotlightNode->transform = g_Scene.GetMainCamera()->transform;
-
-  // g_Scene.camera->forward =
-  //     glm::normalize(glm::rotate(glm::identity<glm::mat4>(), 0.001f * dx, glm::vec3{0, 1, 0}) *
-  //     glm::vec4(g_Scene.camera->forward, 1));
-
-  // g_Scene.camera->forward.y += 0.001f * dy;
-  // g_Scene.camera->forward = glm::normalize(g_Scene.camera->forward);
 
   prev_x = event->GetMove().x;
   prev_y = event->GetMove().y;
@@ -92,45 +76,31 @@ void ProcessKeyEvent(Event* event) {
 
   float speed = 0.5;
 
-  // CameraComponent* cameraComponent = g_Scene.camera->GetComponent<CameraComponent>();
-  // TransformComponent* transformComponent = g_Scene.camera->GetComponent<TransformComponent>();
 
   glm::vec3 forward = g_Scene.GetMainCamera()->CalculateForwardVector();
   glm::vec3 right = g_Scene.GetMainCamera()->CalculateRightVector();
 
   if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-    // transformComponent->translation += speed * cameraComponent->forward;
-    // g_Scene.camera->pos += speed * g_Scene.camera->forward;
     g_Scene.GetMainCamera()->transform.translation += speed * forward;
   }
 
   if (key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-    // transformComponent->translation -= speed * cameraComponent->forward;
-    // g_Scene.camera->pos -= speed * g_Scene.camera->forward;
     g_Scene.GetMainCamera()->transform.translation -= speed * forward;
   }
 
   if (key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-    // transformComponent->translation -= speed * glm::cross(cameraComponent->forward, glm::vec3{0, 1, 0});
-    // g_Scene.camera->pos -= speed * glm::cross(g_Scene.camera->forward, glm::vec3{0, 1, 0});
     g_Scene.GetMainCamera()->transform.translation -= speed * right;
   }
 
   if (key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-    // transformComponent->translation += speed * glm::cross(cameraComponent->forward, glm::vec3{0, 1, 0});
-    // g_Scene.camera->pos += speed * glm::cross(g_Scene.camera->forward, glm::vec3{0, 1, 0});
     g_Scene.GetMainCamera()->transform.translation += speed * right;
   }
 
   if (key == GLFW_KEY_Q && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-    // transformComponent->translation.y += 1;
-    // g_Scene.camera->pos.y += 1;
     g_Scene.GetMainCamera()->transform.translation.y -= 1;
   }
 
   if (key == GLFW_KEY_E && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-    // transformComponent->translation.y -= 1;
-    // g_Scene.camera->pos.y -= 1;
     g_Scene.GetMainCamera()->transform.translation.y += 1;
   }
 
@@ -170,7 +140,7 @@ void ProcessEvent(Event* event, bool* running) {
 int main() {
   // Logger::OpenLogFile();
 
-  Window _window{1280, 960};
+  Window _window{1920, 1080};
   EventQueue::SetWindow(&_window);
   NativeWindow* window = _window.GetNativeWindow();
 
