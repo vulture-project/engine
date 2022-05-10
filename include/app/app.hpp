@@ -1,7 +1,7 @@
 /**
  * @author Sergey Zelenkin (https://github.com/vssense)
- * @file logger.cpp
- * @date 2022-05-08
+ * @file app.hpp
+ * @date 2022-05-10
  * 
  * The MIT License (MIT)
  * Copyright (c) vulture-project
@@ -25,49 +25,12 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "core/logger.hpp"
-#include <cassert>
+#pragma once
 
-FILE* Logger::log_file_ = stdout;
+class Application {
+ public:
+  Application();
+  ~Application();
 
-void Logger::OpenLogFile(const char* filename) {
-  log_file_ = fopen(filename, "a");
-
-  if (log_file_ == nullptr) {
-    printf("Can't open log file: %s\n", filename);
-    fflush(stdout);
-
-    assert(!"Can't open log_file");
-  }
-}
-
-void Logger::Flush() {
-  fflush(log_file_);
-}
-
-void Logger::Close() {
-  if (log_file_ != stdout) {
-    fclose(log_file_);
-    log_file_ = stdout;
-  }
-}
-
-const char* Logger::LevelToString(LoggingLevel level) {
-  switch (level) {
-    case kInfo:  { return "[info]"; }
-    case kWarn:  { return "[warn]"; }
-    case kError: { return "[error]"; }
-    case kDebug: { return "[debug]"; }
-    default:     { return "unknown"; }
-  }
-}
-
-fmt::text_style Logger::LevelToTextStyle(LoggingLevel level) {
-  switch (level) {
-    case kInfo:  { return kInfoStyle; }
-    case kWarn:  { return kWarnStyle; }
-    case kError: { return kErrorStyle; }
-    case kDebug: { return kDebugStyle; }
-    default:     { return fmt::emphasis::italic | fg(fmt::color::purple); }
-  }
-}
+  void Run();
+};

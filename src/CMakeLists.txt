@@ -8,6 +8,7 @@ target_sources(engine
     ${ENGINE_SOURCE_DIR}/src/main.cpp
   )
 
+add_subdirectory(app)
 add_subdirectory(ECS)
 add_subdirectory(platform)
 add_subdirectory(renderer)
