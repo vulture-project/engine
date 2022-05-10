@@ -26,12 +26,34 @@
  */
 
 #include <cassert>
+#include <string>
 
 #include <GLFW/glfw3.h>
 
 #include "platform/window.hpp"
 
 const char* Window::kDefaultTitle = "Success is inevitable";
+
+//FIXME: initializing libs to other class. Window hint also.
+
+Window::Window(const char* title) {
+  if (!glfwInit()) {
+    assert(!"Can't init glfw while creating a window");
+  }
+
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+#ifdef __APPLE__
+  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, 1);
+#endif
+
+  window_ = glfwCreateWindow(kDefaultWidth, kDefaultHeight, title, glfwGetPrimaryMonitor(), NULL);
+  assert(window_ && "Can't create a window");
+
+  glfwMakeContextCurrent(window_);
+}
 
 Window::Window(size_t width, size_t height, const char* title) {
   if (!glfwInit()) {
@@ -58,8 +80,14 @@ void Window::SetTitle(const char* title) {
 
   glfwSetWindowTitle(window_, title);
 }
+void Window::SetFPSToTitle(double fps) {
+  assert(window_);
 
-GLFWwindow* Window::GetNativeWindow() {
+  std::string title = std::to_string(fps);
+  glfwSetWindowTitle(window_, title.c_str());
+}
+
+NativeWindow* Window::GetNativeWindow() {
   return window_;
 }
 
