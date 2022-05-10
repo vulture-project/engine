@@ -1,7 +1,7 @@
 /**
  * @author Sergey Zelenkin (https://github.com/vssense)
- * @file window.cpp
- * @date 2022-04-27
+ * @file logger.cpp
+ * @date 2022-05-08
  * 
  * The MIT License (MIT)
  * Copyright (c) vulture-project
@@ -25,47 +25,29 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#include "core/logger.hpp"
 #include <cassert>
 
-#include <GLFW/glfw3.h>
+FILE* Logger::log_file_ = stdout;
 
-#include "platform/window.hpp"
+void Logger::OpenLogFile(const char* filename) {
+  log_file_ = fopen(filename, "a");
 
-const char* Window::kDefaultTitle = "Success is inevitable";
+  if (log_file_ == nullptr) {
+    printf("Can't open log file: %s\n", filename);
+    fflush(stdout);
 
-Window::Window(size_t width, size_t height, const char* title) {
-  if (!glfwInit()) {
-    assert(!"Can't init glfw while creating a window");
+    assert(!"Can't open log_file");
   }
-
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-#ifdef __APPLE__
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, 1);
-#endif
-
-  window_ = glfwCreateWindow(width, height, title, NULL, NULL);
-  assert(window_ && "Can't create a window");
-
-  glfwMakeContextCurrent(window_);
 }
 
-void Window::SetTitle(const char* title) {
-  assert(window_);
-  assert(title);
-
-  glfwSetWindowTitle(window_, title);
+void Logger::Flush() {
+  fflush(log_file_);
 }
 
-GLFWwindow* Window::GetNativeWindow() {
-  return window_;
-}
-
-Window::~Window() {
-  assert(window_);
-  glfwDestroyWindow(window_);
-
-  glfwTerminate();
+void Logger::Close() {
+  if (log_file_ != stdout) {
+    fclose(log_file_);
+    log_file_ = stdout;
+  }
 }

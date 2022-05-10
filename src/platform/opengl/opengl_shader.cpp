@@ -25,6 +25,9 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#include "core/logger.hpp"
+#include "platform/opengl/opengl_shader.hpp"
+
 #include <alloca.h>
 #include <glad/glad.h>
 
@@ -33,8 +36,6 @@
 #include <sstream>
 #include <string>
 
-#include "platform/opengl/opengl_shader.hpp"
-
 using namespace vulture;
 
 struct ShaderProgramSource {
@@ -42,17 +43,24 @@ struct ShaderProgramSource {
   std::string fragment_source;
 };
 
+enum class ShaderType { kInvalid = -1, kVertex, kFragment, kTotal };
+
+struct ShaderInfo {
+  ShaderType type{ShaderType::kInvalid};
+  const char* name{nullptr};
+};
+
+static const ShaderInfo kShadersInfo[] = {{ShaderType::kVertex, "vertex"}, {ShaderType::kFragment, "fragment"}};
+
 static ShaderProgramSource ParseShader(const std::string& filename) {
-  enum class ShaderType { kInvalid = -1, kVertex, kFragment, kTotal };
-
-  struct ShaderInfo {
-    ShaderType type{ShaderType::kInvalid};
-    const char* name{nullptr};
-  };
-
-  const ShaderInfo kShadersInfo[] = {{ShaderType::kVertex, "vertex"}, {ShaderType::kFragment, "fragment"}};
+  LOG_INFO(Renderer, "Parsing OpenGL shader source file \"{}\"...", filename);
 
   std::ifstream stream(filename);
+  if (stream.fail()) {
+    LOG_ERROR(Renderer, "Failed to open shader source file \"{}\"", filename);
+    return {nullptr, nullptr};
+  }
+
   std::stringstream ss[static_cast<int32_t>(ShaderType::kTotal)];
   std::string cur_line;
   int32_t cur_type;
@@ -69,10 +77,14 @@ static ShaderProgramSource ParseShader(const std::string& filename) {
     }
   }
 
+  LOG_INFO(Renderer, "Successfully parsed OpenGL shader source file \"{}\"", filename);
+
   return {ss[static_cast<int32_t>(ShaderType::kVertex)].str(), ss[static_cast<int32_t>(ShaderType::kFragment)].str()};
 }
 
 static uint32_t CompileShader(uint32_t type, const std::string& source) {
+  LOG_INFO(Renderer, "Compiling OpenGL shader (type={})...", type);
+
   uint32_t id = glCreateShader(type);
   const char* c_source = source.c_str();
 
@@ -88,11 +100,13 @@ static uint32_t CompileShader(uint32_t type, const std::string& source) {
     char* message = (char*)alloca(length * sizeof(char));
     glGetShaderInfoLog(id, length, &length, message);
 
-    std::cout << "Failed to compile shader of type " << type << ":\n\t" << message << std::endl;
+    LOG_ERROR(Renderer, "Failed to compile OpenGL shader (type={}), OpenGL message:\n{}", type, message);
 
     glDeleteShader(id);
     return 0;
   }
+
+  LOG_INFO(Renderer, "Successfully compiled OpenGL shader (type={}, id={})", type, id);
 
   return id;
 }
@@ -116,15 +130,13 @@ static uint32_t CreateShader(const std::string& vertex_shader, const std::string
 OpenGLShader::OpenGLShader(const std::string& filename) {
   ShaderProgramSource src = ParseShader(filename);
 
-  std::cout << "Parsed \"" << filename << "\":\n";
-  std::cout << "Vertex Shader:\n" << src.vertex_source << "\n";
-  std::cout << "Fragment Shader:\n" << src.fragment_source << "\n";
-
   id_ = CreateShader(src.vertex_source.c_str(), src.fragment_source.c_str());
+  SetAttributeLocations();
 }
 
 OpenGLShader::OpenGLShader(const std::string& vertex_shader, const std::string& fragment_shader) {
   id_ = CreateShader(vertex_shader, fragment_shader);
+  SetAttributeLocations();
 }
 
 OpenGLShader::~OpenGLShader() { glDeleteProgram(id_); }
@@ -133,38 +145,65 @@ void OpenGLShader::Bind() const { glUseProgram(id_); }
 
 void OpenGLShader::Unbind() const { glUseProgram(0); }
 
-void OpenGLShader::LoadUniformInt(const std::string& name, int value) {
-  Bind();
-  GLint location = glGetUniformLocation(id_, name.c_str());
-  glUniform1i(location, value);
+const AttributeLocationMap& OpenGLShader::GetAttributeLocations() const { return attribute_locations_; }
+
+static void CheckUniformLoadSuccess(GLint uniform_location, const std::string& uniform_name) {
+  if (uniform_location == -1) {
+    LOG_WARN("Failed to load uniform \"{}\"", uniform_name);
+  }
 }
 
-void OpenGLShader::LoadUniformFloat(const std::string& name, float value) {
-  Bind();
-  GLint location = glGetUniformLocation(id_, name.c_str());
-  glUniform1f(location, value);
+void OpenGLShader::LoadUniformInt(int value, const std::string& name) {
+  glUniform1i(GetUniformLocation(name), value);
 }
 
-void OpenGLShader::LoadUniformFloat2(const std::string& name, const glm::vec2& value) {
-  Bind();
-  GLint location = glGetUniformLocation(id_, name.c_str());
-  glUniform2f(location, value.x, value.y);
+void OpenGLShader::LoadUniformFloat(float value, const std::string& name) {
+  glUniform1f(GetUniformLocation(name), value);
 }
 
-void OpenGLShader::LoadUniformFloat3(const std::string& name, const glm::vec3& value) {
-  Bind();
-  GLint location = glGetUniformLocation(id_, name.c_str());
-  glUniform3f(location, value.x, value.y, value.z);
+void OpenGLShader::LoadUniformFloat2(const glm::vec2& value, const std::string& name) {
+  glUniform2f(GetUniformLocation(name), value.x, value.y);
 }
 
-void OpenGLShader::LoadUniformFloat4(const std::string& name, const glm::vec4& value) {
-  Bind();
-  GLint location = glGetUniformLocation(id_, name.c_str());
-  glUniform4f(location, value.x, value.y, value.z, value.w);
+void OpenGLShader::LoadUniformFloat3(const glm::vec3& value, const std::string& name) {
+  glUniform3f(GetUniformLocation(name), value.x, value.y, value.z);
 }
 
-void OpenGLShader::LoadUniformMat4(const std::string& name, const glm::mat4& value) {
+void OpenGLShader::LoadUniformFloat4(const glm::vec4& value, const std::string& name) {
+  glUniform4f(GetUniformLocation(name), value.x, value.y, value.z, value.w);
+}
+
+void OpenGLShader::LoadUniformMat4(const glm::mat4& value, const std::string& name) {
+  glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, glm::value_ptr(value));
+}
+
+void OpenGLShader::SetAttributeLocations() {
+  int32_t attribs_count = 0;
+  glGetProgramiv(id_, GL_ACTIVE_ATTRIBUTES, &attribs_count);
+
+  const uint32_t kAttribNameMaxLength = 128;
+  char attrib_name[kAttribNameMaxLength];
+  int32_t attrib_name_length = 0;
+
+  int32_t attrib_size = 0;
+  GLenum attrib_type;
+
+  for (int32_t i = 0; i < attribs_count; i++) {
+    glGetActiveAttrib(id_, static_cast<uint32_t>(i), kAttribNameMaxLength, &attrib_name_length, &attrib_size,
+                      &attrib_type, attrib_name);
+    assert(attrib_name_length != 0);
+
+    int32_t location = glGetAttribLocation(id_, attrib_name);
+    assert(location != -1);
+
+    attribute_locations_[attrib_name] = static_cast<uint32_t>(location);
+  }
+}
+
+GLint OpenGLShader::GetUniformLocation(const std::string& name) {
   Bind();
   GLint location = glGetUniformLocation(id_, name.c_str());
-  glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
+  CheckUniformLoadSuccess(location, name);
+
+  return location;
 }

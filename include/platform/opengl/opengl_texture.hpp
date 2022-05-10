@@ -43,9 +43,9 @@ class OpenGLTexture : public Texture {
   virtual void Bind(uint32_t slot = 0) const override;
 
  private:
-  uint32_t width_;
-  uint32_t height_;
-  uint32_t id_;
+  uint32_t width_{0};
+  uint32_t height_{0};
+  uint32_t id_{0};
 };
 
 }  // namespace vulture

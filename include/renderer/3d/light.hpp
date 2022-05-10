@@ -31,22 +31,63 @@
 
 namespace vulture {
 
-struct LightSourceSpecs {
-  enum class Type {
-    kAmbient,
-    kPoint,
+enum class LightType {
+  kInvalid = -1,
+  kDirectional,
+  kPoint,
+  kSpot,
 
-    kTotal
-  };
+  kTotal
+};
 
-  Type type;
+struct LightColorSpecs {
+  glm::vec3 ambient{0};
+  glm::vec3 diffuse{0};
+  glm::vec3 specular{0};
 
-  glm::vec3 ambient;
-  glm::vec3 diffuse;
-  glm::vec3 specular;
+  LightColorSpecs() = default;
+  LightColorSpecs(const glm::vec3& ambient, const glm::vec3& diffuse, const glm::vec3& specular)
+      : ambient(ambient), diffuse(diffuse), specular(specular) {}
+};
 
-  LightSourceSpecs(Type type, const glm::vec3 ambient, const glm::vec3 diffuse, const glm::vec3 specular)
-      : type(type), ambient(ambient), diffuse(diffuse), specular(specular) {}
+struct LightAttenuationSpecs {
+  float linear{0};
+  float quadratic{0};
+
+  LightAttenuationSpecs() = default;
+  LightAttenuationSpecs(float linear, float quadratic) : linear(linear), quadratic(quadratic) {}
+  LightAttenuationSpecs(float range) : linear(2.0f / range), quadratic(1.0f / (range * range)) {}
+};
+
+struct DirectionalLightSpecs {
+  LightColorSpecs color_specs;
+
+  DirectionalLightSpecs() = default;
+  DirectionalLightSpecs(const LightColorSpecs& color_specs) : color_specs(color_specs) {}
+};
+
+struct PointLightSpecs {
+  LightColorSpecs color_specs;
+  LightAttenuationSpecs attenuation_specs;
+
+  PointLightSpecs() = default;
+  PointLightSpecs(const LightColorSpecs& color_specs, const LightAttenuationSpecs& attenuation_specs)
+      : color_specs(color_specs), attenuation_specs(attenuation_specs) {}
+};
+
+struct SpotLightSpecs {
+  LightColorSpecs color_specs;
+  LightAttenuationSpecs attenuation_specs;
+  float inner_cone_cosine{1};
+  float outer_cone_cosine{1};
+
+  SpotLightSpecs() = default;
+  SpotLightSpecs(const LightColorSpecs& color_specs, const LightAttenuationSpecs& attenuation_specs,
+                 float inner_cone_cosine, float outer_cone_cosine)
+      : color_specs(color_specs),
+        attenuation_specs(attenuation_specs),
+        inner_cone_cosine(inner_cone_cosine),
+        outer_cone_cosine(outer_cone_cosine) {}
 };
 
 }  // namespace vulture

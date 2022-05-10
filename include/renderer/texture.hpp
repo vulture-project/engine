@@ -27,7 +27,7 @@
 
 #pragma once
 
-#include "core.hpp"
+#include "core/core.hpp"
 
 namespace vulture {
 

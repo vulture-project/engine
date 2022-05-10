@@ -25,9 +25,11 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#include "platform/opengl/opengl_buffer.hpp"
+
 #include <glad/glad.h>
 
-#include "platform/opengl/opengl_buffer.hpp"
+#include "core/logger.hpp"
 
 using namespace vulture;
 
@@ -45,7 +47,7 @@ GLenum GetOpenGLType(BufferDataType type) {
     case BufferDataType::kInt3:   { return GL_INT;   }
     case BufferDataType::kInt4:   { return GL_INT;   }
     case BufferDataType::kBool:   { return GL_BOOL;  }
-    default:                      { assert(false);   }
+    default:                      { assert(!"Invalid BufferDataType for OpenGL!");   }
   }
 
   return 0;
@@ -93,30 +95,41 @@ void OpenGLVertexArray::Bind() const { glBindVertexArray(id_); }
 
 void OpenGLVertexArray::Unbind() const { glBindVertexArray(0); }
 
-void OpenGLVertexArray::AddVertexBuffer(const SharedPtr<VertexBuffer>& vertexBuffer) {
+void OpenGLVertexArray::SetAttributeLocations(const AttributeLocationMap& locations) {
   glBindVertexArray(id_);
-  vertexBuffer->Bind();
 
-  const VertexBufferLayout& layout = vertexBuffer->GetLayout();
-  for (const auto& attribute : layout.attributes()) {
-    const BufferDataTypeSpec dataTypeSpec = BufferDataTypeSpec::Get(attribute.type);
+  for (const auto& vertex_buffer : vertex_buffers_) {
+    const VertexBufferLayout& layout = vertex_buffer->GetLayout();
+    vertex_buffer->Bind();
 
-    glEnableVertexAttribArray(vertex_attrib_number_);
-    glVertexAttribPointer(vertex_attrib_number_, dataTypeSpec.components_count, GetOpenGLType(attribute.type),
-                          attribute.normalize, layout.stride(), reinterpret_cast<const void*>(attribute.offset));
+    for (const auto& attribute : vertex_buffer->GetLayout().attributes()) {
+      const BufferDataTypeSpec data_type_spec = BufferDataTypeSpec::Get(attribute.type);
 
-    ++vertex_attrib_number_;
+      auto location_it = locations.find(attribute.name);
+      if (location_it != locations.end()) {
+        glEnableVertexAttribArray(location_it->second);
+        glVertexAttribPointer(location_it->second, data_type_spec.components_count, GetOpenGLType(attribute.type),
+                              attribute.normalize, layout.stride(), reinterpret_cast<const void*>(attribute.offset));
+      } else {
+        LOG_WARN(Renderer, "Vertex buffer attribute \"{}\" doesn't have a corresponding attribute location!",
+                 attribute.name);
+      }
+    }
   }
-
-  vertex_buffers_.push_back(vertexBuffer);
 }
 
-void OpenGLVertexArray::SetIndexBuffer(const SharedPtr<IndexBuffer>& indexBuffer) {
+void OpenGLVertexArray::AddVertexBuffer(SharedPtr<VertexBuffer> vertex_buffer) {
   glBindVertexArray(id_);
-  indexBuffer->Bind();
-  index_buffer_ = indexBuffer;
+  vertex_buffer->Bind();
+  vertex_buffers_.push_back(vertex_buffer);
+}
+
+void OpenGLVertexArray::SetIndexBuffer(SharedPtr<IndexBuffer> index_buffer) {
+  glBindVertexArray(id_);
+  index_buffer->Bind();
+  index_buffer_ = index_buffer;
 }
 
 const std::vector<SharedPtr<VertexBuffer>>& OpenGLVertexArray::GetVertexBuffers() const { return vertex_buffers_; }
 
-const SharedPtr<IndexBuffer>& OpenGLVertexArray::GetIndexBuffer() const { return index_buffer_; }
+const IndexBuffer* OpenGLVertexArray::GetIndexBuffer() const { return index_buffer_.get(); }

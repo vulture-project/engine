@@ -1,7 +1,7 @@
 /**
- * @author Nikita Mochalov (github.com/tralf-strues)
- * @file core.cpp
- * @date 2022-04-27
+ * @author Sergey Zelenkin (https://github.com/vssense)
+ * @file time.cpp
+ * @date 2022-05-08
  * 
  * The MIT License (MIT)
  * Copyright (c) vulture-project
@@ -25,24 +25,16 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include <glad/glad.h>
+#include "core/time.hpp"
 
-#include "core.hpp"
+const size_t kHhMmSsStart = 11;
+const size_t kHhMmSsLength = 8;
 
-using namespace vulture;
 
-void OpenglClearErrors()
-{
-    while (glGetError());
-}
+std::string GetCurrentTime() {
+  time_t rawtime = std::time(nullptr);
+  std::string time_str = asctime(localtime(&rawtime));
+  time_str.pop_back();   // remove '\n'
 
-bool OpenglLogCall()
-{
-    while (GLenum error = glGetError())
-    {
-        std::cout << "[OpenGL error] Error code 0x" << std::hex << error << std::endl;
-        return false;
-    }
-
-    return true;
+  return time_str.substr(kHhMmSsStart, kHhMmSsLength);
 }

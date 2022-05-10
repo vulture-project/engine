@@ -1,7 +1,7 @@
 /**
  * @author Sergey Zelenkin (https://github.com/vssense)
- * @file window.cpp
- * @date 2022-04-27
+ * @file time.hpp
+ * @date 2022-05-08
  * 
  * The MIT License (MIT)
  * Copyright (c) vulture-project
@@ -25,47 +25,14 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include <cassert>
+#pragma once
 
-#include <GLFW/glfw3.h>
+#include <ctime>
+#include <string>
 
-#include "platform/window.hpp"
-
-const char* Window::kDefaultTitle = "Success is inevitable";
-
-Window::Window(size_t width, size_t height, const char* title) {
-  if (!glfwInit()) {
-    assert(!"Can't init glfw while creating a window");
-  }
-
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-#ifdef __APPLE__
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, 1);
-#endif
-
-  window_ = glfwCreateWindow(width, height, title, NULL, NULL);
-  assert(window_ && "Can't create a window");
-
-  glfwMakeContextCurrent(window_);
-}
-
-void Window::SetTitle(const char* title) {
-  assert(window_);
-  assert(title);
-
-  glfwSetWindowTitle(window_, title);
-}
-
-GLFWwindow* Window::GetNativeWindow() {
-  return window_;
-}
-
-Window::~Window() {
-  assert(window_);
-  glfwDestroyWindow(window_);
-
-  glfwTerminate();
-}
+/**
+ * @brief Get current time in format hh:mm:ss
+ * 
+ * @return std::string current time
+ */
+std::string GetCurrentTime();

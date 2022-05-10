@@ -28,10 +28,11 @@
 #pragma once
 
 #include <cstdint>
+#include <map>
 #include <string>
 #include <vector>
 
-#include "core.hpp"
+#include "core/core.hpp"
 
 namespace vulture {
 
@@ -65,22 +66,22 @@ struct BufferDataTypeSpec {
 };
 
 const BufferDataTypeSpec kShaderDataTypeSpecs[] = {
-    {BufferDataType::kInvalid, "Invalid", 0,                     0},
+    {BufferDataType::kInvalid, "Invalid", 0, 0},
 
-    {BufferDataType::kFloat,   "Float",   1 * sizeof(float),     1},
-    {BufferDataType::kFloat2,  "Float2",  2 * sizeof(float),     2},
-    {BufferDataType::kFloat3,  "Float3",  3 * sizeof(float),     3},
-    {BufferDataType::kFloat4,  "Float4",  4 * sizeof(float),     4},
+    {BufferDataType::kFloat,  "Float",  1 * sizeof(float), 1},
+    {BufferDataType::kFloat2, "Float2", 2 * sizeof(float), 2},
+    {BufferDataType::kFloat3, "Float3", 3 * sizeof(float), 3},
+    {BufferDataType::kFloat4, "Float4", 4 * sizeof(float), 4},
 
-    {BufferDataType::kInt,     "Int",     1 * sizeof(int32_t),   1},
-    {BufferDataType::kInt2,    "Int2",    2 * sizeof(int32_t),   2},
-    {BufferDataType::kInt3,    "Int3",    3 * sizeof(int32_t),   3},
-    {BufferDataType::kInt4,    "Int4",    4 * sizeof(int32_t),   4},
+    {BufferDataType::kInt,  "Int",  1 * sizeof(int32_t), 1},
+    {BufferDataType::kInt2, "Int2", 2 * sizeof(int32_t), 2},
+    {BufferDataType::kInt3, "Int3", 3 * sizeof(int32_t), 3},
+    {BufferDataType::kInt4, "Int4", 4 * sizeof(int32_t), 4},
 
-    {BufferDataType::kMat3,    "Mat3",    3 * 3 * sizeof(float), 3},
-    {BufferDataType::kMat4,    "Mat4",    4 * 4 * sizeof(float), 4},
+    {BufferDataType::kMat3, "Mat3", 3 * 3 * sizeof(float), 3},
+    {BufferDataType::kMat4, "Mat4", 4 * 4 * sizeof(float), 4},
 
-    {BufferDataType::kBool,    "Bool",    1 * sizeof(bool),      1},
+    {BufferDataType::kBool, "Bool", 1 * sizeof(bool), 1},
 };
 
 //================================================================
@@ -205,6 +206,8 @@ class IndexBuffer {
 //================================================================
 // VertexArray
 //================================================================
+using AttributeLocationMap = std::map<std::string, uint32_t>;
+
 class VertexArray {
  public:
   static SharedPtr<VertexArray> Create();
@@ -215,6 +218,8 @@ class VertexArray {
   virtual void Bind() const = 0;
   virtual void Unbind() const = 0;
 
+  virtual void SetAttributeLocations(const AttributeLocationMap& locations) = 0;
+
   /**
    * @brief Adds a completely set vertex buffer to the vertex array.
    *
@@ -222,12 +227,12 @@ class VertexArray {
    *
    * @warning The vertex buffer to be added must have a layout!
    */
-  virtual void AddVertexBuffer(const SharedPtr<VertexBuffer>& vertex_buffer) = 0;
+  virtual void AddVertexBuffer(SharedPtr<VertexBuffer> vertex_buffer) = 0;
 
-  virtual void SetIndexBuffer(const SharedPtr<IndexBuffer>& index_buffer) = 0;
+  virtual void SetIndexBuffer(SharedPtr<IndexBuffer> index_buffer) = 0;
 
   virtual const std::vector<SharedPtr<VertexBuffer>>& GetVertexBuffers() const = 0;
-  virtual const SharedPtr<IndexBuffer>& GetIndexBuffer() const = 0;
+  virtual const IndexBuffer* GetIndexBuffer() const = 0;
 };
 
 }  // namespace vulture

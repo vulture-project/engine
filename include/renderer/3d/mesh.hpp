@@ -27,15 +27,29 @@
 
 #pragma once
 
-#include "core.hpp"
+#include <vector>
+
+#include "core/core.hpp"
 #include "renderer/buffer.hpp"
+#include "renderer/material.hpp"
 
 namespace vulture {
 
-struct Mesh {
-  SharedPtr<VertexArray> vertex_array;
+class Mesh {
+ public:
+  Mesh() = default;
+  Mesh(SharedPtr<VertexArray> vertex_array, SharedPtr<Material> material)
+      : vertex_array_(vertex_array), material_(material) {
+    assert(material_->GetShader());
+    vertex_array_->SetAttributeLocations(material_->GetShader()->GetAttributeLocations());
+  }
 
-  Mesh(const SharedPtr<VertexArray>& vertex_array) : vertex_array(vertex_array) {}
+  VertexArray* GetVertexArray() { return vertex_array_.get(); }
+  Material* GetMaterial() { return material_.get(); }
+
+ private:
+  SharedPtr<VertexArray> vertex_array_{nullptr};
+  SharedPtr<Material> material_{nullptr};
 };
 
 }  // namespace vulture

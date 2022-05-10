@@ -36,20 +36,27 @@ class OpenGLShader : public Shader {
   OpenGLShader(const std::string& filename);
   OpenGLShader(const std::string& vertex_shader, const std::string& fragment_shader);
 
-  virtual ~OpenGLShader();
+  virtual ~OpenGLShader() override;
 
   virtual void Bind() const override;
   virtual void Unbind() const override;
 
-  virtual void LoadUniformInt(const std::string& name, int value) override;
-  virtual void LoadUniformFloat(const std::string& name, float value) override;
-  virtual void LoadUniformFloat2(const std::string& name, const glm::vec2& value) override;
-  virtual void LoadUniformFloat3(const std::string& name, const glm::vec3& value) override;
-  virtual void LoadUniformFloat4(const std::string& name, const glm::vec4& value) override;
-  virtual void LoadUniformMat4(const std::string& name, const glm::mat4& value) override;
+  virtual const AttributeLocationMap& GetAttributeLocations() const override;
+
+  virtual void LoadUniformInt(int value, const std::string& name) override;
+  virtual void LoadUniformFloat(float value, const std::string& name) override;
+  virtual void LoadUniformFloat2(const glm::vec2& value, const std::string& name) override;
+  virtual void LoadUniformFloat3(const glm::vec3& value, const std::string& name) override;
+  virtual void LoadUniformFloat4(const glm::vec4& value, const std::string& name) override;
+  virtual void LoadUniformMat4(const glm::mat4& value, const std::string& name) override;
+
+ private:
+  void SetAttributeLocations();
+  int GetUniformLocation(const std::string& name);
 
  private:
   uint32_t id_{0};
+  AttributeLocationMap attribute_locations_;
 };
 
 }  // namespace vulture

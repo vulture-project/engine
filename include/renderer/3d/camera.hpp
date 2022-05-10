@@ -29,7 +29,7 @@
 
 #include <glm/glm.hpp>
 
-#include "core.hpp"
+#include "core/core.hpp"
 
 namespace vulture {
 
@@ -39,11 +39,9 @@ struct PerspectiveCameraSpecs {
   float far = 1000.0f;
   float aspect_ratio = 0.0f;
 
-  PerspectiveCameraSpecs(float aspect_ratio = 0.0f) : aspect_ratio(aspect_ratio) {}
+  PerspectiveCameraSpecs(float aspect_ratio = 0.0f);
 
-  glm::mat4 CalculateProjectionMatrix() const {
-    return glm::perspective(fov, aspect_ratio, near, far);
-  }
+  glm::mat4 CalculateProjectionMatrix() const;
 };
 
 }  // namespace vulture

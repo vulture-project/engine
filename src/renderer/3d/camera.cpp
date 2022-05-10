@@ -1,7 +1,7 @@
 /**
- * @author Sergey Zelenkin (https://github.com/vssense)
- * @file window.cpp
- * @date 2022-04-27
+ * @author Nikita Mochalov (github.com/tralf-strues)s
+ * @file camera.cpp
+ * @date 2022-05-10
  * 
  * The MIT License (MIT)
  * Copyright (c) vulture-project
@@ -25,47 +25,12 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include <cassert>
+#include "renderer/3d/camera.hpp"
 
-#include <GLFW/glfw3.h>
+using namespace vulture;
 
-#include "platform/window.hpp"
+PerspectiveCameraSpecs::PerspectiveCameraSpecs(float aspect_ratio) : aspect_ratio(aspect_ratio) {}
 
-const char* Window::kDefaultTitle = "Success is inevitable";
-
-Window::Window(size_t width, size_t height, const char* title) {
-  if (!glfwInit()) {
-    assert(!"Can't init glfw while creating a window");
-  }
-
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-#ifdef __APPLE__
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, 1);
-#endif
-
-  window_ = glfwCreateWindow(width, height, title, NULL, NULL);
-  assert(window_ && "Can't create a window");
-
-  glfwMakeContextCurrent(window_);
-}
-
-void Window::SetTitle(const char* title) {
-  assert(window_);
-  assert(title);
-
-  glfwSetWindowTitle(window_, title);
-}
-
-GLFWwindow* Window::GetNativeWindow() {
-  return window_;
-}
-
-Window::~Window() {
-  assert(window_);
-  glfwDestroyWindow(window_);
-
-  glfwTerminate();
+glm::mat4 PerspectiveCameraSpecs::CalculateProjectionMatrix() const {
+  return glm::perspective(fov, aspect_ratio, near, far);
 }

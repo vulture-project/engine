@@ -1,7 +1,7 @@
 /**
  * @author Nikita Mochalov (github.com/tralf-strues)
- * @file buffer.cpp
- * @date 2022-04-27
+ * @file material.cpp
+ * @date 2022-05-07
  *
  * The MIT License (MIT)
  * Copyright (c) vulture-project
@@ -25,38 +25,41 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "platform/opengl/opengl_buffer.hpp"
-#include "renderer/renderer_api.hpp"
+#include "renderer/material.hpp"
 
 using namespace vulture;
 
-const BufferDataTypeSpec BufferDataTypeSpec::Get(BufferDataType type) {
-  return kShaderDataTypeSpecs[static_cast<uint8_t>(type)];
-}
+Material::Material(SharedPtr<Shader> shader) : shader_(shader) {}
 
-SharedPtr<VertexBuffer> VertexBuffer::Create(void* data, uint32_t size) {
-  switch (RendererAPI::GetAPI()) {
-    case RendererAPI::API::kOpenGL: { return CreateShared<OpenGLVertexBuffer>(data, size); }
-    default:                        { assert(!"Unsupported RendererAPI"); }
+void Material::LoadUniformsToShader() {
+  shader_->Bind();
+
+  for (const auto& uniform_int : uniforms_int_) {
+    shader_->LoadUniformInt(uniform_int.second, uniform_int.first);
   }
 
-  return nullptr;
-}
-
-SharedPtr<IndexBuffer> IndexBuffer::Create(uint32_t* indices, uint32_t count) {
-  switch (RendererAPI::GetAPI()) {
-    case RendererAPI::API::kOpenGL: { return CreateShared<OpenGLIndexBuffer>(indices, count); }
-    default:                        { assert(!"Unsupported RendererAPI"); }
+  for (const auto& uniform_float : uniforms_float_) {
+    shader_->LoadUniformFloat(uniform_float.second, uniform_float.first);
   }
 
-  return nullptr;
-}
-
-SharedPtr<VertexArray> VertexArray::Create() {
-  switch (RendererAPI::GetAPI()) {
-    case RendererAPI::API::kOpenGL: { return CreateShared<OpenGLVertexArray>(); }
-    default:                        { assert(!"Unsupported RendererAPI"); }
+  for (const auto& uniform_float2 : uniforms_float2_) {
+    shader_->LoadUniformFloat2(uniform_float2.second, uniform_float2.first);
   }
 
-  return nullptr;
+  for (const auto& uniform_float3 : uniforms_float3_) {
+    shader_->LoadUniformFloat3(uniform_float3.second, uniform_float3.first);
+  }
+
+  for (const auto& uniform_float4 : uniforms_float4_) {
+    shader_->LoadUniformFloat4(uniform_float4.second, uniform_float4.first);
+  }
+
+  for (const auto& uniform_mat4 : uniforms_mat4_) {
+    shader_->LoadUniformMat4(uniform_mat4.second, uniform_mat4.first);
+  }
 }
+
+void Material::SetShader(SharedPtr<Shader> shader) { shader_ = shader; }
+Shader* Material::GetShader() { return shader_.get(); }
+
+void Material::AddTexture(const std::string& name, SharedPtr<Texture> texture) { textures_[name] = texture; }
