@@ -1,13 +1,16 @@
-set(ECS_INCLUDE_DIR ${ENGINE_SOURCE_DIR}/include/ECS)
-set(ECS_SOURCE_DIR ${ENGINE_SOURCE_DIR}/src/ECS)
+set(ECS_INCLUDE_DIR ${ENGINE_SOURCE_DIR}/include/ecs)
+set(ECS_SOURCE_DIR ${ENGINE_SOURCE_DIR}/src/ecs)
 
 target_sources(engine
   PUBLIC
-    ${ECS_INCLUDE_DIR}/component.h
-    ${ECS_INCLUDE_DIR}/component_factory.h
-    ${ECS_INCLUDE_DIR}/entity.h
-    ${ECS_INCLUDE_DIR}/entity_factory.h
-    ${ECS_INCLUDE_DIR}/type_id_generator.h
+    ${ECS_INCLUDE_DIR}/api.hpp
+    ${ECS_INCLUDE_DIR}/component_holder.hpp
+    ${ECS_INCLUDE_DIR}/entity_handler.hpp
+    ${ECS_INCLUDE_DIR}/generator.hpp
+    ${ECS_INCLUDE_DIR}/registry.hpp
+    ${ECS_INCLUDE_DIR}/view.hpp
   PRIVATE
-    ${ECS_SOURCE_DIR}/entity.cpp
+    ${ECS_SOURCE_DIR}/api.cpp
+    ${ECS_SOURCE_DIR}/entity_handler.cpp
+    ${ECS_SOURCE_DIR}/registry.cpp
   )
