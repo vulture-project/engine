@@ -1,5 +1,6 @@
+mkdir -p build
 cd build
 cmake ../
-cmake --build .
+make -j 8
 mv engine ../
 cd ..
