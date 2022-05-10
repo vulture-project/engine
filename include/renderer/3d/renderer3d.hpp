@@ -41,8 +41,8 @@ class Renderer3D {
   static void RenderScene(Scene3D* scene);
 
  private:
-  static void SetUpCamera(Scene3D* scene, const SharedPtr<Shader>& shader);
-  static void SetUpLights(Scene3D* scene, const SharedPtr<Shader>& shader);
+  static void SetUpCamera(Scene3D* scene, Shader* shader);
+  static void SetUpLights(Scene3D* scene, Shader* shader);
 
  private:
   static ScopePtr<RendererAPI> rendererAPI_;

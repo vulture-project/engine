@@ -31,33 +31,6 @@
 
 namespace vulture {
 
-// struct LightSourceSpecs {
-//   enum class Type {
-//     kAmbient,
-//     kPoint,
-
-//     kTotal
-//   };
-
-//   Type type;
-
-//   glm::vec3 ambient;
-//   glm::vec3 diffuse;
-//   glm::vec3 specular;
-
-//   float attenuation_linear;
-//   float attenuation_quadratic;
-
-//   LightSourceSpecs(Type type, const glm::vec3 ambient, const glm::vec3 diffuse, const glm::vec3 specular,
-//                    float attenuation_linear, float attenuation_quadratic)
-//       : type(type),
-//         ambient(ambient),
-//         diffuse(diffuse),
-//         specular(specular),
-//         attenuation_linear(attenuation_linear),
-//         attenuation_quadratic(attenuation_quadratic) {}
-// };
-
 enum class LightType {
   kInvalid = -1,
   kDirectional,

@@ -31,6 +31,7 @@
 #include <string>
 #include <cstring>
 
+#include "core/logger.hpp"
 #include "resource_loaders/parse_obj.hpp"
 #include "renderer/3d/3d_default_shader_names.hpp"
 
@@ -70,6 +71,8 @@ SharedPtr<Mesh> vulture::ParseMeshObj(const std::string& filename) {
     Vertex vertices[3];
   };
 
+  LOG_INFO(Renderer, "Loading mesh from file \"{}\"", filename);
+
   std::vector<glm::vec3> positions;
   std::vector<glm::vec2> uvs;
   std::vector<glm::vec3> normals;
@@ -77,7 +80,8 @@ SharedPtr<Mesh> vulture::ParseMeshObj(const std::string& filename) {
 
   std::ifstream stream(filename);
   if (stream.fail()) {
-    assert(!"File doesn't exist!");
+    LOG_ERROR(Renderer, "Failed to open file \"{}\"", filename);
+    return nullptr;
   }
 
   std::string cur_line;
@@ -144,10 +148,16 @@ SharedPtr<Mesh> vulture::ParseMeshObj(const std::string& filename) {
 
   /* FIXME: */
   SharedPtr<Material> material = CreateShared<Material>(Shader::Create("res/shaders/basic.glsl"));
-  material->SetUniform(std::string(kUniformNameMaterial) + "." + std::string(kStructMemberNameAmbientColor),  glm::vec3{5.0});
-  material->SetUniform(std::string(kUniformNameMaterial) + "." + std::string(kStructMemberNameDiffuseColor),  glm::vec3{0.8});
-  material->SetUniform(std::string(kUniformNameMaterial) + "." + std::string(kStructMemberNameSpecularColor), glm::vec3{0.0});
-  material->SetUniform(std::string(kUniformNameMaterial) + "." + std::string(kStructMemberNameSpecularExponent), 1.0f);
+  material->SetUniform(glm::vec3{0.8}, "{}.{}", kUniformNameMaterial, kStructMemberNameAmbientColor);
+  material->SetUniform(glm::vec3{0.8}, "{}.{}", kUniformNameMaterial, kStructMemberNameDiffuseColor);
+  material->SetUniform(glm::vec3{0.1}, "{}.{}", kUniformNameMaterial, kStructMemberNameSpecularColor);
+  material->SetUniform(1.0f,           "{}.{}", kUniformNameMaterial, kStructMemberNameSpecularExponent);
+
+  LOG_INFO(Renderer,
+           "Successfully loaded mesh from file \"{}\" (position={}, uvs={}, normals={}, faces={} | out_vertices={}, "
+           "out_indices={})",
+           filename, positions.size(), uvs.size(), normals.size(), faces.size(), out_vertices.size(),
+           out_indices.size());
 
   return CreateShared<Mesh>(vao, material);
 }

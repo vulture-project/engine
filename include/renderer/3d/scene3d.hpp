@@ -46,9 +46,9 @@ struct SceneNode3D {
   SceneNode3D(const Transform& transform) : transform(transform) {}
 };
 
-constexpr glm::vec3 kDefaultCameraForwardVector{0, 0, -1};
-constexpr glm::vec3 kDefaultCameraUpVector{0, 1, 0};
-constexpr glm::vec3 kDefaultCameraRightVector{1, 0, 0};
+constexpr glm::vec3 kDefaultForwardVector{0, 0, -1};
+constexpr glm::vec3 kDefaultUpVector{0, 1, 0};
+constexpr glm::vec3 kDefaultRightVector{1, 0, 0};
 
 /**
  * @brief Specifies a 3D camera.
@@ -60,19 +60,18 @@ struct CameraNode3D : public SceneNode3D {
   CameraNode3D(const PerspectiveCameraSpecs& specs, const Transform& transform = Transform())
       : SceneNode3D(transform), specs(specs) {}
 
+  glm::mat4 CalculateProjectionViewMatrix() const { return CalculateProjectionMatrix() * CalculateViewMatrix(); }
   glm::mat4 CalculateProjectionMatrix() const { return specs.CalculateProjectionMatrix(); }
   glm::mat4 CalculateViewMatrix() const { return transform.CalculateInverseMatrix(); }
 
   glm::vec3 CalculateForwardVector() const {
-    return transform.CalculateRotationMatrix() * glm::vec4(kDefaultCameraForwardVector, 1);
+    return transform.CalculateRotationMatrix() * glm::vec4(kDefaultForwardVector, 1);
   }
 
-  glm::vec3 CalculateUpVector() const {
-    return transform.CalculateRotationMatrix() * glm::vec4(kDefaultCameraUpVector, 1);
-  }
+  glm::vec3 CalculateUpVector() const { return transform.CalculateRotationMatrix() * glm::vec4(kDefaultUpVector, 1); }
 
   glm::vec3 CalculateRightVector() const {
-    return transform.CalculateRotationMatrix() * glm::vec4(kDefaultCameraRightVector, 1);
+    return transform.CalculateRotationMatrix() * glm::vec4(kDefaultRightVector, 1);
   }
 };
 
@@ -129,15 +128,19 @@ class LightSourceNode3D : public SceneNode3D {
     type_ = LightType::kSpot;
   }
 
+  void SetEnabled(bool enabled) { enabled_ = enabled; }
+  bool IsEnabled() const { return enabled_; }
+
  private:
   LightSourceSpecs specs_;
   LightType type_{LightType::kInvalid};
+  bool enabled_{true};
 };
 
 struct ModelNode3D : public SceneNode3D {
   SharedPtr<Mesh> mesh;
 
-  ModelNode3D(const SharedPtr<Mesh>& mesh, const Transform& transform = Transform())
+  ModelNode3D(SharedPtr<Mesh> mesh, const Transform& transform = Transform())
       : SceneNode3D(transform), mesh(mesh) {}
 };
 

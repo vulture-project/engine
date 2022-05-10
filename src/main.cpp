@@ -37,17 +37,18 @@
 // #include "ECS/entity_factory.h"
 // #include "ECS/entity_manager.h"
 // #include "components/components.hpp"
+#include "core/logger.hpp"
 #include "platform/event.hpp"
 #include "platform/window.hpp"
 #include "renderer/3d/renderer3d.hpp"
 #include "resource_loaders/parse_obj.hpp"
 
-#include "core/logger.hpp"
-
 using namespace vulture;
 using namespace input;
 
 Scene3D g_Scene;
+LightSourceNode3D* g_SpotlightNode{nullptr};
+LightSourceNode3D* g_DirectionalLightNode{nullptr};
 
 void ProcessMoveEvent(Event* event) {
   assert(event);
@@ -69,6 +70,8 @@ void ProcessMoveEvent(Event* event) {
 
   g_Scene.GetMainCamera()->transform.rotation.y += 0.001f * dx;
   g_Scene.GetMainCamera()->transform.rotation.x += 0.001f * dy;
+
+  g_SpotlightNode->transform = g_Scene.GetMainCamera()->transform;
 
   // g_Scene.camera->forward =
   //     glm::normalize(glm::rotate(glm::identity<glm::mat4>(), 0.001f * dx, glm::vec3{0, 1, 0}) *
@@ -130,6 +133,16 @@ void ProcessKeyEvent(Event* event) {
     // g_Scene.camera->pos.y -= 1;
     g_Scene.GetMainCamera()->transform.translation.y += 1;
   }
+
+  if (key == GLFW_KEY_F && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+    g_SpotlightNode->SetEnabled(!g_SpotlightNode->IsEnabled());
+  }
+
+  if (key == GLFW_KEY_J && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+    g_DirectionalLightNode->SetEnabled(!g_DirectionalLightNode->IsEnabled());
+  }
+
+  g_SpotlightNode->transform = g_Scene.GetMainCamera()->transform;
 }
 
 void ProcessEvent(Event* event, bool* running) {
@@ -155,8 +168,7 @@ void ProcessEvent(Event* event, bool* running) {
 }
 
 int main() {
-  Logger::OpenLogFile();
-  LOG_INFO(main, "Hi from main {}", 24);
+  // Logger::OpenLogFile();
 
   Window _window{1280, 960};
   EventQueue::SetWindow(&_window);
@@ -177,28 +189,34 @@ int main() {
   g_Scene.AddCamera(cameraNode);
   g_Scene.SetMainCamera(cameraNode);
 
-  g_Scene.AddLightSource(new LightSourceNode3D(LightSourceSpecs(LightSourceSpecs::Type::kPoint, glm::vec3{0.1},
-                                                                glm::vec3{0.8, 0.7, 0}, glm::vec3{0.2}, 0.35, 0.65),
-                                               Transform(glm::vec3{4, 3, 0})));
+  g_Scene.AddLightSource(
+      new LightSourceNode3D(PointLightSpecs(LightColorSpecs(glm::vec3{0.1}, glm::vec3{0.4, 0.34, 0}, glm::vec3{0.1}),
+                                            LightAttenuationSpecs(3)),
+                            Transform(glm::vec3{4, 3, 0})));
 
-  g_Scene.AddLightSource(new LightSourceNode3D(LightSourceSpecs(LightSourceSpecs::Type::kPoint, glm::vec3{0.1},
-                                                                glm::vec3{0.8, 0.4, 0.4}, glm::vec3{0.2}, 0.35, 0.65),
-                                               Transform(glm::vec3{-4, 3, 0})));
+  g_Scene.AddLightSource(
+      new LightSourceNode3D(PointLightSpecs(LightColorSpecs(glm::vec3{0.1}, glm::vec3{0.4, 0.2, 0.2}, glm::vec3{0.1}),
+                                            LightAttenuationSpecs(3)),
+                            Transform(glm::vec3{-4, 3, 0})));
 
-  g_Scene.AddLightSource(new LightSourceNode3D(
-      LightSourceSpecs(LightSourceSpecs::Type::kPoint, glm::vec3{0}, glm::vec3{0.8, 0.6, 0.8}, glm::vec3{0}, 0.7, 1.8),
-      Transform(glm::vec3{10, 1, 10})));
+  g_DirectionalLightNode =
+      new LightSourceNode3D(DirectionalLightSpecs(LightColorSpecs(glm::vec3{0.01}, glm::vec3{0.01}, glm::vec3{0.01})),
+                            Transform(glm::vec3{0}, glm::vec3{-0.3, 0, 0}));
+  g_Scene.AddLightSource(g_DirectionalLightNode);
+
+  g_SpotlightNode = new LightSourceNode3D(SpotLightSpecs(LightColorSpecs(glm::vec3{0.3}, glm::vec3{0.3}, glm::vec3{0}),
+                                                         LightAttenuationSpecs(2), cosf(0.2), cos(0.3)));
+  g_Scene.AddLightSource(g_SpotlightNode);
 
   g_Scene.AddModel(new ModelNode3D(ParseMeshObj("res/meshes/skameiki.obj")));
-  g_Scene.AddModel(new ModelNode3D(ParseMeshObj("res/meshes/wooden watch tower.obj"), Transform(glm::vec3{0, -0.75, 0})));
+  g_Scene.AddModel(
+      new ModelNode3D(ParseMeshObj("res/meshes/wooden watch tower.obj"), Transform(glm::vec3{0, -0.75, 0})));
 
   g_Scene.AddModel(new ModelNode3D(ParseMeshObj("res/meshes/street_lamp.obj"),
-                                   Transform(glm::vec3{3, 0, 0}, glm::vec3{0}, glm::vec3{0.2})));
+                                   Transform(glm::vec3{3, 0, 0}, glm::vec3{0}, glm::vec3{0.6})));
 
   g_Scene.AddModel(new ModelNode3D(ParseMeshObj("res/meshes/street_lamp.obj"),
-                                   Transform(glm::vec3{-3, 0, 0}, glm::vec3{0}, glm::vec3{0.2})));
-
-  // SharedPtr<Shader> shader = Shader::Create("res/shaders/basic.shader");
+                                   Transform(glm::vec3{-3, 0, 0}, glm::vec3{0}, glm::vec3{0.6})));
 
   Renderer3D::Init();
   Renderer3D::SetViewport(

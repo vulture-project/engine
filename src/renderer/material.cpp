@@ -29,37 +29,37 @@
 
 using namespace vulture;
 
-Material::Material(const SharedPtr<Shader>& shader) : shader_(shader) {}
+Material::Material(SharedPtr<Shader> shader) : shader_(shader) {}
 
 void Material::LoadUniformsToShader() {
   shader_->Bind();
 
   for (const auto& uniform_int : uniforms_int_) {
-    shader_->LoadUniformInt(uniform_int.first, uniform_int.second);
+    shader_->LoadUniformInt(uniform_int.second, uniform_int.first);
   }
 
   for (const auto& uniform_float : uniforms_float_) {
-    shader_->LoadUniformFloat(uniform_float.first, uniform_float.second);
+    shader_->LoadUniformFloat(uniform_float.second, uniform_float.first);
   }
 
   for (const auto& uniform_float2 : uniforms_float2_) {
-    shader_->LoadUniformFloat2(uniform_float2.first, uniform_float2.second);
+    shader_->LoadUniformFloat2(uniform_float2.second, uniform_float2.first);
   }
 
   for (const auto& uniform_float3 : uniforms_float3_) {
-    shader_->LoadUniformFloat3(uniform_float3.first, uniform_float3.second);
+    shader_->LoadUniformFloat3(uniform_float3.second, uniform_float3.first);
   }
 
   for (const auto& uniform_float4 : uniforms_float4_) {
-    shader_->LoadUniformFloat4(uniform_float4.first, uniform_float4.second);
+    shader_->LoadUniformFloat4(uniform_float4.second, uniform_float4.first);
   }
 
   for (const auto& uniform_mat4 : uniforms_mat4_) {
-    shader_->LoadUniformMat4(uniform_mat4.first, uniform_mat4.second);
+    shader_->LoadUniformMat4(uniform_mat4.second, uniform_mat4.first);
   }
 }
 
-void Material::SetShader(const SharedPtr<Shader>& shader) { shader_ = shader; }
-const SharedPtr<Shader>& Material::GetShader() const { return shader_; }
+void Material::SetShader(SharedPtr<Shader> shader) { shader_ = shader; }
+Shader* Material::GetShader() { return shader_.get(); }
 
-void Material::AddTexture(const std::string& name, const SharedPtr<Texture>& texture) { textures_[name] = texture; }
+void Material::AddTexture(const std::string& name, SharedPtr<Texture> texture) { textures_[name] = texture; }

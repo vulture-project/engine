@@ -54,15 +54,21 @@ constexpr const char* kAttribNameUV         = "in_uv";
 //! @addtogroup 3D_SHADER_DEFAULT_UNIFORM_NAMES
 //! @{
 
-constexpr const char* kUniformNameProjectionView   = "u_projection_view";
-constexpr const char* kUniformNameModel            = "u_model";
+constexpr const char* kUniformNameProjectionView         = "u_projection_view";
+constexpr const char* kUniformNameModel                  = "u_model";
 
-constexpr const char* kUniformNameWSCamera         = "u_ws_camera";
+constexpr const char* kUniformNameWSCamera               = "u_ws_camera";
 
-constexpr const char* kUniformNamePointLights      = "u_point_lights";
-constexpr const char* kUniformNamePointLightsCount = "u_point_lights_count";
+constexpr const char* kUniformNameDirectionalLights      = "u_directional_lights";
+constexpr const char* kUniformNameDirectionalLightsCount = "u_directional_lights_count";
 
-constexpr const char* kUniformNameMaterial         = "u_material";
+constexpr const char* kUniformNamePointLights            = "u_point_lights";
+constexpr const char* kUniformNamePointLightsCount       = "u_point_lights_count";
+
+constexpr const char* kUniformNameSpotLights             = "u_spot_lights";
+constexpr const char* kUniformNameSpotLightsCount        = "u_spot_lights_count";
+
+constexpr const char* kUniformNameMaterial               = "u_material";
 
 //! @}
 //================================================================
@@ -75,6 +81,7 @@ constexpr const char* kUniformNameMaterial         = "u_material";
 //! @{
 
 constexpr const char* kStructMemberNameWSPosition           = "ws_position";
+constexpr const char* kStructMemberNameWSDirection          = "ws_direction";
 
 constexpr const char* kStructMemberNameAmbientColor         = "color_ambient";
 constexpr const char* kStructMemberNameDiffuseColor         = "color_diffuse";
@@ -83,6 +90,9 @@ constexpr const char* kStructMemberNameSpecularExponent     = "color_specular";
 
 constexpr const char* kStructMemberNameAttenuationLinear    = "attenuation_linear";
 constexpr const char* kStructMemberNameAttenuationQuadratic = "attenuation_quadratic";
+
+constexpr const char* kStructMemberNameSpotInnerConeCosine  = "inner_cone_cosine";
+constexpr const char* kStructMemberNameSpotOuterConeCosine  = "outer_cone_cosine";
 
 //! @}
 //================================================================

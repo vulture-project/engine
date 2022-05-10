@@ -1,1 +1,0 @@
-[22:45:57] [main] [info] engine/src/main.cpp:162                  Hi from main 11

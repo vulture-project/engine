@@ -227,12 +227,12 @@ class VertexArray {
    *
    * @warning The vertex buffer to be added must have a layout!
    */
-  virtual void AddVertexBuffer(const SharedPtr<VertexBuffer>& vertex_buffer) = 0;
+  virtual void AddVertexBuffer(SharedPtr<VertexBuffer> vertex_buffer) = 0;
 
-  virtual void SetIndexBuffer(const SharedPtr<IndexBuffer>& index_buffer) = 0;
+  virtual void SetIndexBuffer(SharedPtr<IndexBuffer> index_buffer) = 0;
 
   virtual const std::vector<SharedPtr<VertexBuffer>>& GetVertexBuffers() const = 0;
-  virtual const SharedPtr<IndexBuffer>& GetIndexBuffer() const = 0;
+  virtual const IndexBuffer* GetIndexBuffer() const = 0;
 };
 
 }  // namespace vulture

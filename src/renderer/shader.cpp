@@ -34,7 +34,7 @@ using namespace vulture;
 SharedPtr<Shader> Shader::Create(const std::string& filename) {
   switch (RendererAPI::GetAPI()) {
     case RendererAPI::API::kOpenGL: { return CreateShared<OpenGLShader>(filename); }
-    default:                        { assert(false); }
+    default:                        { assert(!"Unsupported RendererAPI"); }
   }
 
   return nullptr;
@@ -43,7 +43,7 @@ SharedPtr<Shader> Shader::Create(const std::string& filename) {
 SharedPtr<Shader> Shader::Create(const std::string& vertexShader, const std::string& fragmentShader) {
   switch (RendererAPI::GetAPI()) {
     case RendererAPI::API::kOpenGL: { return CreateShared<OpenGLShader>(vertexShader, fragmentShader); }
-    default:                        { assert(false); }
+    default:                        { assert(!"Unsupported RendererAPI"); }
   }
 
   return nullptr;

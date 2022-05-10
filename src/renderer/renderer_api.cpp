@@ -35,7 +35,7 @@ RendererAPI::API RendererAPI::api_ = RendererAPI::API::kOpenGL;
 ScopePtr<RendererAPI> RendererAPI::Create() {
   switch (api_) {
     case API::kOpenGL: { return CreateScope<OpenGLRendererAPI>(); }
-    default:           { assert(false); }
+    default:           { assert(!"Unsupported RendererAPI"); }
   };
 
   return nullptr;

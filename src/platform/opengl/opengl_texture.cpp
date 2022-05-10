@@ -25,6 +25,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#include "core/logger.hpp"
 #include "platform/opengl/opengl_texture.hpp"
 
 #include <glad/glad.h>
@@ -33,9 +34,15 @@
 using namespace vulture;
 
 OpenGLTexture::OpenGLTexture(const std::string& filename) {
+  LOG_INFO(Renderer, "Loading OpenGL texture \"{}\"", filename);
+
   int32_t width, height, channels;
   uint8_t* data = stbi_load(filename.c_str(), &width, &height, &channels, /*desired_channels=*/0);
-  assert(data);
+
+  if (data == nullptr) {
+    LOG_ERROR(Renderer, "Failed to load OpenGL texture \"{}\"", filename);
+    return;
+  }
 
   glGenTextures(1, &id_);
   glBindTexture(GL_TEXTURE_2D, id_);
@@ -49,6 +56,8 @@ OpenGLTexture::OpenGLTexture(const std::string& filename) {
   glGenerateMipmap(GL_TEXTURE_2D);
 
   stbi_image_free(data);
+
+  LOG_INFO(Renderer, "Successfully loaded OpenGL texture \"{}\" (id={})", filename, id_);
 }
 
 OpenGLTexture::~OpenGLTexture() { glDeleteTextures(1, &id_); }

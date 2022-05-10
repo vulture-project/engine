@@ -39,17 +39,22 @@ namespace vulture {
 class Material {
  public:
   Material() = default;
-  Material(const SharedPtr<Shader>& shader);
+  Material(SharedPtr<Shader> shader);
 
   void LoadUniformsToShader();
 
-  void SetShader(const SharedPtr<Shader>& shader);
-  const SharedPtr<Shader>& GetShader() const;
+  void SetShader(SharedPtr<Shader> shader);
+  Shader* GetShader();
 
-  void AddTexture(const std::string& name, const SharedPtr<Texture>& texture);
+  void AddTexture(const std::string& name, SharedPtr<Texture> texture);
+
+  template <typename T, typename... Args>
+  inline void SetUniform(const T& value, const std::string& format, Args&&... args) {
+    SetUniform(value, fmt::format(format, std::forward<Args>(args)...));
+  }
 
   template <typename T>
-  inline void SetUniform(const std::string& name, const T& value) {
+  inline void SetUniform(const T& value, const std::string& name) {
     if      constexpr (std::is_same<T, int>())       { uniforms_int_   [name] = value; }
     else if constexpr (std::is_same<T, float>())     { uniforms_float_ [name] = value; }
     else if constexpr (std::is_same<T, glm::vec2>()) { uniforms_float2_[name] = value; }

@@ -74,16 +74,16 @@ class OpenGLVertexArray : public VertexArray {
 
   virtual void SetAttributeLocations(const AttributeLocationMap& locations) override;
 
-  virtual void AddVertexBuffer(const SharedPtr<VertexBuffer>& vertex_buffer) override;
-  virtual void SetIndexBuffer(const SharedPtr<IndexBuffer>& index_buffer) override;
+  virtual void AddVertexBuffer(SharedPtr<VertexBuffer> vertex_buffer) override;
+  virtual void SetIndexBuffer(SharedPtr<IndexBuffer> index_buffer) override;
 
   virtual const std::vector<SharedPtr<VertexBuffer>>& GetVertexBuffers() const override;
-  virtual const SharedPtr<IndexBuffer>& GetIndexBuffer() const override;
+  virtual const IndexBuffer* GetIndexBuffer() const override;
 
  private:
   uint32_t id_{0};
   std::vector<SharedPtr<VertexBuffer>> vertex_buffers_;
-  SharedPtr<IndexBuffer> index_buffer_;
+  SharedPtr<IndexBuffer> index_buffer_{nullptr};
 };
 
 }  // namespace vulture

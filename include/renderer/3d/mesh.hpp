@@ -38,15 +38,14 @@ namespace vulture {
 class Mesh {
  public:
   Mesh() = default;
-  Mesh(const SharedPtr<VertexArray>& vertex_array, const SharedPtr<Material>& material)
+  Mesh(SharedPtr<VertexArray> vertex_array, SharedPtr<Material> material)
       : vertex_array_(vertex_array), material_(material) {
     assert(material_->GetShader());
     vertex_array_->SetAttributeLocations(material_->GetShader()->GetAttributeLocations());
   }
 
-  /* FIXME: Change return value! */
-  SharedPtr<VertexArray> GetVertexArray() { return vertex_array_; }
-  SharedPtr<Material> GetMaterial() { return material_; }
+  VertexArray* GetVertexArray() { return vertex_array_.get(); }
+  Material* GetMaterial() { return material_.get(); }
 
  private:
   SharedPtr<VertexArray> vertex_array_{nullptr};

@@ -29,6 +29,7 @@
 
 #include <glm/glm.hpp>
 #include <string>
+#include <fmt/format.h>
 
 #include "core/core.hpp"
 #include "renderer/buffer.hpp"
@@ -47,35 +48,65 @@ class Shader {
 
   virtual const AttributeLocationMap& GetAttributeLocations() const = 0;
 
-  /**
-   * @attention Uniform loading functions bind Shader!
-   */
-  virtual void LoadUniformInt(const std::string& name, int value) = 0;
+  template<typename... Args>
+  void LoadUniformInt(int value, const std::string& format, Args&&... args) {
+    LoadUniformInt(value, fmt::format(format, std::forward<Args>(args)...));
+  }
+
+  template<typename... Args>
+  void LoadUniformFloat(float value, const std::string& format, Args&&... args) {
+    LoadUniformFloat(value, fmt::format(format, std::forward<Args>(args)...));
+  }
+
+  template<typename... Args>
+  void LoadUniformFloat2(const glm::vec2& value, const std::string& format, Args&&... args) {
+    LoadUniformFloat2(value, fmt::format(format, std::forward<Args>(args)...));
+  }
+
+  template<typename... Args>
+  void LoadUniformFloat3(const glm::vec3& value, const std::string& format, Args&&... args) {
+    LoadUniformFloat3(value, fmt::format(format, std::forward<Args>(args)...));
+  }
+
+  template<typename... Args>
+  void LoadUniformFloat4(const glm::vec4& value, const std::string& format, Args&&... args) {
+    LoadUniformFloat4(value, fmt::format(format, std::forward<Args>(args)...));
+  }
+
+  template<typename... Args>
+  void LoadUniformMat4(const glm::mat4& value, const std::string& format, Args&&... args) {
+    LoadUniformMat4(value, fmt::format(format, std::forward<Args>(args)...));
+  }
 
   /**
    * @attention Uniform loading functions bind Shader!
    */
-  virtual void LoadUniformFloat(const std::string& name, float value) = 0;
+  virtual void LoadUniformInt(int value, const std::string& name) = 0;
 
   /**
    * @attention Uniform loading functions bind Shader!
    */
-  virtual void LoadUniformFloat2(const std::string& name, const glm::vec2& value) = 0;
+  virtual void LoadUniformFloat(float value, const std::string& name) = 0;
 
   /**
    * @attention Uniform loading functions bind Shader!
    */
-  virtual void LoadUniformFloat3(const std::string& name, const glm::vec3& value) = 0;
+  virtual void LoadUniformFloat2(const glm::vec2& value, const std::string& name) = 0;
 
   /**
    * @attention Uniform loading functions bind Shader!
    */
-  virtual void LoadUniformFloat4(const std::string& name, const glm::vec4& value) = 0;
+  virtual void LoadUniformFloat3(const glm::vec3& value, const std::string& name) = 0;
 
   /**
    * @attention Uniform loading functions bind Shader!
    */
-  virtual void LoadUniformMat4(const std::string& name, const glm::mat4& value) = 0;
+  virtual void LoadUniformFloat4(const glm::vec4& value, const std::string& name) = 0;
+
+  /**
+   * @attention Uniform loading functions bind Shader!
+   */
+  virtual void LoadUniformMat4(const glm::mat4& value, const std::string& name) = 0;
 };
 
 }  // namespace vulture
