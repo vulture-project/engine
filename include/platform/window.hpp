@@ -45,6 +45,7 @@ class Window {
   Window& operator=(Window&&) = delete;
 
   NativeWindow* GetNativeWindow();
+
   void SetTitle(const char* title);
   void SetFPSToTitle(double fps);
 
