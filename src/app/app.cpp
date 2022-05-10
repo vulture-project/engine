@@ -120,7 +120,7 @@ Application::~Application() {
 }
 
 void Application::Run() {
-  Window _window{};
+  Window _window{1280, 960};
   EventQueue::SetWindow(&_window);
   NativeWindow* window = _window.GetNativeWindow();
 
@@ -178,11 +178,14 @@ void Application::Run() {
 
   Event event{};
   while (running) {
+    clock_t start = clock();
     while (PollEvent(&event)) {
       ProcessEvent(&event);
     }
 
     Renderer3D::RenderScene(&g_Scene);
     glfwSwapBuffers(window);
+
+    _window.SetFPSToTitle(CLOCKS_PER_SEC / (clock() + 0.0 - start));
   }
 }
