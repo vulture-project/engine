@@ -34,6 +34,7 @@ using namespace vulture;
 void OpenGLRendererAPI::Init() {
   // TODO:
   glEnable(GL_DEPTH_TEST);
+  glDepthFunc(GL_LEQUAL); // FIXME: only needed for some types of objects (e.g. skyboxes)
 }
 
 void OpenGLRendererAPI::SetViewport(const Viewport& viewport) {
@@ -51,5 +52,4 @@ void OpenGLRendererAPI::Clear(const glm::vec4& color) {
 void OpenGLRendererAPI::Draw(const VertexArray& vertexArray) {
   vertexArray.Bind();
   glDrawElements(GL_TRIANGLES, vertexArray.GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
-  glBindTexture(GL_TEXTURE_2D, 0);  // TODO: enable several textures
 }

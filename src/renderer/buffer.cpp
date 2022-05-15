@@ -34,7 +34,7 @@ const BufferDataTypeSpec BufferDataTypeSpec::Get(BufferDataType type) {
   return kShaderDataTypeSpecs[static_cast<uint8_t>(type)];
 }
 
-SharedPtr<VertexBuffer> VertexBuffer::Create(void* data, uint32_t size) {
+SharedPtr<VertexBuffer> VertexBuffer::Create(const void* data, uint32_t size) {
   switch (RendererAPI::GetAPI()) {
     case RendererAPI::API::kOpenGL: { return CreateShared<OpenGLVertexBuffer>(data, size); }
     default:                        { assert(!"Unsupported RendererAPI"); }
@@ -43,7 +43,7 @@ SharedPtr<VertexBuffer> VertexBuffer::Create(void* data, uint32_t size) {
   return nullptr;
 }
 
-SharedPtr<IndexBuffer> IndexBuffer::Create(uint32_t* indices, uint32_t count) {
+SharedPtr<IndexBuffer> IndexBuffer::Create(const uint32_t* indices, uint32_t count) {
   switch (RendererAPI::GetAPI()) {
     case RendererAPI::API::kOpenGL: { return CreateShared<OpenGLIndexBuffer>(indices, count); }
     default:                        { assert(!"Unsupported RendererAPI"); }

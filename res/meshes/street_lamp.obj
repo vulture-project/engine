@@ -1,6 +1,6 @@
 # Blender v2.93.5 OBJ File: ''
 # www.blender.org
-mtllib street_lamp.mtl
+mtllib res/meshes/street_lamp.mtl
 o rv_lamp_post_3
 v -0.016217 5.212009 -0.028087
 v -0.039723 5.222317 -0.022932

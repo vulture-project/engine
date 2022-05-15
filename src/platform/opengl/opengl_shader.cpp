@@ -149,7 +149,7 @@ const AttributeLocationMap& OpenGLShader::GetAttributeLocations() const { return
 
 static void CheckUniformLoadSuccess(GLint uniform_location, const std::string& uniform_name) {
   if (uniform_location == -1) {
-    LOG_WARN("Failed to load uniform \"{}\"", uniform_name);
+    // LOG_WARN(Renderer, "Failed to load uniform \"{}\"", uniform_name);
   }
 }
 

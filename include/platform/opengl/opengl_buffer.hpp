@@ -33,7 +33,7 @@ namespace vulture {
 
 class OpenGLVertexBuffer : public VertexBuffer {
  public:
-  OpenGLVertexBuffer(void* data, uint32_t size);
+  OpenGLVertexBuffer(const void* data, uint32_t size);
 
   virtual ~OpenGLVertexBuffer() override;
 
@@ -50,7 +50,7 @@ class OpenGLVertexBuffer : public VertexBuffer {
 
 class OpenGLIndexBuffer : public IndexBuffer {
  public:
-  OpenGLIndexBuffer(uint32_t* indices, uint32_t count);
+  OpenGLIndexBuffer(const uint32_t* indices, uint32_t count);
 
   virtual ~OpenGLIndexBuffer() override;
 

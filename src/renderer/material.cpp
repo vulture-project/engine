@@ -57,9 +57,23 @@ void Material::LoadUniformsToShader() {
   for (const auto& uniform_mat4 : uniforms_mat4_) {
     shader_->LoadUniformMat4(uniform_mat4.second, uniform_mat4.first);
   }
+
+  uint32_t texture_slot = 0;
+  for (const auto& [name, texture] : textures_) {
+    texture->Bind(texture_slot);
+    shader_->LoadUniformInt(texture_slot, name);
+    ++texture_slot;
+  }
+
+  for (const auto& [name, cube_map] : cube_maps_) {
+    cube_map->Bind(texture_slot);
+    shader_->LoadUniformInt(texture_slot, name);
+    ++texture_slot;
+  }
 }
 
 void Material::SetShader(SharedPtr<Shader> shader) { shader_ = shader; }
 Shader* Material::GetShader() { return shader_.get(); }
 
-void Material::AddTexture(const std::string& name, SharedPtr<Texture> texture) { textures_[name] = texture; }
+void Material::AddTexture(SharedPtr<Texture> texture, const std::string& name) { textures_[name] = texture; }
+void Material::AddCubeMap(SharedPtr<CubeMap> cube_map, const std::string& name) { cube_maps_[name] = cube_map; }

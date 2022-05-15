@@ -70,6 +70,8 @@ constexpr const char* kUniformNameSpotLightsCount        = "u_spot_lights_count"
 
 constexpr const char* kUniformNameMaterial               = "u_material";
 
+constexpr const char* kUniformNameSkybox                 = "u_skybox";
+
 //! @}
 //================================================================
 
@@ -87,6 +89,8 @@ constexpr const char* kStructMemberNameAmbientColor         = "color_ambient";
 constexpr const char* kStructMemberNameDiffuseColor         = "color_diffuse";
 constexpr const char* kStructMemberNameSpecularColor        = "color_specular";
 constexpr const char* kStructMemberNameSpecularExponent     = "color_specular";
+
+constexpr const char* kStructMemberNameDiffuseMap           = "map_diffuse";
 
 constexpr const char* kStructMemberNameAttenuationLinear    = "attenuation_linear";
 constexpr const char* kStructMemberNameAttenuationQuadratic = "attenuation_quadratic";

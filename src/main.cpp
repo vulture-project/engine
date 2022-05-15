@@ -49,6 +49,7 @@ using namespace input;
 Scene3D g_Scene;
 LightSourceNode3D* g_SpotlightNode{nullptr};
 LightSourceNode3D* g_DirectionalLightNode{nullptr};
+ModelNode3D* g_SkyboxModel{nullptr};
 
 void ProcessMoveEvent(Event* event) {
   assert(event);
@@ -72,6 +73,7 @@ void ProcessMoveEvent(Event* event) {
   g_Scene.GetMainCamera()->transform.rotation.x += 0.001f * dy;
 
   g_SpotlightNode->transform = g_Scene.GetMainCamera()->transform;
+  g_SkyboxModel->transform.translation = g_Scene.GetMainCamera()->transform.translation;
 
   // g_Scene.camera->forward =
   //     glm::normalize(glm::rotate(glm::identity<glm::mat4>(), 0.001f * dx, glm::vec3{0, 1, 0}) *
@@ -143,6 +145,7 @@ void ProcessKeyEvent(Event* event) {
   }
 
   g_SpotlightNode->transform = g_Scene.GetMainCamera()->transform;
+  g_SkyboxModel->transform.translation = g_Scene.GetMainCamera()->transform.translation;
 }
 
 void ProcessEvent(Event* event, bool* running) {
@@ -184,7 +187,7 @@ int main() {
   }
 
   CameraNode3D* cameraNode = new CameraNode3D(
-      PerspectiveCameraSpecs((float)frameBufferWidth / (float)frameBufferHeight), Transform(glm::vec3{10, 2, 10}));
+      PerspectiveCameraSpecs((float)frameBufferWidth / (float)frameBufferHeight), Transform(glm::vec3{10, 3, -3}));
 
   g_Scene.AddCamera(cameraNode);
   g_Scene.SetMainCamera(cameraNode);
@@ -200,23 +203,49 @@ int main() {
                             Transform(glm::vec3{-4, 3, 0})));
 
   g_DirectionalLightNode =
-      new LightSourceNode3D(DirectionalLightSpecs(LightColorSpecs(glm::vec3{0.01}, glm::vec3{0.01}, glm::vec3{0.01})),
-                            Transform(glm::vec3{0}, glm::vec3{-0.3, 0, 0}));
+      new LightSourceNode3D(DirectionalLightSpecs(LightColorSpecs(glm::vec3{0.2}, glm::vec3{0.2}, glm::vec3{0.1})),
+                            Transform(glm::vec3{0}, glm::vec3{-0.5, 0, 0}));
   g_Scene.AddLightSource(g_DirectionalLightNode);
 
   g_SpotlightNode = new LightSourceNode3D(SpotLightSpecs(LightColorSpecs(glm::vec3{0.3}, glm::vec3{0.3}, glm::vec3{0}),
                                                          LightAttenuationSpecs(2), cosf(0.2), cos(0.3)));
   g_Scene.AddLightSource(g_SpotlightNode);
 
-  g_Scene.AddModel(new ModelNode3D(ParseMeshObj("res/meshes/skameiki.obj")));
-  g_Scene.AddModel(
-      new ModelNode3D(ParseMeshObj("res/meshes/wooden watch tower.obj"), Transform(glm::vec3{0, -0.75, 0})));
+  // g_Scene.AddModel(new ModelNode3D(ParseMeshWavefront("res/meshes/skameiki.obj")));
 
-  g_Scene.AddModel(new ModelNode3D(ParseMeshObj("res/meshes/street_lamp.obj"),
+  g_Scene.AddModel(new ModelNode3D(ParseMeshWavefront("res/meshes/nk.obj")));
+
+  g_Scene.AddModel(
+      new ModelNode3D(ParseMeshWavefront("res/meshes/wooden_watch_tower.obj"), Transform(glm::vec3{0, -0.75, 0})));
+
+  g_Scene.AddModel(new ModelNode3D(ParseMeshWavefront("res/meshes/street_lamp.obj"),
                                    Transform(glm::vec3{3, 0, 0}, glm::vec3{0}, glm::vec3{0.6})));
 
-  g_Scene.AddModel(new ModelNode3D(ParseMeshObj("res/meshes/street_lamp.obj"),
+  g_Scene.AddModel(new ModelNode3D(ParseMeshWavefront("res/meshes/street_lamp.obj"),
                                    Transform(glm::vec3{-3, 0, 0}, glm::vec3{0}, glm::vec3{0.6})));
+
+  // g_SkyboxModel = new ModelNode3D(CreateSkyboxMesh(
+  //     {"res/textures/skybox_forest/skybox_forest_right.png", "res/textures/skybox_forest/skybox_forest_left.png",
+  //      "res/textures/skybox_forest/skybox_forest_top.png", "res/textures/skybox_forest/skybox_forest_bottom.png",
+  //      "res/textures/skybox_forest/skybox_forest_front.png", "res/textures/skybox_forest/skybox_forest_back.png"}));
+
+  // g_SkyboxModel = new ModelNode3D(CreateSkyboxMesh({"res/textures/skybox_ocean_sunset/skybox_ocean_sunset_right.png",
+  //                                                   "res/textures/skybox_ocean_sunset/skybox_ocean_sunset_left.png",
+  //                                                   "res/textures/skybox_ocean_sunset/skybox_ocean_sunset_top.png",
+  //                                                   "res/textures/skybox_ocean_sunset/skybox_ocean_sunset_bottom.png",
+  //                                                   "res/textures/skybox_ocean_sunset/skybox_ocean_sunset_front.png",
+  //                                                   "res/textures/skybox_ocean_sunset/skybox_ocean_sunset_back.png"}));
+
+  g_SkyboxModel = new ModelNode3D(CreateSkyboxMesh({"res/textures/skybox_night_sky/skybox_night_sky_right.png",
+                                                    "res/textures/skybox_night_sky/skybox_night_sky_left.png",
+                                                    "res/textures/skybox_night_sky/skybox_night_sky_top.png",
+                                                    "res/textures/skybox_night_sky/skybox_night_sky_bottom.png",
+                                                    "res/textures/skybox_night_sky/skybox_night_sky_front.png",
+                                                    "res/textures/skybox_night_sky/skybox_night_sky_back.png"}));
+
+  g_Scene.AddModel(g_SkyboxModel);
+
+  g_SkyboxModel->transform.translation = g_Scene.GetMainCamera()->transform.translation;
 
   Renderer3D::Init();
   Renderer3D::SetViewport(

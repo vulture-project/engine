@@ -178,7 +178,7 @@ class VertexBufferLayout {
  */
 class VertexBuffer {
  public:
-  static SharedPtr<VertexBuffer> Create(void* data, uint32_t size);
+  static SharedPtr<VertexBuffer> Create(const void* data, uint32_t size);
 
  public:
   virtual ~VertexBuffer() = default;
@@ -192,7 +192,7 @@ class VertexBuffer {
 
 class IndexBuffer {
  public:
-  static SharedPtr<IndexBuffer> Create(uint32_t* indices, uint32_t count);
+  static SharedPtr<IndexBuffer> Create(const uint32_t* indices, uint32_t count);
 
  public:
   virtual ~IndexBuffer() = default;
