@@ -32,7 +32,7 @@
 
 #include "platform/window.hpp"
 
-namespace input {
+namespace vulture {
 
 enum EventType {
   kNoEvent,
@@ -241,4 +241,4 @@ class Keyboard {
   static std::vector<bool> keys_pressed_;
 };
 
-} // namespace input
+} // namespace vulture

@@ -1,7 +1,7 @@
 /**
- * @author Sergey Zelenkin (https://github.com/vssense)
- * @file window.hpp
- * @date 2022-04-27
+ * @author Nikita Mochalov (github.com/tralf-strues)
+ * @file sandbox_app.hpp
+ * @date 2022-05-15
  *
  * The MIT License (MIT)
  * Copyright (c) vulture-project
@@ -27,38 +27,28 @@
 
 #pragma once
 
-#include <GLFW/glfw3.h>
+#include "app/app.hpp"
+#include "platform/event.hpp"
+#include "platform/window.hpp"
+#include "renderer/3d/scene3d.hpp"
 
-#include <cstddef>
-
-namespace vulture {
-
-typedef GLFWwindow NativeWindow;
-
-class Window {
+class SandboxApp : public vulture::Application {
  public:
-  Window(const char* title = kDefaultTitle);
-  explicit Window(size_t width, size_t height, const char* title = kDefaultTitle);
-  ~Window();
+  SandboxApp();
 
-  Window(const Window&) = delete;
-  Window(Window&&) = delete;
-  Window& operator=(const Window&) = delete;
-  Window& operator=(Window&&) = delete;
+  virtual int Init() override;
+  virtual void Run() override;
 
-  NativeWindow* GetNativeWindow();
-
-  void SetTitle(const char* title);
-  void SetFPSToTitle(double fps);
-
- public:
-  static const size_t kDefaultWidth = 640;
-  static const size_t kDefaultHeight = 480;
-
-  static const char* kDefaultTitle;
+  void ProcessEvent(vulture::Event* event, bool* running);
+  void ProcessMoveEvent(vulture::Event* event);
+  void ProcessKeyEvent(vulture::Event* event);
 
  private:
-  NativeWindow* window_;
-};
+  vulture::Window window_;
 
-}  // namespace vulture
+  vulture::Scene3D scene_;
+
+  vulture::LightSourceNode3D* directional_light_node_{nullptr};
+  vulture::LightSourceNode3D* spot_light_node_{nullptr};
+  vulture::ModelNode3D* skybox_node_{nullptr};
+};
