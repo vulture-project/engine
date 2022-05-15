@@ -51,16 +51,16 @@ class Logger {
     kDebug
   };
 
-  constexpr static const fmt::text_style kInfoStyle  = fmt::emphasis::faint;
-  constexpr static const fmt::text_style kWarnStyle  = fmt::emphasis::bold | fg(fmt::color::purple);
-  constexpr static const fmt::text_style kErrorStyle = fmt::emphasis::bold | fg(fmt::color::red);
-  constexpr static const fmt::text_style kDebugStyle = fmt::emphasis::bold;
+  static const fmt::text_style kInfoStyle;
+  static const fmt::text_style kWarnStyle;
+  static const fmt::text_style kErrorStyle;
+  static const fmt::text_style kDebugStyle;
 
-  constexpr static const char* kDefaultLogFileName = "log/log.txt"; 
-  constexpr static const char* kProjectDirectoryName = "engine"; 
+  static const char* kDefaultLogFileName;
+  static const char* kProjectDirectoryName;
 
-  constexpr static const int kFilenameAlignment = 40;
-  constexpr static const int kLevelStringAlignment = 7;
+  static const int kFilenameAlignment;
+  static const int kLevelStringAlignment;
 
  public:
   static void OpenLogFile(const char* filename = kDefaultLogFileName);

@@ -26,7 +26,7 @@
  */
 
 #include <glad/glad.h>
-#include <glfw/glfw3.h>
+#include <GLFW/glfw3.h>
 
 #include "sandbox_app.hpp"
 #include "core/logger.hpp"
@@ -121,7 +121,6 @@ void SandboxApp::Run() {
   glfwSetCursorPos(window_.GetNativeWindow(), frameBufferWidth / 2, frameBufferHeight / 2);
 
   Event event{};
-  bool running = true;
 
   while (running) {
     while (PollEvent(&event)) {
@@ -184,6 +183,10 @@ void SandboxApp::ProcessKeyEvent(Event* event) {
 
   glm::vec3 forward = scene_.GetMainCamera()->CalculateForwardVector();
   glm::vec3 right = scene_.GetMainCamera()->CalculateRightVector();
+
+  if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
+    running = false;
+  }
 
   if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
     scene_.GetMainCamera()->transform.translation += speed * forward;

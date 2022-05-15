@@ -51,4 +51,6 @@ class SandboxApp : public vulture::Application {
   vulture::LightSourceNode3D* directional_light_node_{nullptr};
   vulture::LightSourceNode3D* spot_light_node_{nullptr};
   vulture::ModelNode3D* skybox_node_{nullptr};
+
+  bool running{true};
 };

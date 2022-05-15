@@ -30,6 +30,18 @@
 
 FILE* Logger::log_file_ = stdout;
 
+// Constants
+const fmt::text_style Logger::kInfoStyle  = fmt::emphasis::faint;
+const fmt::text_style Logger::kWarnStyle  = fmt::emphasis::bold | fg(fmt::color::purple);
+const fmt::text_style Logger::kErrorStyle = fmt::emphasis::bold | fg(fmt::color::red);
+const fmt::text_style Logger::kDebugStyle = fmt::emphasis::bold;
+
+const char* Logger::kDefaultLogFileName = "log/log.txt"; 
+const char* Logger::kProjectDirectoryName = "engine"; 
+
+const int Logger::kFilenameAlignment = 40;
+const int Logger::kLevelStringAlignment = 7;
+
 void Logger::OpenLogFile(const char* filename) {
   log_file_ = fopen(filename, "a");
 
