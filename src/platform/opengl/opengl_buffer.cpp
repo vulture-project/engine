@@ -53,7 +53,7 @@ GLenum GetOpenGLType(BufferDataType type) {
   return 0;
 }
 
-OpenGLVertexBuffer::OpenGLVertexBuffer(void* data, uint32_t size) {
+OpenGLVertexBuffer::OpenGLVertexBuffer(const void* data, uint32_t size) {
   glGenBuffers(1, &id_);
   glBindBuffer(GL_ARRAY_BUFFER, id_);
   glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
@@ -69,7 +69,7 @@ const VertexBufferLayout& OpenGLVertexBuffer::GetLayout() const { return layout_
 
 void OpenGLVertexBuffer::SetLayout(const VertexBufferLayout& layout) { layout_ = layout; }
 
-OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t* indices, uint32_t count) : count_(count) {
+OpenGLIndexBuffer::OpenGLIndexBuffer(const uint32_t* indices, uint32_t count) : count_(count) {
   glGenBuffers(1, &id_);
 
   /*

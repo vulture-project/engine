@@ -25,12 +25,245 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#include <fstream>
+#include <sstream>
+#include <string>
 
-#include "app/app.hpp"
+// #include "ECS/component_factory.h"
+// #include "ECS/entity_factory.h"
+// #include "ECS/entity_manager.h"
+// #include "components/components.hpp"
+#include "core/logger.hpp"
+#include "platform/event.hpp"
+#include "platform/window.hpp"
+#include "renderer/3d/renderer3d.hpp"
+#include "resource_loaders/parse_obj.hpp"
+
+using namespace vulture;
+using namespace input;
+
+Scene3D g_Scene;
+LightSourceNode3D* g_SpotlightNode{nullptr};
+LightSourceNode3D* g_DirectionalLightNode{nullptr};
+ModelNode3D* g_SkyboxModel{nullptr};
+
+void ProcessMoveEvent(Event* event) {
+  assert(event);
+
+  static float prev_x = 0;
+  static float prev_y = 0;
+
+  float dx = prev_x - event->GetMove().x;
+  float dy = prev_y - event->GetMove().y;
+  // std::cout << dx << ' ' << dy << '\n';
+
+  // CameraComponent* cameraComponent = g_Scene.camera->GetComponent<CameraComponent>();
+
+  // cameraComponent->forward = glm::normalize(glm::rotate(glm::identity<glm::mat4>(), 0.001f * dx, glm::vec3{0, 1, 0})
+  // *
+  //                                           glm::vec4(cameraComponent->forward, 1));
+  // cameraComponent->forward.y += 0.001f * dy;
+  // cameraComponent->forward = glm::normalize(cameraComponent->forward);
+
+  g_Scene.GetMainCamera()->transform.rotation.y += 0.001f * dx;
+  g_Scene.GetMainCamera()->transform.rotation.x += 0.001f * dy;
+
+  g_SpotlightNode->transform = g_Scene.GetMainCamera()->transform;
+  g_SkyboxModel->transform.translation = g_Scene.GetMainCamera()->transform.translation;
+
+  // g_Scene.camera->forward =
+  //     glm::normalize(glm::rotate(glm::identity<glm::mat4>(), 0.001f * dx, glm::vec3{0, 1, 0}) *
+  //     glm::vec4(g_Scene.camera->forward, 1));
+
+  // g_Scene.camera->forward.y += 0.001f * dy;
+  // g_Scene.camera->forward = glm::normalize(g_Scene.camera->forward);
+
+  prev_x = event->GetMove().x;
+  prev_y = event->GetMove().y;
+}
+
+void ProcessKeyEvent(Event* event) {
+  assert(event);
+
+  int key = event->GetKey().key;
+  int action = (int)event->GetKey().action;
+
+  float speed = 0.5;
+
+  // CameraComponent* cameraComponent = g_Scene.camera->GetComponent<CameraComponent>();
+  // TransformComponent* transformComponent = g_Scene.camera->GetComponent<TransformComponent>();
+
+  glm::vec3 forward = g_Scene.GetMainCamera()->CalculateForwardVector();
+  glm::vec3 right = g_Scene.GetMainCamera()->CalculateRightVector();
+
+  if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+    // transformComponent->translation += speed * cameraComponent->forward;
+    // g_Scene.camera->pos += speed * g_Scene.camera->forward;
+    g_Scene.GetMainCamera()->transform.translation += speed * forward;
+  }
+
+  if (key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+    // transformComponent->translation -= speed * cameraComponent->forward;
+    // g_Scene.camera->pos -= speed * g_Scene.camera->forward;
+    g_Scene.GetMainCamera()->transform.translation -= speed * forward;
+  }
+
+  if (key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+    // transformComponent->translation -= speed * glm::cross(cameraComponent->forward, glm::vec3{0, 1, 0});
+    // g_Scene.camera->pos -= speed * glm::cross(g_Scene.camera->forward, glm::vec3{0, 1, 0});
+    g_Scene.GetMainCamera()->transform.translation -= speed * right;
+  }
+
+  if (key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+    // transformComponent->translation += speed * glm::cross(cameraComponent->forward, glm::vec3{0, 1, 0});
+    // g_Scene.camera->pos += speed * glm::cross(g_Scene.camera->forward, glm::vec3{0, 1, 0});
+    g_Scene.GetMainCamera()->transform.translation += speed * right;
+  }
+
+  if (key == GLFW_KEY_Q && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+    // transformComponent->translation.y += 1;
+    // g_Scene.camera->pos.y += 1;
+    g_Scene.GetMainCamera()->transform.translation.y -= 1;
+  }
+
+  if (key == GLFW_KEY_E && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+    // transformComponent->translation.y -= 1;
+    // g_Scene.camera->pos.y -= 1;
+    g_Scene.GetMainCamera()->transform.translation.y += 1;
+  }
+
+  if (key == GLFW_KEY_F && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+    g_SpotlightNode->SetEnabled(!g_SpotlightNode->IsEnabled());
+  }
+
+  if (key == GLFW_KEY_J && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+    g_DirectionalLightNode->SetEnabled(!g_DirectionalLightNode->IsEnabled());
+  }
+
+  g_SpotlightNode->transform = g_Scene.GetMainCamera()->transform;
+  g_SkyboxModel->transform.translation = g_Scene.GetMainCamera()->transform.translation;
+}
+
+void ProcessEvent(Event* event, bool* running) {
+  assert(event);
+  assert(running);
+
+  switch (event->GetType()) {
+    case kQuit:
+      *running = false;
+      break;
+
+    case kKey:
+      ProcessKeyEvent(event);
+      break;
+
+    case kMouseMove:
+      ProcessMoveEvent(event);
+      break;
+
+    default:
+      break;
+  }
+}
 
 int main() {
-  Application app;
-  app.Run();
+  // Logger::OpenLogFile();
+
+  Window _window{1280, 960};
+  EventQueue::SetWindow(&_window);
+  NativeWindow* window = _window.GetNativeWindow();
+
+  int32_t frameBufferWidth = 0;
+  int32_t frameBufferHeight = 0;
+  glfwGetFramebufferSize(window, &frameBufferWidth, &frameBufferHeight);
+
+  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+    std::cout << "Failed to initialize GLAD" << std::endl;
+    return -1;
+  }
+
+  CameraNode3D* cameraNode = new CameraNode3D(
+      PerspectiveCameraSpecs((float)frameBufferWidth / (float)frameBufferHeight), Transform(glm::vec3{10, 3, -3}));
+
+  g_Scene.AddCamera(cameraNode);
+  g_Scene.SetMainCamera(cameraNode);
+
+  g_Scene.AddLightSource(
+      new LightSourceNode3D(PointLightSpecs(LightColorSpecs(glm::vec3{0.1}, glm::vec3{0.4, 0.34, 0}, glm::vec3{0.1}),
+                                            LightAttenuationSpecs(3)),
+                            Transform(glm::vec3{4, 3, 0})));
+
+  g_Scene.AddLightSource(
+      new LightSourceNode3D(PointLightSpecs(LightColorSpecs(glm::vec3{0.1}, glm::vec3{0.4, 0.2, 0.2}, glm::vec3{0.1}),
+                                            LightAttenuationSpecs(3)),
+                            Transform(glm::vec3{-4, 3, 0})));
+
+  g_DirectionalLightNode =
+      new LightSourceNode3D(DirectionalLightSpecs(LightColorSpecs(glm::vec3{0.2}, glm::vec3{0.2}, glm::vec3{0.1})),
+                            Transform(glm::vec3{0}, glm::vec3{-0.5, 0, 0}));
+  g_Scene.AddLightSource(g_DirectionalLightNode);
+
+  g_SpotlightNode = new LightSourceNode3D(SpotLightSpecs(LightColorSpecs(glm::vec3{0.3}, glm::vec3{0.3}, glm::vec3{0}),
+                                                         LightAttenuationSpecs(2), cosf(0.2), cos(0.3)));
+  g_Scene.AddLightSource(g_SpotlightNode);
+
+  // g_Scene.AddModel(new ModelNode3D(ParseMeshWavefront("res/meshes/skameiki.obj")));
+
+  g_Scene.AddModel(new ModelNode3D(ParseMeshWavefront("res/meshes/nk.obj")));
+
+  g_Scene.AddModel(
+      new ModelNode3D(ParseMeshWavefront("res/meshes/wooden_watch_tower.obj"), Transform(glm::vec3{0, -0.75, 0})));
+
+  g_Scene.AddModel(new ModelNode3D(ParseMeshWavefront("res/meshes/street_lamp.obj"),
+                                   Transform(glm::vec3{3, 0, 0}, glm::vec3{0}, glm::vec3{0.6})));
+
+  g_Scene.AddModel(new ModelNode3D(ParseMeshWavefront("res/meshes/street_lamp.obj"),
+                                   Transform(glm::vec3{-3, 0, 0}, glm::vec3{0}, glm::vec3{0.6})));
+
+  // g_SkyboxModel = new ModelNode3D(CreateSkyboxMesh(
+  //     {"res/textures/skybox_forest/skybox_forest_right.png", "res/textures/skybox_forest/skybox_forest_left.png",
+  //      "res/textures/skybox_forest/skybox_forest_top.png", "res/textures/skybox_forest/skybox_forest_bottom.png",
+  //      "res/textures/skybox_forest/skybox_forest_front.png", "res/textures/skybox_forest/skybox_forest_back.png"}));
+
+  // g_SkyboxModel = new ModelNode3D(CreateSkyboxMesh({"res/textures/skybox_ocean_sunset/skybox_ocean_sunset_right.png",
+  //                                                   "res/textures/skybox_ocean_sunset/skybox_ocean_sunset_left.png",
+  //                                                   "res/textures/skybox_ocean_sunset/skybox_ocean_sunset_top.png",
+  //                                                   "res/textures/skybox_ocean_sunset/skybox_ocean_sunset_bottom.png",
+  //                                                   "res/textures/skybox_ocean_sunset/skybox_ocean_sunset_front.png",
+  //                                                   "res/textures/skybox_ocean_sunset/skybox_ocean_sunset_back.png"}));
+
+  g_SkyboxModel = new ModelNode3D(CreateSkyboxMesh({"res/textures/skybox_night_sky/skybox_night_sky_right.png",
+                                                    "res/textures/skybox_night_sky/skybox_night_sky_left.png",
+                                                    "res/textures/skybox_night_sky/skybox_night_sky_top.png",
+                                                    "res/textures/skybox_night_sky/skybox_night_sky_bottom.png",
+                                                    "res/textures/skybox_night_sky/skybox_night_sky_front.png",
+                                                    "res/textures/skybox_night_sky/skybox_night_sky_back.png"}));
+
+  g_Scene.AddModel(g_SkyboxModel);
+
+  g_SkyboxModel->transform.translation = g_Scene.GetMainCamera()->transform.translation;
+
+  Renderer3D::Init();
+  Renderer3D::SetViewport(
+      Viewport{0, 0, static_cast<uint32_t>(frameBufferWidth), static_cast<uint32_t>(frameBufferHeight)});
+
+  // FIXME:
+  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  glfwSetCursorPos(window, frameBufferWidth / 2, frameBufferHeight / 2);
+
+  Event event{};
+  bool running = true;
+
+  while (running) {
+    while (PollEvent(&event)) {
+      ProcessEvent(&event, &running);
+    }
+
+    Renderer3D::RenderScene(&g_Scene);
+    glfwSwapBuffers(window);
+  }
+
+  Logger::Close();
 
   return 0;
 }

@@ -31,6 +31,7 @@
 #include <map>
 #include <string>
 
+#include "renderer/cube_map.hpp"
 #include "renderer/shader.hpp"
 #include "renderer/texture.hpp"
 
@@ -46,7 +47,19 @@ class Material {
   void SetShader(SharedPtr<Shader> shader);
   Shader* GetShader();
 
-  void AddTexture(const std::string& name, SharedPtr<Texture> texture);
+  template <typename... Args>
+  void AddTexture(SharedPtr<Texture> texture, const std::string& format, Args&&... args) {
+    AddTexture(texture, fmt::format(format, std::forward<Args>(args)...));
+  }
+
+  void AddTexture(SharedPtr<Texture> texture, const std::string& name);
+
+  template <typename... Args>
+  void AddCubeMap(SharedPtr<CubeMap> cube_map, const std::string& format, Args&&... args) {
+    AddCubeMap(cube_map, fmt::format(format, std::forward<Args>(args)...));
+  }
+
+  void AddCubeMap(SharedPtr<CubeMap> cube_map, const std::string& name);
 
   template <typename T, typename... Args>
   inline void SetUniform(const T& value, const std::string& format, Args&&... args) {
@@ -69,6 +82,7 @@ class Material {
  private:
   SharedPtr<Shader> shader_{nullptr};
   std::map<std::string, SharedPtr<Texture>> textures_;
+  std::map<std::string, SharedPtr<CubeMap>> cube_maps_;
 
   /* TODO: Think of an alternative way of storing this */
   std::map<std::string, int>       uniforms_int_;

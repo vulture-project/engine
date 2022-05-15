@@ -36,6 +36,8 @@ using namespace vulture;
 OpenGLTexture::OpenGLTexture(const std::string& filename) {
   LOG_INFO(Renderer, "Loading OpenGL texture \"{}\"", filename);
 
+  stbi_set_flip_vertically_on_load(true);  // FIXME:
+
   int32_t width, height, channels;
   uint8_t* data = stbi_load(filename.c_str(), &width, &height, &channels, /*desired_channels=*/0);
 
@@ -52,7 +54,9 @@ OpenGLTexture::OpenGLTexture(const std::string& filename) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-  glTexImage2D(GL_TEXTURE_2D, /*level=*/0, GL_RGB, width, height, /*border=*/0, GL_RGB, GL_UNSIGNED_BYTE, data);
+  GLenum format = channels == 3 ? GL_RGB : GL_RGBA;
+
+  glTexImage2D(GL_TEXTURE_2D, /*level=*/0, format, width, height, /*border=*/0, format, GL_UNSIGNED_BYTE, data);
   glGenerateMipmap(GL_TEXTURE_2D);
 
   stbi_image_free(data);
@@ -67,5 +71,7 @@ uint32_t OpenGLTexture::GetHeight() const { return height_; }
 uint32_t OpenGLTexture::GetID() const { return id_; }
 
 void OpenGLTexture::Bind(uint32_t slot) const {
-  glBindTextureUnit(slot, id_);
+  // glBindTextureUnit(slot, id_); NOTE: for OpenGL version 4.5 and later!
+  glActiveTexture(GL_TEXTURE0 + slot);
+  glBindTexture(GL_TEXTURE_2D, id_);
 }

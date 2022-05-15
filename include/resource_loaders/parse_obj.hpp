@@ -34,11 +34,22 @@
 namespace vulture {
 
 /**
- * @brief Loads a Mesh from the specified Wavefront file.
+ * @brief Loads a Mesh from the specified Wavefront (.obj) file.
+ * 
+ * @note If file contains info about materials, then the materials
+ * will be loaded as well.
  * 
  * @param filename
- * @return SharedPtr<Mesh> 
+ * @return SharedPtr<Mesh>
  */
-SharedPtr<Mesh> ParseMeshObj(const std::string& filename);
+SharedPtr<Mesh> ParseMeshWavefront(const std::string& filename);
+
+/**
+ * @brief Loads a Material from the specified Wavefront file.
+ * 
+ * @param filename 
+ * @return SharedPtr<Material> 
+ */
+SharedPtr<Material> ParseMaterialWavefront(const std::string& filename);
 
 }  // namespace vulture
