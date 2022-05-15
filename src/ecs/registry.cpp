@@ -31,13 +31,13 @@
 
 namespace vulture {
 
-EntityId Registry::CreateEntity() {
+EntityId EntityRegistry::CreateEntity() {
   EntityId id = entity_id_generator_.Next();
   entities_.emplace(id, ComponentMap{});
   return id;
 }
 
-void Registry::DestroyEntity(EntityId id) {
+void EntityRegistry::DestroyEntity(EntityId id) {
   assert(entities_.find(id) != entities_.end());
 
   for (auto it = entities_[id].begin(); it != entities_[id].end(); ++it) {
@@ -51,7 +51,7 @@ void Registry::DestroyEntity(EntityId id) {
 	entities_.erase(id);
 }
 
-void Registry::DestroyAllEntities() {
+void EntityRegistry::DestroyAllEntities() {
   for (auto iter = entities_.begin(); iter != entities_.end(); ++iter) {
     DestroyEntity(iter->first);
   }

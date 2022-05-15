@@ -33,7 +33,7 @@ namespace vulture {
 
 class EntityHandle {
  public:
-  EntityHandle(EntityId id, Registry& registry);
+  EntityHandle(EntityId id, EntityRegistry& registry);
 
   void Destroy();
 
@@ -51,7 +51,7 @@ class EntityHandle {
 
 private:
   EntityId id_;
-  Registry& registry_;
+  EntityRegistry& registry_;
 };
 
 }  // namespace vulture

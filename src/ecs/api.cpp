@@ -29,7 +29,7 @@
 
 namespace vulture {
 
-EntityHandle CreateEntity(Registry& registry) {
+EntityHandle CreateEntity(EntityRegistry& registry) {
   return EntityHandle{registry.CreateEntity(), registry};
 }
 

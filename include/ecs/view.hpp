@@ -42,7 +42,7 @@ class View {
     using EntityMapIterator = typename std::unordered_map<EntityId, IComponentHolder*>::iterator;
 
    public:
-    Iterator(EntityMapIterator iterator, Registry& registry);
+    Iterator(EntityMapIterator iterator, EntityRegistry& registry);
 
     Iterator& operator++();
     Iterator operator++(int unused);
@@ -61,11 +61,11 @@ class View {
 
    private:
     EntityMapIterator iterator_;
-    Registry& registry_;
+    EntityRegistry& registry_;
   };
 
  public:
-  View(EntityMap& entity_map, Registry& registry);
+  View(EntityMap& entity_map, EntityRegistry& registry);
 
   Iterator Begin();
 
@@ -73,7 +73,7 @@ class View {
 
  private:
   EntityMap& entity_map_;
-  Registry& registry_;
+  EntityRegistry& registry_;
 };
 
 } // namespace vulture

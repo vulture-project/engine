@@ -33,12 +33,10 @@
 
 namespace vulture {
 
-void f();
-
-EntityHandle CreateEntity(Registry& registry);
+EntityHandle CreateEntity(EntityRegistry& registry);
 
 template <typename ComponentT>
-View<ComponentT> GetView(Registry& registry);
+View<ComponentT> GetView(EntityRegistry& registry);
 
 }  // namespace vulture
 

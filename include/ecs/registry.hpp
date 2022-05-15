@@ -42,7 +42,7 @@ using EntityIdGenerator = IdGenerator<EntityId>;
 using EntityMap = std::unordered_map<EntityId, IComponentHolder*>;
 using ComponentMap = std::unordered_map<ComponentTypeId, IComponentHolder*>;
 
-class Registry {
+class EntityRegistry {
  public:
   EntityId CreateEntity();
 

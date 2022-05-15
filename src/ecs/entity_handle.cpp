@@ -29,7 +29,7 @@
 
 namespace vulture {
 
-EntityHandle::EntityHandle(EntityId id, Registry& registry) 
+EntityHandle::EntityHandle(EntityId id, EntityRegistry& registry) 
     : id_{id},
       registry_{registry} {
 }

@@ -28,7 +28,7 @@
 namespace vulture {
 
 template <typename ComponentT, typename... Args>
-void Registry::AddComponent(EntityId id, Args&&... args) {
+void EntityRegistry::AddComponent(EntityId id, Args&&... args) {
   ComponentTypeId component_type_id = ComponentHolder<ComponentT>::GetTypeId();
 
   assert(entities_.find(id) != entities_.end());
@@ -41,7 +41,7 @@ void Registry::AddComponent(EntityId id, Args&&... args) {
 }
 
 template <typename ComponentT>
-void Registry::RemoveComponent(EntityId id) {
+void EntityRegistry::RemoveComponent(EntityId id) {
   ComponentTypeId component_type_id = ComponentHolder<ComponentT>::GetTypeId();
 
   assert(entities_.find(id) != entities_.end());
@@ -55,7 +55,7 @@ void Registry::RemoveComponent(EntityId id) {
 }
 
 template <typename ComponentT>
-ComponentT* Registry::GetComponent(EntityId id) {
+ComponentT* EntityRegistry::GetComponent(EntityId id) {
   ComponentTypeId component_type_id = ComponentHolder<ComponentT>::GetTypeId();
 
   auto component_holder_iter = components_[component_type_id].find(id);
@@ -68,7 +68,7 @@ ComponentT* Registry::GetComponent(EntityId id) {
 }
 
 template <typename ComponentT>
-bool Registry::HasComponent(EntityId id) {
+bool EntityRegistry::HasComponent(EntityId id) {
   ComponentTypeId component_type_id = ComponentHolder<ComponentT>::GetTypeId();
 
   auto component_holder_iter = components_[component_type_id].find(id);
@@ -77,7 +77,7 @@ bool Registry::HasComponent(EntityId id) {
 }
 
 template <typename ComponentT>
-EntityMap& Registry::GetEntityMap() {
+EntityMap& EntityRegistry::GetEntityMap() {
   ComponentTypeId component_type_id = ComponentHolder<ComponentT>::GetTypeId();
 
   return components_[component_type_id];
