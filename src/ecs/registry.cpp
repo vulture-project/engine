@@ -1,21 +1,21 @@
 /**
- * @author Sergey Zelenkin (https://github.com/vssense)
- * @file window.hpp
- * @date 2022-04-27
- * 
+ * @author Viktor Baranov (github.com/baranov-V-V)
+ * @file registry.ipp
+ * @date 2022-05-10
+ *
  * The MIT License (MIT)
  * Copyright (c) vulture-project
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
  * the rights to use, copy, modify, merge, publish, distribute, sublicense,
  * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,36 +25,36 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#pragma once
+#include "ecs/registry.hpp"
 
-#include <cstddef>
+#include <iostream>
 
-struct GLFWwindow;
+namespace vulture {
 
-typedef GLFWwindow NativeWindow;
+EntityId Registry::CreateEntity() {
+  EntityId id = entity_id_generator_.Next();
+  entities_.emplace(id, ComponentMap{});
+  return id;
+}
 
-class Window {
- public:
-  Window(const char* title = kDefaultTitle);
-  explicit Window(size_t width, size_t height, const char* title = kDefaultTitle);
-  ~Window();
+void Registry::DestroyEntity(EntityId id) {
+  assert(entities_.find(id) != entities_.end());
 
-  Window(const Window&) = delete;
-  Window(Window&&) = delete;
-  Window& operator=(const Window&) = delete;
-  Window& operator=(Window&&) = delete;
+  for (auto it = entities_[id].begin(); it != entities_[id].end(); ++it) {
+    ComponentTypeId component_type_id = it->first;
 
-  NativeWindow* GetNativeWindow();
+    IComponentHolder* component_to_remove_holder = components_[component_type_id].find(id)->second;
+    components_[component_type_id].erase(id);
+    delete component_to_remove_holder;
+  }
 
-  void SetTitle(const char* title);
-  void SetFPSToTitle(double fps);
+	entities_.erase(id);
+}
 
- public:
-  static const size_t kDefaultWidth = 640;
-  static const size_t kDefaultHeight = 480;
+void Registry::DestroyAllEntities() {
+  for (auto iter = entities_.begin(); iter != entities_.end(); ++iter) {
+    DestroyEntity(iter->first);
+  }
+}
 
-  static const char* kDefaultTitle;
-
- private:
-  NativeWindow* window_;
-};
+}  // namespace vulture

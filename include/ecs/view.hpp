@@ -1,21 +1,21 @@
 /**
- * @author Sergey Zelenkin (https://github.com/vssense)
- * @file window.hpp
- * @date 2022-04-27
- * 
+ * @author Viktor Baranov (github.com/baranov-V-V)
+ * @file view.hpp
+ * @date 2022-05-10
+ *
  * The MIT License (MIT)
  * Copyright (c) vulture-project
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
  * the rights to use, copy, modify, merge, publish, distribute, sublicense,
  * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,34 +27,55 @@
 
 #pragma once
 
-#include <cstddef>
+#include "ecs/entity_handle.hpp"
+#include "ecs/registry.hpp"
 
-struct GLFWwindow;
+#include <unordered_map>
 
-typedef GLFWwindow NativeWindow;
+namespace vulture {
 
-class Window {
+template <typename ComponentT>
+class View {
  public:
-  Window(const char* title = kDefaultTitle);
-  explicit Window(size_t width, size_t height, const char* title = kDefaultTitle);
-  ~Window();
+  class Iterator {
+   private:
+    using EntityMapIterator = typename std::unordered_map<EntityId, IComponentHolder*>::iterator;
 
-  Window(const Window&) = delete;
-  Window(Window&&) = delete;
-  Window& operator=(const Window&) = delete;
-  Window& operator=(Window&&) = delete;
+   public:
+    Iterator(EntityMapIterator iterator, Registry& registry);
 
-  NativeWindow* GetNativeWindow();
+    Iterator& operator++();
+    Iterator operator++(int unused);
 
-  void SetTitle(const char* title);
-  void SetFPSToTitle(double fps);
+    ComponentT* GetComponent() const;
+    EntityHandle GetEntityHandle() const;
+
+   public:
+    friend bool operator==(const Iterator& lhs, const Iterator& rhs) {
+      return lhs.iterator_ == rhs.iterator_;
+    }
+
+    friend bool operator!=(const Iterator& lhs, const Iterator& rhs) {
+      return lhs.iterator_ != rhs.iterator_;
+    }
+
+   private:
+    EntityMapIterator iterator_;
+    Registry& registry_;
+  };
 
  public:
-  static const size_t kDefaultWidth = 640;
-  static const size_t kDefaultHeight = 480;
+  View(EntityMap& entity_map, Registry& registry);
 
-  static const char* kDefaultTitle;
+  Iterator Begin();
+
+  Iterator End();
 
  private:
-  NativeWindow* window_;
+  EntityMap& entity_map_;
+  Registry& registry_;
 };
+
+} // namespace vulture
+
+#include "ecs/view.ipp"

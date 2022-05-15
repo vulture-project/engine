@@ -1,21 +1,21 @@
 /**
- * @author Sergey Zelenkin (https://github.com/vssense)
- * @file window.hpp
- * @date 2022-04-27
- * 
+ * @author Viktor Baranov (github.com/baranov-V-V)
+ * @file component_holder.hpp
+ * @date 2022-05-10
+ *
  * The MIT License (MIT)
  * Copyright (c) vulture-project
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
  * the rights to use, copy, modify, merge, publish, distribute, sublicense,
  * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,34 +27,47 @@
 
 #pragma once
 
-#include <cstddef>
+#include "ecs/generator.hpp"
 
-struct GLFWwindow;
+#include <cstdint>
+#include <utility>
 
-typedef GLFWwindow NativeWindow;
+namespace vulture {
 
-class Window {
+using ComponentTypeId = uint64_t;
+using ComponentTypeIdGenerator = StaticIdGenerator<ComponentTypeId>;
+
+class IComponentHolder {
  public:
-  Window(const char* title = kDefaultTitle);
-  explicit Window(size_t width, size_t height, const char* title = kDefaultTitle);
-  ~Window();
+  virtual ~IComponentHolder() = default;
+};
 
-  Window(const Window&) = delete;
-  Window(Window&&) = delete;
-  Window& operator=(const Window&) = delete;
-  Window& operator=(Window&&) = delete;
-
-  NativeWindow* GetNativeWindow();
-
-  void SetTitle(const char* title);
-  void SetFPSToTitle(double fps);
-
+template <typename ComponentT>
+class ComponentHolderBase : public IComponentHolder {
  public:
-  static const size_t kDefaultWidth = 640;
-  static const size_t kDefaultHeight = 480;
+  template <typename... Args>
+  ComponentHolderBase(Args&&... args);
 
-  static const char* kDefaultTitle;
+  ~ComponentHolderBase() override = default;
+
+ protected:
+  ComponentT component_;
+};
+
+template <typename ComponentT>
+class ComponentHolder : public ComponentHolderBase<ComponentT> {
+ public:
+  template <typename... Args>
+  ComponentHolder(Args&&... args);
+
+  ComponentT* Get();
+
+  static ComponentTypeId GetTypeId();
 
  private:
-  NativeWindow* window_;
+  static ComponentTypeId type_id_;
 };
+
+}  // namespace vulture
+
+#include "ecs/component_holder.ipp"

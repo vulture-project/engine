@@ -1,21 +1,21 @@
 /**
- * @author Sergey Zelenkin (https://github.com/vssense)
- * @file window.hpp
- * @date 2022-04-27
- * 
+ * @author Viktor Baranov (github.com/baranov-V-V)
+ * @file component_holder.ipp
+ * @date 2022-05-10
+ *
  * The MIT License (MIT)
  * Copyright (c) vulture-project
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
  * the rights to use, copy, modify, merge, publish, distribute, sublicense,
  * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,36 +25,31 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#pragma once
+namespace vulture {
 
-#include <cstddef>
+template <typename ComponentT>
+template <typename... Args>
+ComponentHolderBase<ComponentT>::ComponentHolderBase(Args&&... args) 
+    : component_{std::forward<Args>(args)...} {
+}
 
-struct GLFWwindow;
+template <typename ComponentT>
+template <typename... Args>
+ComponentHolder<ComponentT>::ComponentHolder(Args&&... args)
+    : ComponentHolderBase<ComponentT>{std::forward<Args>(args)...} {
+}
 
-typedef GLFWwindow NativeWindow;
+template <typename ComponentT>
+ComponentT* ComponentHolder<ComponentT>::Get() {
+  return &this->component_;
+}
 
-class Window {
- public:
-  Window(const char* title = kDefaultTitle);
-  explicit Window(size_t width, size_t height, const char* title = kDefaultTitle);
-  ~Window();
+template <typename ComponentT>
+ComponentTypeId ComponentHolder<ComponentT>::GetTypeId() {
+  return type_id_;
+}
 
-  Window(const Window&) = delete;
-  Window(Window&&) = delete;
-  Window& operator=(const Window&) = delete;
-  Window& operator=(Window&&) = delete;
+template <typename ComponentT>
+ComponentTypeId ComponentHolder<ComponentT>::type_id_{ComponentTypeIdGenerator::Next()};
 
-  NativeWindow* GetNativeWindow();
-
-  void SetTitle(const char* title);
-  void SetFPSToTitle(double fps);
-
- public:
-  static const size_t kDefaultWidth = 640;
-  static const size_t kDefaultHeight = 480;
-
-  static const char* kDefaultTitle;
-
- private:
-  NativeWindow* window_;
-};
+}  // namespace vulture

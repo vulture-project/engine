@@ -25,10 +25,6 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include <GLFW/glfw3.h>
-#include <alloca.h>
-#include <glad/glad.h>
-
 #include <fstream>
 #include <sstream>
 #include <string>

@@ -4,25 +4,32 @@
 Window::Window(size_t width, size_t height, const char* title);
 ```
  Также в конструкторе вызывается ```glfwInit()```, в деструкторе ```glfwTerminate()```, когда определимся с библиотеками, возможно, будет модуль отвечающий за инициализацию.
-
-#### Установка нового заголовка
+```C++
+Window::Window(const char* title);
+```
+Создает fullscreen окно 
+### Установка нового заголовка
 ```C++
 void Window::SetTitle(const char* title);
 ```
 
-#### Получение базового окна
+### Получение базового окна
 ```C++
 typedef GLFWwindow NativeWindow;
 
 NativeWindow* Window::GetNativeWindow();
 ```
 
+### Установить FPS в заголовок окна
+```C++
+  void SetFPSToTitle(double fps);
+```
+
 # Event
 
 - Типы эвентов, которые доступны
 ```C++
-enum EventType
-{
+enum EventType {
     kNoEvent,
     kQuit,
     kKey,
@@ -43,10 +50,8 @@ input::EventQueue::SetWindow(&window);
 ```C++
 Event event{};
 
-while (running)
-{
-    while (PollEvent(&event))
-    {
+while (running) {
+    while (PollEvent(&event)) {
         ProcessEvent(&event);
     }
 }
@@ -54,8 +59,7 @@ while (running)
 
 Данные эвента и геттеры
 ```C++
-union EventData
-{
+union EventData {
     MouseMoveEventData   move;
     MouseButtonEventData button;
     KeyEventData         key;
@@ -81,8 +85,7 @@ ScrollEventData&      Event::GetScroll()
 event.GetData().key == event.GetKey()
 ```
 ```C++
-struct KeyEventData
-{
+struct KeyEventData {
     int key;              // Actually ascii codes
     int scancode;
     Action action;
@@ -93,8 +96,7 @@ struct KeyEventData
 - key - ascii код
 - action
 ```C++
-enum Action
-{
+enum Action {
     kPress,
     kRelease,
     kHold
@@ -104,8 +106,7 @@ enum Action
 
 - mods - информация о зажатых клавишах
 ```C++
-struct ButtonMods
-{
+struct ButtonMods {
     bool shift_pressed : 1;
     bool ctrl_pressed  : 1;
     bool alt_pressed   : 1;
@@ -120,8 +121,7 @@ event.GetData().button == event.GetButton()
 ```
 
 ```C++
-struct MouseButtonEventData
-{
+struct MouseButtonEventData {
     MouseButton button;
     Action action;
     ButtonMods mods;
@@ -129,8 +129,7 @@ struct MouseButtonEventData
 ```
 
 ```C++
-enum MouseButton
-{
+enum MouseButton {
     kLeftMouseButton,
     kRightMouseButton,
     kMiddleMouseButton,
@@ -146,8 +145,7 @@ event.GetData().move == event.GetMove()
 ```
 
 ```C++
-struct MouseMoveEventData
-{
+struct MouseMoveEventData {
     int x;
     int y;
 };
@@ -159,8 +157,7 @@ struct MouseMoveEventData
 event.GetType().scroll == event.GetScroll()
 ```
 ```C++
-struct ScrollEventData
-{
+struct ScrollEventData {
     int dx;
     int dy;
 };
@@ -168,8 +165,7 @@ struct ScrollEventData
 ## Keyboard
 
 ```C++
-class Keyboard
-{
+class Keyboard {
  public:
   static bool Pressed(Keys key);
 };
