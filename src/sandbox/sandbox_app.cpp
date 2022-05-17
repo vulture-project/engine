@@ -31,7 +31,7 @@
 #include "sandbox_app.hpp"
 #include "core/logger.hpp"
 #include "renderer/3d/renderer3d.hpp"
-#include "resource_loaders/parse_obj.hpp"
+#include "core/resource_manager.hpp"
 
 using namespace vulture;
 
@@ -78,15 +78,15 @@ void SandboxApp::Run() {
                                                           LightAttenuationSpecs(2), cosf(0.2), cos(0.3)));
   scene_.AddLightSource(spot_light_node_);
 
-  scene_.AddModel(new ModelNode3D(ParseMeshWavefront("res/meshes/nk.obj")));
+  scene_.AddModel(new ModelNode3D(ResourceManager::LoadMesh("res/meshes/nk.obj")));
 
   scene_.AddModel(
-      new ModelNode3D(ParseMeshWavefront("res/meshes/wooden_watch_tower.obj"), Transform(glm::vec3{0, -0.75, 0})));
+      new ModelNode3D(ResourceManager::LoadMesh("res/meshes/wooden_watch_tower.obj"), Transform(glm::vec3{0, -0.75, 0})));
 
-  scene_.AddModel(new ModelNode3D(ParseMeshWavefront("res/meshes/street_lamp.obj"),
+  scene_.AddModel(new ModelNode3D(ResourceManager::LoadMesh("res/meshes/street_lamp.obj"),
                                   Transform(glm::vec3{3, 0, 0}, glm::vec3{0}, glm::vec3{0.6})));
 
-  scene_.AddModel(new ModelNode3D(ParseMeshWavefront("res/meshes/street_lamp.obj"),
+  scene_.AddModel(new ModelNode3D(ResourceManager::LoadMesh("res/meshes/street_lamp.obj"),
                                   Transform(glm::vec3{-3, 0, 0}, glm::vec3{0}, glm::vec3{0.6})));
 
   // skybox_node_ = new ModelNode3D(CreateSkyboxMesh(
