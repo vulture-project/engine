@@ -45,26 +45,45 @@ class Sink final : public BaseSink {
  public:
   template <auto F, typename U>
   void Connect(U& instance) {
-    callback_.emplace_back(std::bind(F, instance, std::placeholders::_1));
+    callback_.emplace_back(reinterpret_cast<void*>(F),
+                           std::bind(F, instance, std::placeholders::_1));
   }
+
   template <auto F>
   void Connect() {
-    callback_.emplace_back(std::bind(F, std::placeholders::_1));
+    callback_.emplace_back(reinterpret_cast<void*>(F),
+                           std::bind(F, std::placeholders::_1));
   }
 
   template <auto F, typename U>
-  void Connect() {
-    callback_.emplace_back(std::bind(F, std::placeholders::_1));
+  void Disonnect(U& instance) {
+    for (auto it = callback_.begin(); it != callback_.end(); ++it) {
+      if (it->first == reinterpret_cast<void*>(F)) {
+        callback_.erase(it);
+        break;
+      }
+    }
+  }
+  template <auto F>
+  void Disonnect() {
+    for (auto it = callback_.begin(); it != callback_.end(); ++it) {
+      if (it->first == reinterpret_cast<void*>(F)) {
+        callback_.erase(it);
+        break;
+      }
+    }
   }
 
   void Publish(T& event) {
     for (size_t i = 0; i < callback_.size(); ++i) {
-      callback_[i](event);
+      (callback_[i].second)(event);
     }
   }
 
  private:
-  std::vector<std::function<void(T&)>> callback_;
+  // std pair just for now, then we will write our own std::function with
+  // operator
+  std::vector<std::pair<void*, std::function<void(T&)>>> callback_;
 };
 
 class Dispatcher {
