@@ -34,6 +34,7 @@
 #include "core/logger.hpp"
 #include "resource_loaders/parse_obj.hpp"
 #include "renderer/3d/3d_default_shader_names.hpp"
+#include "core/resource_manager.hpp"
 
 using namespace vulture;
 
@@ -162,12 +163,15 @@ SharedPtr<Mesh> vulture::ParseMeshWavefront(const std::string& filename) {
   if (!material_specified) {
     LOG_WARN(Renderer, "Wavefront mesh file \"{}\" doesn't specify material info, using default material!", filename);
 
-    material = CreateShared<Material>(Shader::Create("res/shaders/basic.glsl"));
+    // material = CreateShared<Material>(Shader::Create("res/shaders/basic.glsl"));
+    material = CreateShared<Material>(ResourceManager::LoadShader("res/shaders/basic.glsl"));
     material->SetUniform(glm::vec3{1.0}, "{}.{}", kUniformNameMaterial, kStructMemberNameAmbientColor);
     material->SetUniform(glm::vec3{0.8}, "{}.{}", kUniformNameMaterial, kStructMemberNameDiffuseColor);
     material->SetUniform(glm::vec3{0.5}, "{}.{}", kUniformNameMaterial, kStructMemberNameSpecularColor);
     material->SetUniform(225.0f, "{}.{}", kUniformNameMaterial, kStructMemberNameSpecularExponent);
-    material->AddTexture(Texture::Create("res/textures/blank.png"), "{}.{}", kUniformNameMaterial,
+    // material->AddTexture(Texture::Create("res/textures/blank.png"), "{}.{}", kUniformNameMaterial,
+    //                      kStructMemberNameDiffuseMap);
+    material->AddTexture(ResourceManager::LoadTexture("res/textures/blank.png"), "{}.{}", kUniformNameMaterial,
                          kStructMemberNameDiffuseMap);
   } else {
     material = ParseMaterialWavefront(material_filename);
@@ -185,7 +189,8 @@ SharedPtr<Material> vulture::ParseMaterialWavefront(const std::string& filename)
     return nullptr;
   }
 
-  SharedPtr<Material> material{CreateShared<Material>(Shader::Create("res/shaders/basic.glsl"))};
+  // SharedPtr<Material> material{CreateShared<Material>(Shader::Create("res/shaders/basic.glsl"))};
+  SharedPtr<Material> material{CreateShared<Material>(ResourceManager::LoadShader("res/shaders/basic.glsl"))};
 
   bool diffuse_map_found = false;
 
@@ -215,7 +220,9 @@ SharedPtr<Material> vulture::ParseMaterialWavefront(const std::string& filename)
   }
 
   if (!diffuse_map_found) {
-    material->AddTexture(Texture::Create("res/textures/blank.png"), "{}.{}", kUniformNameMaterial,
+    // material->AddTexture(Texture::Create("res/textures/blank.png"), "{}.{}", kUniformNameMaterial,
+    //                      kStructMemberNameDiffuseMap);
+    material->AddTexture(ResourceManager::LoadTexture("res/textures/blank.png"), "{}.{}", kUniformNameMaterial,
                          kStructMemberNameDiffuseMap);
   }
 

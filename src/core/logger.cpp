@@ -39,7 +39,7 @@ const fmt::text_style Logger::kDebugStyle = fmt::emphasis::bold;
 const char* Logger::kDefaultLogFileName = "log/log.txt"; 
 const char* Logger::kProjectDirectoryName = "engine"; 
 
-const int Logger::kFilenameAlignment = 40;
+const int Logger::kFilenameAlignment = 0;
 const int Logger::kLevelStringAlignment = 7;
 
 void Logger::OpenLogFile(const char* filename) {

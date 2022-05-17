@@ -33,7 +33,7 @@
 #include "core/logger.hpp"
 #include "glad/glad.h"
 #include "renderer/3d/renderer3d.hpp"
-#include "resource_loaders/parse_obj.hpp"
+#include "core/resource_manager.hpp"
 
 using namespace vulture;
 

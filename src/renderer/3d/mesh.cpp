@@ -27,6 +27,7 @@
 
 #include "renderer/3d/mesh.hpp"
 #include "renderer/3d/3d_default_shader_names.hpp"
+#include "core/resource_manager.hpp"
 
 using namespace vulture;
 
@@ -71,7 +72,8 @@ SharedPtr<Mesh> vulture::CreateSkyboxMesh(const std::array<std::string, 6>& face
   vao->AddVertexBuffer(vbo);
   vao->SetIndexBuffer(ibo);
 
-  SharedPtr<Material> material = CreateShared<Material>(Shader::Create("res/shaders/skybox.glsl"));
+  // SharedPtr<Material> material = CreateShared<Material>(Shader::Create("res/shaders/skybox.glsl"));
+  SharedPtr<Material> material = CreateShared<Material>(ResourceManager::LoadShader("res/shaders/skybox.glsl"));
   material->AddCubeMap(CubeMap::Create(faces_filenames), "u_skybox");
 
   return CreateShared<Mesh>(vao, material);
