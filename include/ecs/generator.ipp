@@ -38,6 +38,6 @@ Id StaticIdGenerator<Id>::Next() {
 }
 
 template <typename Id>
-Id StaticIdGenerator<Id>::current_{0};
+Id StaticIdGenerator<Id>::current_{1};
 
 } // namespace vulture

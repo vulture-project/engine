@@ -40,7 +40,7 @@ typename View<ComponentT>::Iterator& View<ComponentT>::Iterator::operator++() {
 }
 
 template <typename ComponentT>
-typename View<ComponentT>::Iterator View<ComponentT>::Iterator::operator++(int unused) {
+typename View<ComponentT>::Iterator View<ComponentT>::Iterator::operator++(int) {
   Iterator temp{*this};
   ++(*this);
   return temp;
@@ -65,12 +65,12 @@ View<ComponentT>::View(EntityMap& entity_map, EntityRegistry& registry)
 }
 
 template <typename ComponentT>
-typename View<ComponentT>::Iterator View<ComponentT>::Begin() {
+typename View<ComponentT>::Iterator View<ComponentT>::begin() {
   return Iterator{entity_map_.begin(), registry_}; 
 }
 
 template <typename ComponentT>
-typename View<ComponentT>::Iterator View<ComponentT>::End() {
+typename View<ComponentT>::Iterator View<ComponentT>::end() {
   return Iterator{entity_map_.end(), registry_};
 }
 

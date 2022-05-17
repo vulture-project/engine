@@ -31,15 +31,6 @@
 
 namespace vulture {
 
-enum class LightType {
-  kInvalid = -1,
-  kDirectional,
-  kPoint,
-  kSpot,
-
-  kTotal
-};
-
 struct LightColorSpecs {
   glm::vec3 ambient{0};
   glm::vec3 diffuse{0};
@@ -88,6 +79,33 @@ struct SpotLightSpecs {
         attenuation_specs(attenuation_specs),
         inner_cone_cosine(inner_cone_cosine),
         outer_cone_cosine(outer_cone_cosine) {}
+};
+
+enum class LightType {
+  kInvalid = -1,
+  kDirectional,
+  kPoint,
+  kSpot,
+
+  kTotal
+};
+
+struct LightSourceSpecs {
+  LightType type{LightType::kInvalid};
+
+  union {
+    DirectionalLightSpecs directional;
+    PointLightSpecs point;
+    SpotLightSpecs spot;
+  };
+
+  LightSourceSpecs() : directional() {}
+
+  LightSourceSpecs(const DirectionalLightSpecs& directional)
+      : type(LightType::kDirectional), directional(directional) {}
+
+  LightSourceSpecs(const PointLightSpecs& point) : type(LightType::kPoint), point(point) {}
+  LightSourceSpecs(const SpotLightSpecs& spot) : type(LightType::kSpot), spot(spot) {}
 };
 
 }  // namespace vulture

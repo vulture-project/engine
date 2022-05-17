@@ -25,11 +25,13 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-
 #include "sandbox_app.hpp"
+
+#include <chrono>
+
+#include "GLFW/glfw3.h"
 #include "core/logger.hpp"
+#include "glad/glad.h"
 #include "renderer/3d/renderer3d.hpp"
 #include "core/resource_manager.hpp"
 
@@ -48,46 +50,88 @@ int SandboxApp::Init() {
   return 0;
 }
 
+class CameraMovementScript : public IScript {
+ public:
+  constexpr static float kSpeed = 10;
+
+  virtual void OnUpdate(EntityHandle entity, float timestep) override {
+    Transform* transform = &entity.GetComponent<TransformComponent>()->transform;
+
+    glm::vec3 forward = transform->CalculateRotationMatrix() * glm::vec4(kDefaultForwardVector, 1);
+    glm::vec3 right = transform->CalculateRotationMatrix() * glm::vec4(kDefaultRightVector, 1);
+
+    float disp = kSpeed * timestep;
+
+    if (Keyboard::Pressed(Keys::kWKey)) {
+      transform->translation += disp * forward;
+    } else if (Keyboard::Pressed(Keys::kSKey)) {
+      transform->translation -= disp * forward;
+    }
+
+    if (Keyboard::Pressed(Keys::kDKey)) {
+      transform->translation += disp * right;
+    } else if (Keyboard::Pressed(Keys::kAKey)) {
+      transform->translation -= disp * right;
+    }
+  }
+};
+
 void SandboxApp::Run() {
-  int32_t frameBufferWidth = 0;
-  int32_t frameBufferHeight = 0;
-  glfwGetFramebufferSize(window_.GetNativeWindow(), &frameBufferWidth, &frameBufferHeight);
+  int32_t frame_buffer_width = 0;
+  int32_t frame_buffer_height = 0;
+  glfwGetFramebufferSize(window_.GetNativeWindow(), &frame_buffer_width, &frame_buffer_height);
 
-  CameraNode3D* cameraNode = new CameraNode3D(
-      PerspectiveCameraSpecs((float)frameBufferWidth / (float)frameBufferHeight), Transform(glm::vec3{10, 3, -3}));
+  float aspect_ratio = (float)frame_buffer_width / (float)frame_buffer_height;
 
-  scene_.AddCamera(cameraNode);
-  scene_.SetMainCamera(cameraNode);
+  EntityHandle camera = scene_.CreateEntity();
+  camera.AddComponent<CameraComponent>(PerspectiveCameraSpecs(aspect_ratio), true);
+  camera.AddComponent<TransformComponent>(glm::vec3{10, 3, 10});
+  camera.AddComponent<ScriptComponent>(new CameraMovementScript());
 
-  scene_.AddLightSource(
-      new LightSourceNode3D(PointLightSpecs(LightColorSpecs(glm::vec3{0.1}, glm::vec3{0.4, 0.34, 0}, glm::vec3{0.1}),
-                                            LightAttenuationSpecs(3)),
-                            Transform(glm::vec3{4, 3, 0})));
+  EntityHandle street_lamp_light1 = scene_.CreateEntity();
+  street_lamp_light1.AddComponent<LightSourceComponent>(PointLightSpecs(
+      LightColorSpecs(glm::vec3(0.1), glm::vec3(0.4, 0.34, 0), glm::vec3(0.1)), LightAttenuationSpecs(3)));
+  street_lamp_light1.AddComponent<TransformComponent>(glm::vec3(4, 3, 0));
 
-  scene_.AddLightSource(
-      new LightSourceNode3D(PointLightSpecs(LightColorSpecs(glm::vec3{0.1}, glm::vec3{0.4, 0.2, 0.2}, glm::vec3{0.1}),
-                                            LightAttenuationSpecs(3)),
-                            Transform(glm::vec3{-4, 3, 0})));
+  EntityHandle street_lamp_light2 = scene_.CreateEntity();
+  street_lamp_light2.AddComponent<LightSourceComponent>(PointLightSpecs(
+      LightColorSpecs(glm::vec3(0.1), glm::vec3(0.4, 0.2, 0.2), glm::vec3(0.1)), LightAttenuationSpecs(3)));
+  street_lamp_light2.AddComponent<TransformComponent>(glm::vec3(-4, 3, 0));
 
-  directional_light_node_ =
-      new LightSourceNode3D(DirectionalLightSpecs(LightColorSpecs(glm::vec3{0.2}, glm::vec3{0.2}, glm::vec3{0.1})),
-                            Transform(glm::vec3{0}, glm::vec3{-0.5, 0, 0}));
-  scene_.AddLightSource(directional_light_node_);
+  EntityHandle dir_light = scene_.CreateEntity();
+  dir_light.AddComponent<LightSourceComponent>(
+      DirectionalLightSpecs(LightColorSpecs(glm::vec3(0.2), glm::vec3(0.2), glm::vec3(0.1))));
+  dir_light.AddComponent<TransformComponent>(Transform(glm::vec3(0), glm::vec3(-0.5, 0, 0)));
 
-  spot_light_node_ = new LightSourceNode3D(SpotLightSpecs(LightColorSpecs(glm::vec3{0.3}, glm::vec3{0.3}, glm::vec3{0}),
-                                                          LightAttenuationSpecs(2), cosf(0.2), cos(0.3)));
-  scene_.AddLightSource(spot_light_node_);
+  EntityHandle spot_light = scene_.CreateEntity();
+  spot_light.AddComponent<LightSourceComponent>(SpotLightSpecs(
+      LightColorSpecs(glm::vec3(0.3), glm::vec3(0.3), glm::vec3(0)), LightAttenuationSpecs(2), cosf(0.2), cos(0.3)));
+  spot_light.AddComponent<TransformComponent>(*camera.GetComponent<TransformComponent>());
 
-  scene_.AddModel(new ModelNode3D(ResourceManager::LoadMesh("res/meshes/nk.obj")));
+  EntityHandle nk = scene_.CreateEntity();
+  nk.AddComponent<MeshComponent>(ParseMeshWavefront("res/meshes/nk.obj"));
+  nk.AddComponent<TransformComponent>();
 
-  scene_.AddModel(
-      new ModelNode3D(ResourceManager::LoadMesh("res/meshes/wooden_watch_tower.obj"), Transform(glm::vec3{0, -0.75, 0})));
+  EntityHandle watch_tower = scene_.CreateEntity();
+  watch_tower.AddComponent<MeshComponent>(ParseMeshWavefront("res/meshes/wooden_watch_tower.obj"));
+  watch_tower.AddComponent<TransformComponent>();
 
-  scene_.AddModel(new ModelNode3D(ResourceManager::LoadMesh("res/meshes/street_lamp.obj"),
-                                  Transform(glm::vec3{3, 0, 0}, glm::vec3{0}, glm::vec3{0.6})));
+  EntityHandle street_lamp1 = scene_.CreateEntity();
+  street_lamp1.AddComponent<MeshComponent>(ParseMeshWavefront("res/meshes/street_lamp.obj"));
+  street_lamp1.AddComponent<TransformComponent>(Transform(glm::vec3(3, 0, 0), glm::vec3(0), glm::vec3(0.6)));
 
-  scene_.AddModel(new ModelNode3D(ResourceManager::LoadMesh("res/meshes/street_lamp.obj"),
-                                  Transform(glm::vec3{-3, 0, 0}, glm::vec3{0}, glm::vec3{0.6})));
+  EntityHandle street_lamp2 = scene_.CreateEntity();
+  street_lamp2.AddComponent<MeshComponent>(ParseMeshWavefront("res/meshes/street_lamp.obj"));
+  street_lamp2.AddComponent<TransformComponent>(Transform(glm::vec3(-3, 0, 0), glm::vec3(0), glm::vec3(0.6)));
+
+  // EntityHandle skybox = scene_.CreateEntity();
+  // skybox.AddComponent<MeshComponent>(CreateSkyboxMesh({"res/textures/skybox_night_sky/skybox_night_sky_right.png",
+  //                                                      "res/textures/skybox_night_sky/skybox_night_sky_left.png",
+  //                                                      "res/textures/skybox_night_sky/skybox_night_sky_top.png",
+  //                                                      "res/textures/skybox_night_sky/skybox_night_sky_bottom.png",
+  //                                                      "res/textures/skybox_night_sky/skybox_night_sky_front.png",
+  //                                                      "res/textures/skybox_night_sky/skybox_night_sky_back.png"}));
+  // skybox.AddComponent<TransformComponent>();
 
   // skybox_node_ = new ModelNode3D(CreateSkyboxMesh(
   //     {"res/textures/skybox_forest/skybox_forest_right.png", "res/textures/skybox_forest/skybox_forest_left.png",
@@ -101,34 +145,34 @@ void SandboxApp::Run() {
   //                                                   "res/textures/skybox_ocean_sunset/skybox_ocean_sunset_front.png",
   //                                                   "res/textures/skybox_ocean_sunset/skybox_ocean_sunset_back.png"}));
 
-  skybox_node_ = new ModelNode3D(CreateSkyboxMesh({"res/textures/skybox_night_sky/skybox_night_sky_right.png",
-                                                   "res/textures/skybox_night_sky/skybox_night_sky_left.png",
-                                                   "res/textures/skybox_night_sky/skybox_night_sky_top.png",
-                                                   "res/textures/skybox_night_sky/skybox_night_sky_bottom.png",
-                                                   "res/textures/skybox_night_sky/skybox_night_sky_front.png",
-                                                   "res/textures/skybox_night_sky/skybox_night_sky_back.png"}));
+  // scene_.AddModel(skybox_node_);
 
-  scene_.AddModel(skybox_node_);
-
-  skybox_node_->transform.translation = scene_.GetMainCamera()->transform.translation;
+  // skybox_node_->transform.translation = scene_.GetMainCamera()->transform.translation;
 
   Renderer3D::Init();
   Renderer3D::SetViewport(
-      Viewport{0, 0, static_cast<uint32_t>(frameBufferWidth), static_cast<uint32_t>(frameBufferHeight)});
+      Viewport{0, 0, static_cast<uint32_t>(frame_buffer_width), static_cast<uint32_t>(frame_buffer_height)});
 
   // FIXME:
   glfwSetInputMode(window_.GetNativeWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-  glfwSetCursorPos(window_.GetNativeWindow(), frameBufferWidth / 2, frameBufferHeight / 2);
+  glfwSetCursorPos(window_.GetNativeWindow(), frame_buffer_width / 2, frame_buffer_height / 2);
 
   Event event{};
 
+  clock_t time_start = clock();
   while (running) {
+    float timestep = (0.0f + clock() - time_start) / CLOCKS_PER_SEC;
+    time_start = clock();
+
     while (PollEvent(&event)) {
       ProcessEvent(&event, &running);
     }
 
-    Renderer3D::RenderScene(&scene_);
+    scene_.OnUpdate(timestep);
+    scene_.Render();
+
     glfwSwapBuffers(window_.GetNativeWindow());
+    window_.SetFPSToTitle(1 / timestep);
   }
 }
 
@@ -157,69 +201,69 @@ void SandboxApp::ProcessEvent(Event* event, bool* running) {
 void SandboxApp::ProcessMoveEvent(Event* event) {
   assert(event);
 
-  static float prev_x = 0;
-  static float prev_y = 0;
+  // static float prev_x = 0;
+  // static float prev_y = 0;
 
-  float dx = prev_x - event->GetMove().x;
-  float dy = prev_y - event->GetMove().y;
+  // float dx = prev_x - event->GetMove().x;
+  // float dy = prev_y - event->GetMove().y;
 
-  scene_.GetMainCamera()->transform.rotation.y += 0.001f * dx;
-  scene_.GetMainCamera()->transform.rotation.x += 0.001f * dy;
+  // scene_.GetMainCamera()->transform.rotation.y += 0.001f * dx;
+  // scene_.GetMainCamera()->transform.rotation.x += 0.001f * dy;
 
-  spot_light_node_->transform = scene_.GetMainCamera()->transform;
-  skybox_node_->transform.translation = scene_.GetMainCamera()->transform.translation;
+  // spot_light_node_->transform = scene_.GetMainCamera()->transform;
+  // skybox_node_->transform.translation = scene_.GetMainCamera()->transform.translation;
 
-  prev_x = event->GetMove().x;
-  prev_y = event->GetMove().y;
+  // prev_x = event->GetMove().x;
+  // prev_y = event->GetMove().y;
 }
 
 void SandboxApp::ProcessKeyEvent(Event* event) {
   assert(event);
 
-  int key = event->GetKey().key;
-  int action = (int)event->GetKey().action;
+  // int key = event->GetKey().key;
+  // int action = (int)event->GetKey().action;
 
-  float speed = 0.5;
+  // float speed = 0.5;
 
-  glm::vec3 forward = scene_.GetMainCamera()->CalculateForwardVector();
-  glm::vec3 right = scene_.GetMainCamera()->CalculateRightVector();
+  // glm::vec3 forward = scene_.GetMainCamera()->CalculateForwardVector();
+  // glm::vec3 right = scene_.GetMainCamera()->CalculateRightVector();
 
-  if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
-    running = false;
-  }
+  // if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
+  //   running = false;
+  // }
 
-  if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-    scene_.GetMainCamera()->transform.translation += speed * forward;
-  }
+  // if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+  //   scene_.GetMainCamera()->transform.translation += speed * forward;
+  // }
 
-  if (key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-    scene_.GetMainCamera()->transform.translation -= speed * forward;
-  }
+  // if (key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+  //   scene_.GetMainCamera()->transform.translation -= speed * forward;
+  // }
 
-  if (key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-    scene_.GetMainCamera()->transform.translation -= speed * right;
-  }
+  // if (key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+  //   scene_.GetMainCamera()->transform.translation -= speed * right;
+  // }
 
-  if (key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-    scene_.GetMainCamera()->transform.translation += speed * right;
-  }
+  // if (key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+  //   scene_.GetMainCamera()->transform.translation += speed * right;
+  // }
 
-  if (key == GLFW_KEY_Q && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-    scene_.GetMainCamera()->transform.translation.y -= 1;
-  }
+  // if (key == GLFW_KEY_Q && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+  //   scene_.GetMainCamera()->transform.translation.y -= 1;
+  // }
 
-  if (key == GLFW_KEY_E && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-    scene_.GetMainCamera()->transform.translation.y += 1;
-  }
+  // if (key == GLFW_KEY_E && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+  //   scene_.GetMainCamera()->transform.translation.y += 1;
+  // }
 
-  if (key == GLFW_KEY_F && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-    spot_light_node_->SetEnabled(!spot_light_node_->IsEnabled());
-  }
+  // if (key == GLFW_KEY_F && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+  //   spot_light_node_->SetEnabled(!spot_light_node_->IsEnabled());
+  // }
 
-  if (key == GLFW_KEY_J && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-    directional_light_node_->SetEnabled(!directional_light_node_->IsEnabled());
-  }
+  // if (key == GLFW_KEY_J && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+  //   directional_light_node_->SetEnabled(!directional_light_node_->IsEnabled());
+  // }
 
-  spot_light_node_->transform = scene_.GetMainCamera()->transform;
-  skybox_node_->transform.translation = scene_.GetMainCamera()->transform.translation;
+  // spot_light_node_->transform = scene_.GetMainCamera()->transform;
+  // skybox_node_->transform.translation = scene_.GetMainCamera()->transform.translation;
 }

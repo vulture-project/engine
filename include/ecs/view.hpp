@@ -59,6 +59,10 @@ class View {
       return lhs.iterator_ != rhs.iterator_;
     }
 
+    friend std::pair<EntityHandle, ComponentT*> operator*(const Iterator& it) {
+      return std::pair<EntityHandle, ComponentT*>(it.GetEntityHandle(), it.GetComponent());
+    }
+
    private:
     EntityMapIterator iterator_;
     EntityRegistry& registry_;
@@ -67,9 +71,9 @@ class View {
  public:
   View(EntityMap& entity_map, EntityRegistry& registry);
 
-  Iterator Begin();
+  Iterator begin();
 
-  Iterator End();
+  Iterator end();
 
  private:
   EntityMap& entity_map_;

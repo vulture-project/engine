@@ -1,7 +1,7 @@
 /**
- * @author Viktor Baranov (github.com/baranov-V-V)
- * @file generator.hpp
- * @date 2022-05-10
+ * @author Nikita Mochalov (github.com/tralf-strues)
+ * @file script.hpp
+ * @date 2022-05-17
  *
  * The MIT License (MIT)
  * Copyright (c) vulture-project
@@ -27,26 +27,15 @@
 
 #pragma once
 
+#include "ecs/api.hpp"
+
 namespace vulture {
 
-template <typename Id>
-class IdGenerator {
+class IScript {
  public:
-  Id Next();
+  virtual ~IScript() = default;
 
- private:
-  Id current_{1};
-};
-
-template <typename Id>
-class StaticIdGenerator {
- public:
-  static Id Next();
- 
- private:
-  static Id current_;
+  virtual void OnUpdate(EntityHandle entity, float timestep) = 0;
 };
 
 }  // namespace vulture
-
-#include "ecs/generator.ipp"
