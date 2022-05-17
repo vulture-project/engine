@@ -26,9 +26,6 @@
  */
 
 #include "sandbox_app.hpp"
-
-#include <chrono>
-
 #include "GLFW/glfw3.h"
 #include "core/logger.hpp"
 #include "glad/glad.h"
@@ -109,19 +106,19 @@ void SandboxApp::Run() {
   spot_light.AddComponent<TransformComponent>(*camera.GetComponent<TransformComponent>());
 
   EntityHandle nk = scene_.CreateEntity();
-  nk.AddComponent<MeshComponent>(ParseMeshWavefront("res/meshes/nk.obj"));
+  nk.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/nk.obj"));
   nk.AddComponent<TransformComponent>();
 
   EntityHandle watch_tower = scene_.CreateEntity();
-  watch_tower.AddComponent<MeshComponent>(ParseMeshWavefront("res/meshes/wooden_watch_tower.obj"));
+  watch_tower.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/wooden_watch_tower.obj"));
   watch_tower.AddComponent<TransformComponent>();
 
   EntityHandle street_lamp1 = scene_.CreateEntity();
-  street_lamp1.AddComponent<MeshComponent>(ParseMeshWavefront("res/meshes/street_lamp.obj"));
+  street_lamp1.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/street_lamp.obj"));
   street_lamp1.AddComponent<TransformComponent>(Transform(glm::vec3(3, 0, 0), glm::vec3(0), glm::vec3(0.6)));
 
   EntityHandle street_lamp2 = scene_.CreateEntity();
-  street_lamp2.AddComponent<MeshComponent>(ParseMeshWavefront("res/meshes/street_lamp.obj"));
+  street_lamp2.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/street_lamp.obj"));
   street_lamp2.AddComponent<TransformComponent>(Transform(glm::vec3(-3, 0, 0), glm::vec3(0), glm::vec3(0.6)));
 
   // EntityHandle skybox = scene_.CreateEntity();
@@ -132,21 +129,21 @@ void SandboxApp::Run() {
   //                                                      "res/textures/skybox_night_sky/skybox_night_sky_front.png",
   //                                                      "res/textures/skybox_night_sky/skybox_night_sky_back.png"}));
   // skybox.AddComponent<TransformComponent>();
-
+  //
   // skybox_node_ = new ModelNode3D(CreateSkyboxMesh(
   //     {"res/textures/skybox_forest/skybox_forest_right.png", "res/textures/skybox_forest/skybox_forest_left.png",
   //      "res/textures/skybox_forest/skybox_forest_top.png", "res/textures/skybox_forest/skybox_forest_bottom.png",
   //      "res/textures/skybox_forest/skybox_forest_front.png", "res/textures/skybox_forest/skybox_forest_back.png"}));
-
+  //
   // skybox_node_ = new ModelNode3D(CreateSkyboxMesh({"res/textures/skybox_ocean_sunset/skybox_ocean_sunset_right.png",
   //                                                   "res/textures/skybox_ocean_sunset/skybox_ocean_sunset_left.png",
   //                                                   "res/textures/skybox_ocean_sunset/skybox_ocean_sunset_top.png",
   //                                                   "res/textures/skybox_ocean_sunset/skybox_ocean_sunset_bottom.png",
   //                                                   "res/textures/skybox_ocean_sunset/skybox_ocean_sunset_front.png",
   //                                                   "res/textures/skybox_ocean_sunset/skybox_ocean_sunset_back.png"}));
-
+  //
   // scene_.AddModel(skybox_node_);
-
+  //
   // skybox_node_->transform.translation = scene_.GetMainCamera()->transform.translation;
 
   Renderer3D::Init();
@@ -165,7 +162,7 @@ void SandboxApp::Run() {
     time_start = clock();
 
     while (PollEvent(&event)) {
-      ProcessEvent(&event, &running);
+      ProcessEvent(&event);
     }
 
     scene_.OnUpdate(timestep);
@@ -176,13 +173,12 @@ void SandboxApp::Run() {
   }
 }
 
-void SandboxApp::ProcessEvent(Event* event, bool* running) {
+void SandboxApp::ProcessEvent(Event* event) {
   assert(event);
-  assert(running);
 
   switch (event->GetType()) {
     case kQuit:
-      *running = false;
+      running = false;
       break;
 
     case kKey:
@@ -203,16 +199,16 @@ void SandboxApp::ProcessMoveEvent(Event* event) {
 
   // static float prev_x = 0;
   // static float prev_y = 0;
-
+  //
   // float dx = prev_x - event->GetMove().x;
   // float dy = prev_y - event->GetMove().y;
-
+  //
   // scene_.GetMainCamera()->transform.rotation.y += 0.001f * dx;
   // scene_.GetMainCamera()->transform.rotation.x += 0.001f * dy;
-
+  //
   // spot_light_node_->transform = scene_.GetMainCamera()->transform;
   // skybox_node_->transform.translation = scene_.GetMainCamera()->transform.translation;
-
+  //
   // prev_x = event->GetMove().x;
   // prev_y = event->GetMove().y;
 }
@@ -220,50 +216,50 @@ void SandboxApp::ProcessMoveEvent(Event* event) {
 void SandboxApp::ProcessKeyEvent(Event* event) {
   assert(event);
 
-  // int key = event->GetKey().key;
-  // int action = (int)event->GetKey().action;
+  int key = event->GetKey().key;
+  int action = (int)event->GetKey().action;
 
   // float speed = 0.5;
-
+  //
   // glm::vec3 forward = scene_.GetMainCamera()->CalculateForwardVector();
   // glm::vec3 right = scene_.GetMainCamera()->CalculateRightVector();
-
-  // if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
-  //   running = false;
-  // }
+  
+  if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
+    running = false;
+  }
 
   // if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
   //   scene_.GetMainCamera()->transform.translation += speed * forward;
   // }
-
+  //
   // if (key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
   //   scene_.GetMainCamera()->transform.translation -= speed * forward;
   // }
-
+  //
   // if (key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
   //   scene_.GetMainCamera()->transform.translation -= speed * right;
   // }
-
+  //
   // if (key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
   //   scene_.GetMainCamera()->transform.translation += speed * right;
   // }
-
+  //
   // if (key == GLFW_KEY_Q && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
   //   scene_.GetMainCamera()->transform.translation.y -= 1;
   // }
-
+  //
   // if (key == GLFW_KEY_E && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
   //   scene_.GetMainCamera()->transform.translation.y += 1;
   // }
-
+  //
   // if (key == GLFW_KEY_F && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
   //   spot_light_node_->SetEnabled(!spot_light_node_->IsEnabled());
   // }
-
+  //
   // if (key == GLFW_KEY_J && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
   //   directional_light_node_->SetEnabled(!directional_light_node_->IsEnabled());
   // }
-
+  //
   // spot_light_node_->transform = scene_.GetMainCamera()->transform;
   // skybox_node_->transform.translation = scene_.GetMainCamera()->transform.translation;
 }

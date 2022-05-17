@@ -40,7 +40,7 @@ class SandboxApp : public vulture::Application {
   virtual int Init() override;
   virtual void Run() override;
 
-  void ProcessEvent(vulture::Event* event, bool* running);
+  void ProcessEvent(vulture::Event* event);
   void ProcessMoveEvent(vulture::Event* event);
   void ProcessKeyEvent(vulture::Event* event);
 
