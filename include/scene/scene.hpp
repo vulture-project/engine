@@ -1,7 +1,7 @@
 /**
- * @author Viktor Baranov (github.com/baranov-V-V)
- * @file generator.hpp
- * @date 2022-05-10
+ * @author Nikita Mochalov (github.com/tralf-strues)
+ * @file scene.hpp
+ * @date 2022-05-15
  *
  * The MIT License (MIT)
  * Copyright (c) vulture-project
@@ -27,26 +27,46 @@
 
 #pragma once
 
+#include "renderer/3d/scene3d.hpp"
+#include "scene/components.hpp"
+
 namespace vulture {
 
-template <typename Id>
-class IdGenerator {
+class Scene {
  public:
-  Id Next();
+  EntityRegistry& GetEntityRegistry();
+
+  /**
+   * @brief Simulate the game world.
+   *
+   * Simulate physics and run scripts.
+   */
+  void OnUpdate(float timestep);
+
+  /**
+   * @brief Render the scene.
+   */
+  void Render();
+
+  /**
+   * @brief Create a parentless entity.
+   *
+   * @return EntityHandle
+   */
+  EntityHandle CreateEntity();
+
+  /**
+   * @brief Create a child entity from parent.
+   *
+   * @return EntityHandle
+   */
+  EntityHandle CreateChildEntity(EntityHandle parent);
+
+  glm::mat4 ComputeWorldSpaceTransformMatrix(EntityHandle entity);
 
  private:
-  Id current_{1};
-};
-
-template <typename Id>
-class StaticIdGenerator {
- public:
-  static Id Next();
- 
- private:
-  static Id current_;
+  EntityRegistry entities_;
+  Scene3D scene_;
 };
 
 }  // namespace vulture
-
-#include "ecs/generator.ipp"

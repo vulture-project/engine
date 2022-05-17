@@ -29,13 +29,8 @@
 
 namespace vulture {
 
-EntityHandle::EntityHandle(EntityId id, EntityRegistry& registry) 
-    : id_{id},
-      registry_{registry} {
-}
+EntityHandle::EntityHandle(EntityId id, EntityRegistry& registry) : id_{id}, registry_{registry} {}
 
-void EntityHandle::Destroy() {
-  registry_.DestroyEntity(id_);
-}
+void EntityHandle::Destroy() { registry_.DestroyEntity(id_); }
 
 }  // namespace vulture

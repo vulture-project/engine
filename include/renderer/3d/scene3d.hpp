@@ -90,58 +90,40 @@ constexpr uint32_t kMaxSpotLightSources = 4;
  */
 class LightSourceNode3D : public SceneNode3D {
  public:
-  union LightSourceSpecs {
-    DirectionalLightSpecs directional;
-    PointLightSpecs point;
-    SpotLightSpecs spot;
-
-    LightSourceSpecs(const DirectionalLightSpecs& directional) : directional(directional) {}
-    LightSourceSpecs(const PointLightSpecs& point) : point(point) {}
-    LightSourceSpecs(const SpotLightSpecs& spot) : spot(spot) {}
-  };
+  LightSourceNode3D(const LightSourceSpecs& specs, const Transform& transform = Transform())
+      : SceneNode3D(transform), specs_(specs) {}
 
   LightSourceNode3D(const DirectionalLightSpecs& specs, const Transform& transform = Transform())
-      : SceneNode3D(transform), specs_(specs), type_(LightType::kDirectional) {}
+      : SceneNode3D(transform), specs_(specs) {}
 
   LightSourceNode3D(const PointLightSpecs& specs, const Transform& transform = Transform())
-      : SceneNode3D(transform), specs_(specs), type_(LightType::kPoint) {}
+      : SceneNode3D(transform), specs_(specs) {}
 
   LightSourceNode3D(const SpotLightSpecs& specs, const Transform& transform = Transform())
-      : SceneNode3D(transform), specs_(specs), type_(LightType::kSpot) {}
+      : SceneNode3D(transform), specs_(specs) {}
 
-  LightType GetType() const { return type_; }
+  LightType GetType() const { return specs_.type; }
 
   const LightSourceSpecs& GetLightSpecs() const { return specs_; }
 
-  void SetLightSpecs(const DirectionalLightSpecs& specs) {
-    specs_.directional = specs;
-    type_ = LightType::kDirectional;
-  }
+  void SetLightSpecs(const DirectionalLightSpecs& specs) { specs_.directional = specs; }
 
-  void SetLightSpecs(const PointLightSpecs& specs) {
-    specs_.point = specs;
-    type_ = LightType::kPoint;
-  }
+  void SetLightSpecs(const PointLightSpecs& specs) { specs_.point = specs; }
 
-  void SetLightSpecs(const SpotLightSpecs& specs) {
-    specs_.spot = specs;
-    type_ = LightType::kSpot;
-  }
+  void SetLightSpecs(const SpotLightSpecs& specs) { specs_.spot = specs; }
 
   void SetEnabled(bool enabled) { enabled_ = enabled; }
   bool IsEnabled() const { return enabled_; }
 
  private:
   LightSourceSpecs specs_;
-  LightType type_{LightType::kInvalid};
   bool enabled_{true};
 };
 
 struct ModelNode3D : public SceneNode3D {
   SharedPtr<Mesh> mesh;
 
-  ModelNode3D(SharedPtr<Mesh> mesh, const Transform& transform = Transform())
-      : SceneNode3D(transform), mesh(mesh) {}
+  ModelNode3D(SharedPtr<Mesh> mesh, const Transform& transform = Transform()) : SceneNode3D(transform), mesh(mesh) {}
 };
 
 //================================================================
