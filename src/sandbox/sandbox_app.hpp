@@ -31,6 +31,7 @@
 #include "platform/event.hpp"
 #include "platform/window.hpp"
 #include "renderer/3d/scene3d.hpp"
+#include "scene/scene.hpp"
 
 class SandboxApp : public vulture::Application {
  public:
@@ -45,12 +46,11 @@ class SandboxApp : public vulture::Application {
 
  private:
   vulture::Window window_;
+  vulture::Scene scene_;
 
-  vulture::Scene3D scene_;
-
-  vulture::LightSourceNode3D* directional_light_node_{nullptr};
-  vulture::LightSourceNode3D* spot_light_node_{nullptr};
-  vulture::ModelNode3D* skybox_node_{nullptr};
+  // vulture::LightSourceNode3D* directional_light_node_{nullptr};
+  // vulture::LightSourceNode3D* spot_light_node_{nullptr};
+  // vulture::ModelNode3D* skybox_node_{nullptr};
 
   bool running{true};
 };

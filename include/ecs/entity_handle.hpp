@@ -49,11 +49,11 @@ class EntityHandle {
   template <typename ComponentT>
   bool HasComponent();
 
-private:
-  EntityId id_;
+ private:
+  EntityId id_{kInvalidEntityId};
   EntityRegistry& registry_;
 };
 
 }  // namespace vulture
 
-#include "ecs/entity_handle.ipp"  
+#include "ecs/entity_handle.ipp"

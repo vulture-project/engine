@@ -37,6 +37,9 @@
 namespace vulture {
 
 using EntityId = uint64_t;
+
+constexpr EntityId kInvalidEntityId = 0;
+
 using EntityIdGenerator = IdGenerator<EntityId>;
 
 using EntityMap = std::unordered_map<EntityId, IComponentHolder*>;
