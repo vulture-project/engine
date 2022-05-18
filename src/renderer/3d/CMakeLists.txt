@@ -8,7 +8,6 @@ target_sources(engine
     ${RENDERER_3D_INCLUDE_DIR}/mesh.hpp
     ${RENDERER_3D_INCLUDE_DIR}/renderer3d.hpp
     ${RENDERER_3D_INCLUDE_DIR}/scene3d.hpp
-    ${RENDERER_3D_INCLUDE_DIR}/transform.hpp
   PRIVATE
     ${RENDERER_3D_SOURCE_DIR}/camera.cpp
     ${RENDERER_3D_SOURCE_DIR}/mesh.cpp

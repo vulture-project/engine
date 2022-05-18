@@ -30,6 +30,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/quaternion.hpp>
 
 namespace vulture {
@@ -42,6 +43,20 @@ struct Transform {
   Transform(const glm::vec3& translation = glm::vec3{0.0f}, const glm::vec3& rotation = glm::vec3{0.0f},
             const glm::vec3& scale = glm::vec3{1.0f})
       : translation(translation), rotation(rotation), scale(scale) {}
+
+  Transform(const glm::mat4& matrix) {
+    glm::vec3 decomposed_scale;
+    glm::quat decomposed_rotation;
+    glm::vec3 decomposed_translation;
+    glm::vec3 decomposed_skew;
+    glm::vec4 decomposed_perspective;
+    glm::decompose(matrix, decomposed_scale, decomposed_rotation, decomposed_translation, decomposed_skew,
+                   decomposed_perspective);
+
+    translation = decomposed_translation;
+    rotation = glm::eulerAngles(decomposed_rotation);
+    scale = decomposed_scale;
+  }
 
   glm::mat4 CalculateMatrix() const {
     return CalculateTranslationMatrix() * CalculateRotationMatrix() * CalculateScaleMatrix();
@@ -66,8 +81,7 @@ struct Transform {
    */
   glm::mat4 CalculateInverseMatrix() const {
     return glm::scale(glm::identity<glm::mat4>(), glm::vec3{1 / scale.x, 1 / scale.y, 1 / scale.z}) *
-           glm::transpose(CalculateRotationMatrix()) *
-           glm::translate(glm::identity<glm::mat4>(), -translation);
+           glm::transpose(CalculateRotationMatrix()) * glm::translate(glm::identity<glm::mat4>(), -translation);
   }
 
   glm::mat4 CalculateTranslationMatrix() const { return glm::translate(glm::identity<glm::mat4>(), translation); }

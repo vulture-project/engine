@@ -62,7 +62,8 @@ class Scene {
    */
   EntityHandle CreateChildEntity(EntityHandle parent);
 
-  glm::mat4 ComputeWorldSpaceTransformMatrix(EntityHandle entity);
+  glm::mat4 ComputeWorldSpaceMatrix(EntityHandle entity);
+  Transform ComputeWorldSpaceTransform(EntityHandle entity);
 
  private:
   EntityRegistry entities_;
