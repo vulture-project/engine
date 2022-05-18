@@ -14,41 +14,39 @@
 #include <cassert>
 #include <cstdlib>
 #include <functional>
-#include <unordered_map>
-#include <vector>
 #include <tuple>
 #include <type_traits>
+#include <unordered_map>
+#include <vector>
 
 #include "core/logger.hpp"
 
 namespace vulture {
 
-template<auto Fu>
-struct ArgConnector {
-};
+template <auto Fu>
+struct ArgConnector {};
 
-template<typename>
+template <typename>
 class Functor;
 
-template<typename Ret, typename... Args>
+template <typename Ret, typename... Args>
 class Functor<Ret(Args...)> {
   using target_signature = Ret(void*, Args...);
   using function_signature = Ret(Args...);
+
  public:
-  template<auto F, typename... Type>
-  Functor(ArgConnector<F> /*f*/, Type&& ...instance_or_args) {
+  template <auto F, typename... Type>
+  Functor(ArgConnector<F> /*f*/, Type&&... instance_or_args) {
     connect<F>(std::forward<Type>(instance_or_args)...);
   }
 
-  template<auto Candidate>
+  template <auto Candidate>
   void connect() {
-    callable_ = [](void*, Args... args) {
-      return Ret(Candidate(std::forward<Args>(args)...));
-    };
+    callable_ = [](void*, Args... args) { return Ret(Candidate(std::forward<Args>(args)...)); };
   }
 
-  template<auto Candidate, typename Type>
-  void connect(Type &instance) {
+  template <auto Candidate, typename Type>
+  void connect(Type& instance) {
     instance_ = &instance;
     callable_ = [](void* instance, Args... args) {
       return Ret(((reinterpret_cast<Type*>(instance))->*(Candidate))(std::forward<Args>(args)...));
@@ -63,6 +61,7 @@ class Functor<Ret(Args...)> {
   bool operator==(const Functor<Ret(Args...)>& other) {
     return callable_ == other.callable_ && instance_ == other.instance_;
   }
+
  private:
   void* instance_ = nullptr;
   target_signature* callable_ = nullptr;
@@ -87,18 +86,19 @@ struct EventIdHolder {
 
 class BaseSink {
  public:
-  virtual ~BaseSink() {};
+  virtual ~BaseSink(){};
 };
 
 template <typename EventT>
 class Sink final : public BaseSink {
   using function_type = void(const EventT&);
+
  public:
   template <auto F, typename U>
   void Connect(U& instance) {
     callback_.emplace_back(ArgConnector<F>{}, instance);
-    // callback_.emplace_back(reinterpret_cast<void*>(NULL), reinterpret_cast<void*>(&instance), std::bind(F, &instance, std::placeholders::_1));
-    // callback_.emplace_back(reinterpret_cast<void*>(F), //FIXME: bind does not work
+    // callback_.emplace_back(reinterpret_cast<void*>(NULL), reinterpret_cast<void*>(&instance), std::bind(F, &instance,
+    // std::placeholders::_1)); callback_.emplace_back(reinterpret_cast<void*>(F), //FIXME: bind does not work
     //                        std::bind(F, instance, std::placeholders::_1));
   }
 
@@ -110,7 +110,7 @@ class Sink final : public BaseSink {
     //                        std::bind(F, std::placeholders::_1));
   }
 
-  //FIXME:
+  // FIXME:
   template <auto F, typename U>
   void Disconnect(U& instance) {
     for (auto it = callback_.begin(); it != callback_.end(); ++it) {
