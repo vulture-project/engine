@@ -129,13 +129,64 @@ void SandboxApp::Run() {
   // watch_tower.AddComponent<MeshComponent>(ResourcseManager::LoadMesh("res/meshes/wooden_watch_tower.obj"));
   watch_tower.AddComponent<TransformComponent>();
 
-  EntityHandle bench = scene_.CreateEntity();
-  bench.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/bench.obj"));
-  bench.AddComponent<TransformComponent>(Transform(glm::vec3(1, 0, 0), glm::vec3(0), glm::vec3(1)));
+  double bench_x_coord = 11.4;
+  #define CREATE_2BENCHES(NUM) \
+    EntityHandle bench##NUM = scene_.CreateEntity(); \
+    bench##NUM.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/bench.obj")); \
+    bench##NUM.AddComponent<TransformComponent>(Transform(glm::vec3(bench_x_coord, 0.1, 12.2), glm::vec3(0, M_PI, 0), glm::vec3(1))); \
+    EntityHandle bench_##NUM##_symm = scene_.CreateEntity(); \
+    bench_##NUM##_symm.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/bench.obj")); \
+    bench_##NUM##_symm.AddComponent<TransformComponent>(Transform(glm::vec3(bench_x_coord, 0.1, -12.2), glm::vec3(0), glm::vec3(1))); \
+    bench_x_coord -= 4.57;
+
+  CREATE_2BENCHES(0)
+  CREATE_2BENCHES(1)
+  CREATE_2BENCHES(2)
+  CREATE_2BENCHES(3)
+  CREATE_2BENCHES(4)
+  CREATE_2BENCHES(5)
+
+  #undef CREATE_2BENCHES
+
+  double lamp_x_coord = 9;
+  #define CREATE_2LAMPS(NUM) \
+    EntityHandle street_lamp##NUM = scene_.CreateEntity(); \
+    street_lamp##NUM.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/street_lamp.obj")); \
+    street_lamp##NUM.AddComponent<TransformComponent>(Transform(glm::vec3(lamp_x_coord, 0, 12.5), glm::vec3(0), glm::vec3(0.6f))); \
+    EntityHandle street_lamp##NUM##_symm = scene_.CreateEntity(); \
+    street_lamp##NUM##_symm.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/street_lamp.obj")); \
+    street_lamp##NUM##_symm.AddComponent<TransformComponent>(Transform(glm::vec3(lamp_x_coord, 0, -12.5), glm::vec3(0), glm::vec3(0.6f))); \
+    lamp_x_coord -= 4.55;
+
+  CREATE_2LAMPS(0)
+  CREATE_2LAMPS(1)
+  CREATE_2LAMPS(2)
+  CREATE_2LAMPS(3)
+  CREATE_2LAMPS(4)
+
+  #undef CREATE_2LAMPS
+
+  #define CREATE_2LIGHTS(NUM) \
+    EntityHandle lamp_light_##NUM = scene_.CreateChildEntity(street_lamp##NUM); \
+    lamp_light_##NUM.AddComponent<LightSourceComponent>(PointLightSpecs( \
+        LightColorSpecs(glm::vec3(0.1), glm::vec3(0.3, 0.3, 0), glm::vec3(0.1)), LightAttenuationSpecs(100))); \
+    lamp_light_##NUM.AddComponent<TransformComponent>(glm::vec3(2, 8, 2)); \
+    EntityHandle lamp_light_##NUM##_symm = scene_.CreateChildEntity(street_lamp##NUM##_symm); \
+    lamp_light_##NUM##_symm.AddComponent<LightSourceComponent>(PointLightSpecs( \
+        LightColorSpecs(glm::vec3(0.1), glm::vec3(0.3, 0.3, 0), glm::vec3(0.1)), LightAttenuationSpecs(100))); \
+    lamp_light_##NUM##_symm.AddComponent<TransformComponent>(glm::vec3(2, 8, 2));
+
+  CREATE_2LIGHTS(0)
+  CREATE_2LIGHTS(1)
+  CREATE_2LIGHTS(2)
+  CREATE_2LIGHTS(3)
+  CREATE_2LIGHTS(4)
+  
+  #undef CREATE_2LAMPS
 
   EntityHandle dog = scene_.CreateEntity();
   dog.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/dog.obj"));
-  dog.AddComponent<TransformComponent>(Transform(glm::vec3(8, 0, 0), glm::vec3(0), glm::vec3(0.5, 0.4, 0.4)));
+  dog.AddComponent<TransformComponent>(Transform(glm::vec3(0, 0, 0), glm::vec3(0), glm::vec3(0.5, 0.4, 0.4)));
   PlayerMovementScript* dog_movement = new PlayerMovementScript;
   dispatcher.GetSink<JumpEvent>().Connect<&PlayerMovementScript::OnJump>(*dog_movement);
   dog.AddComponent<ScriptComponent>(dog_movement);
@@ -144,13 +195,6 @@ void SandboxApp::Run() {
   camera.AddComponent<CameraComponent>(PerspectiveCameraSpecs(aspect_ratio), true);
   camera.AddComponent<TransformComponent>(Transform(glm::vec3{0, 7, 8}, glm::vec3(-0.3, 0, 0)));
 
-  EntityHandle street_lamp1 = scene_.CreateEntity();
-  street_lamp1.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/street_lamp.obj"));
-  street_lamp1.AddComponent<TransformComponent>(Transform(glm::vec3(3, 0, 0), glm::vec3(0), glm::vec3(0.6f)));
-
-  EntityHandle street_lamp2 = scene_.CreateEntity();
-  street_lamp2.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/street_lamp.obj"));
-  street_lamp2.AddComponent<TransformComponent>(Transform(glm::vec3(-3, 0, 0), glm::vec3(0), glm::vec3(0.6f)));
 
   EntityHandle skybox = scene_.CreateChildEntity(camera);
   skybox.AddComponent<MeshComponent>(CreateSkyboxMesh({"res/textures/skybox_night_sky/skybox_night_sky_right.png",
@@ -160,16 +204,6 @@ void SandboxApp::Run() {
                                                        "res/textures/skybox_night_sky/skybox_night_sky_front.png",
                                                        "res/textures/skybox_night_sky/skybox_night_sky_back.png"}));
   skybox.AddComponent<TransformComponent>();
-
-  EntityHandle street_lamp_light1 = scene_.CreateChildEntity(street_lamp1);
-  street_lamp_light1.AddComponent<LightSourceComponent>(PointLightSpecs(
-      LightColorSpecs(glm::vec3(0.1), glm::vec3(0.4, 0.34, 0), glm::vec3(0.1)), LightAttenuationSpecs(3)));
-  street_lamp_light1.AddComponent<TransformComponent>(glm::vec3(0, 5.3, 0));
-
-  EntityHandle street_lamp_light2 = scene_.CreateChildEntity(street_lamp2);
-  street_lamp_light2.AddComponent<LightSourceComponent>(PointLightSpecs(
-      LightColorSpecs(glm::vec3(0.1), glm::vec3(0.4, 0.2, 0.2), glm::vec3(0.1)), LightAttenuationSpecs(3)));
-  street_lamp_light2.AddComponent<TransformComponent>(glm::vec3(0, 5.3, 0));
 
   EntityHandle dir_light = scene_.CreateEntity();
   dir_light.AddComponent<LightSourceComponent>(
