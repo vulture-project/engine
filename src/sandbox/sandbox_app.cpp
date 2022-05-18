@@ -32,11 +32,23 @@
 #include "renderer/3d/renderer3d.hpp"
 #include "core/resource_manager.hpp"
 
+#include "audio/AudioDevice.h"
+#include "audio/AudioSource.h"
+
 using namespace vulture;
 
 bool running = true;
 
 vulture::Dispatcher dispatcher;
+
+using namespace sound;
+
+AudioDevice device;
+AudioContext* context;
+sound::Source* source;
+AudioBuffer* buffer;
+
+
 
 SandboxApp::SandboxApp() : window_(1280, 960) {}
 
@@ -49,8 +61,29 @@ int SandboxApp::Init() {
   InputEventManager::SetWindowAndDispatcher(&window_, &dispatcher);
 
   dispatcher.GetSink<KeyEvent>().Connect<&ProcessKeyEvent>();
+
+
+  device.Open();
+  context = device.CreateContext();
+  context->MakeCurrentPlaying();
+  source = context->CreateSource();
+  buffer = new AudioBuffer("res/test.wav");
+  source->SetBuf(buffer);
+  source->Play();
+
+
   return 0;
 }
+
+SandboxApp::~SandboxApp() {
+  source->ReleaseBuf();
+
+  delete buffer;
+
+  context->DestroySource(source);
+  device.DestroyContext(context);
+  device.Close();
+};
 
 class JumpEvent {};
 
@@ -107,6 +140,9 @@ class PlayerMovementScript : public IScript {
   }
 
   void OnJump(const JumpEvent&) {
+
+    source->Play();
+
     speed = glm::vec3(0, 4, 0);
   }
 
