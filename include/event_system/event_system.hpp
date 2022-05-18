@@ -17,11 +17,12 @@
 #include <unordered_map>
 #include <vector>
 
+#include "core/logger.hpp"
+
 namespace vulture {
 
 using EventId = size_t;
 
-template <typename T>
 struct EventIdGenerator {
   static EventId GetId() {
     static EventId id{0};
@@ -32,7 +33,7 @@ struct EventIdGenerator {
 template <typename T>
 struct EventIdHolder {
   static EventId GetId() {
-    const static EventId id = EventIdGenerator<T>::GetId();
+    const static EventId id = EventIdGenerator::GetId();
     return id;
   }
 };
