@@ -46,9 +46,9 @@ using namespace sound;
 AudioDevice device;
 AudioContext* context;
 sound::Source* source;
+sound::Source* source_woof;
 AudioBuffer* buffer;
-
-
+AudioBuffer* buffer_woof;
 
 SandboxApp::SandboxApp() : window_(1280, 960) {}
 
@@ -67,20 +67,24 @@ int SandboxApp::Init() {
   context = device.CreateContext();
   context->MakeCurrentPlaying();
   source = context->CreateSource();
-  buffer = new AudioBuffer("res/test.wav");
+  source_woof = context->CreateSource();
+  buffer = new AudioBuffer("res/sounds/test.wav");
+  buffer_woof = new AudioBuffer("res/sounds/woof.wav");
   source->SetBuf(buffer);
-  source->Play();
-
+  source_woof->SetBuf(buffer_woof);
 
   return 0;
 }
 
 SandboxApp::~SandboxApp() {
   source->ReleaseBuf();
+  source_woof->ReleaseBuf();
 
   delete buffer;
+  delete buffer_woof;
 
   context->DestroySource(source);
+  context->DestroySource(source_woof);
   device.DestroyContext(context);
   device.Close();
 };
@@ -245,12 +249,17 @@ void SandboxApp::Run() {
 void ProcessKeyEvent(const vulture::KeyEvent& event) {
   int key = event.key;
   int action = (int)event.action;
-  
+
   if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
     running = false;
   }
 
   if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE) {
     dispatcher.Trigger<JumpEvent>();
+  }
+
+  if (key == GLFW_KEY_E && action == GLFW_PRESS) {
+    LOG_ERROR(QQQQ, "SUAAAA");
+    source_woof->Play();
   }
 }
