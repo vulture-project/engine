@@ -190,13 +190,21 @@ void SandboxApp::Run() {
   dispatcher.GetSink<JumpEvent>().Connect<&PlayerMovementScript::OnJump>(*dog_movement);
   dog.AddComponent<ScriptComponent>(dog_movement);
 
-  EntityHandle statue = scene_.CreateEntity();
-  statue.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/statue.obj"));
-  statue.AddComponent<TransformComponent>(Transform(glm::vec3(2, 0, 2), glm::vec3(0), glm::vec3(1)));
+  EntityHandle statue1 = scene_.CreateEntity();
+  statue1.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/statue.obj"));
+  statue1.AddComponent<TransformComponent>(Transform(glm::vec3(-6, 0, 8), glm::vec3(0, glm::radians(240.0f), 0), glm::vec3(1)));
+
+  EntityHandle statue2 = scene_.CreateEntity();
+  statue2.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/statue.obj"));
+  statue2.AddComponent<TransformComponent>(Transform(glm::vec3(-10, 0, 2), glm::vec3(0, glm::radians(250.0f), 0), glm::vec3(1)));
+
+  EntityHandle statue3 = scene_.CreateEntity();
+  statue3.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/statue.obj"));
+  statue3.AddComponent<TransformComponent>(Transform(glm::vec3(-12, 0, 10), glm::vec3(0, glm::radians(150.0f), 0), glm::vec3(1)));
 
   EntityHandle camera = scene_.CreateChildEntity(dog);
   camera.AddComponent<CameraComponent>(PerspectiveCameraSpecs(aspect_ratio), true);
-  camera.AddComponent<TransformComponent>(Transform(glm::vec3{0, 7, 8}, glm::vec3(-0.3, 0, 0)));
+  camera.AddComponent<TransformComponent>(Transform(glm::vec3{0, 7, 10}, glm::vec3(-0.3, 0, 0)));
 
   EntityHandle skybox = scene_.CreateChildEntity(camera);
   skybox.AddComponent<MeshComponent>(CreateSkyboxMesh({"res/textures/skybox_night_sky/skybox_night_sky_right.png",
@@ -212,10 +220,10 @@ void SandboxApp::Run() {
       DirectionalLightSpecs(LightColorSpecs(glm::vec3(0.2), glm::vec3(0.2), glm::vec3(0.1))));
   dir_light.AddComponent<TransformComponent>(Transform(glm::vec3(0), glm::vec3(-0.5, 0, 0)));
 
-  EntityHandle spot_light = scene_.CreateChildEntity(camera);
+  EntityHandle spot_light = scene_.CreateChildEntity(dog);
   spot_light.AddComponent<LightSourceComponent>(SpotLightSpecs(
-      LightColorSpecs(glm::vec3(0.3), glm::vec3(0.3), glm::vec3(0)), LightAttenuationSpecs(2), cosf(0.2), cos(0.3)));
-  spot_light.AddComponent<TransformComponent>();
+      LightColorSpecs(glm::vec3(0.6, 0, 0), glm::vec3(0.6, 0, 0), glm::vec3(0)), LightAttenuationSpecs(100), cosf(0.2), cos(0.3)));
+  spot_light.AddComponent<TransformComponent>(glm::vec3(0, 3, -3));
 
   Renderer3D::Init();
   Renderer3D::SetViewport(
