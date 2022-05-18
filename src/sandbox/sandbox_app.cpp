@@ -191,10 +191,13 @@ void SandboxApp::Run() {
   dispatcher.GetSink<JumpEvent>().Connect<&PlayerMovementScript::OnJump>(*dog_movement);
   dog.AddComponent<ScriptComponent>(dog_movement);
 
+  EntityHandle statue = scene_.CreateEntity();
+  statue.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/statue.obj"));
+  statue.AddComponent<TransformComponent>(Transform(glm::vec3(2, 0, 2), glm::vec3(0), glm::vec3(1)));
+
   EntityHandle camera = scene_.CreateChildEntity(dog);
   camera.AddComponent<CameraComponent>(PerspectiveCameraSpecs(aspect_ratio), true);
   camera.AddComponent<TransformComponent>(Transform(glm::vec3{0, 7, 8}, glm::vec3(-0.3, 0, 0)));
-
 
   EntityHandle skybox = scene_.CreateChildEntity(camera);
   skybox.AddComponent<MeshComponent>(CreateSkyboxMesh({"res/textures/skybox_night_sky/skybox_night_sky_right.png",
