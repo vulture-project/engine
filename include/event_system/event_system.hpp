@@ -50,14 +50,14 @@ class Sink final : public BaseSink {
  public:
   template <auto F, typename U>
   void Connect(U& instance) {
-    callback_.emplace_back(reinterpret_cast<void*>(F), reinterpret_cast<void*>(&instance), std::bind(F, &instance, std::placeholders::_1));
+    callback_.emplace_back(reinterpret_cast<void*>(NULL), reinterpret_cast<void*>(&instance), std::bind(F, &instance, std::placeholders::_1));
     // callback_.emplace_back(reinterpret_cast<void*>(F), //FIXME: bind does not work
     //                        std::bind(F, instance, std::placeholders::_1));
   }
 
   template <auto F>
   void Connect() {
-    callback_.emplace_back(reinterpret_cast<void*>(F), nullptr, std::bind(F, std::placeholders::_1));
+    callback_.emplace_back(reinterpret_cast<void*>(NULL), nullptr, std::bind(F, std::placeholders::_1));
     // callback_.emplace_back(reinterpret_cast<void*>(F), //FIXME:
     //                        std::bind(F, std::placeholders::_1));
   }
