@@ -24,8 +24,8 @@ void main()
 #version 330 core
 
 #define MAX_DIRECTIONAL_LIGHTS 1
-#define MAX_POINT_LIGHTS 4
-#define MAX_SPOT_LIGHTS 4
+#define MAX_POINT_LIGHTS 10
+#define MAX_SPOT_LIGHTS 2
 
 struct Material
 {

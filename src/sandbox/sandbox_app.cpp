@@ -54,8 +54,6 @@ int SandboxApp::Init() {
 
 class JumpEvent {};
 
-glm::vec3 speed{0, 0, 0};
-
 class PlayerMovementScript : public IScript {
  public:
   constexpr static float kSpeed = 15;
@@ -100,18 +98,19 @@ class PlayerMovementScript : public IScript {
       transform->translation -= disp * right;
     }
 
-    speed -= glm::vec3(0, 10, 0) * timestep;
-    transform->translation += speed * timestep;
+    speed_ -= glm::vec3(0, 10, 0) * timestep;
+    transform->translation += speed_ * timestep;
 
     transform->translation.y = std::max(0.0f, transform->translation.y);
   }
 
   void OnJump(const JumpEvent&) {
-    speed = glm::vec3(0, 4, 0);
+    speed_ = glm::vec3(0, 4, 0);
   }
 
 private:
   EntityHandle* entity_{nullptr}; // FIXME:
+  glm::vec3 speed_{0};
 };
 
 void SandboxApp::Run() {
@@ -169,11 +168,11 @@ void SandboxApp::Run() {
   #define CREATE_2LIGHTS(NUM) \
     EntityHandle lamp_light_##NUM = scene_.CreateChildEntity(street_lamp##NUM); \
     lamp_light_##NUM.AddComponent<LightSourceComponent>(PointLightSpecs( \
-        LightColorSpecs(glm::vec3(0.1), glm::vec3(0.3, 0.3, 0), glm::vec3(0.1)), LightAttenuationSpecs(100))); \
+        LightColorSpecs(glm::vec3(0.1), glm::vec3(0.3, 0.3, 0), glm::vec3(0.01)), LightAttenuationSpecs(15))); \
     lamp_light_##NUM.AddComponent<TransformComponent>(glm::vec3(2, 8, 2)); \
     EntityHandle lamp_light_##NUM##_symm = scene_.CreateChildEntity(street_lamp##NUM##_symm); \
     lamp_light_##NUM##_symm.AddComponent<LightSourceComponent>(PointLightSpecs( \
-        LightColorSpecs(glm::vec3(0.1), glm::vec3(0.3, 0.3, 0), glm::vec3(0.1)), LightAttenuationSpecs(100))); \
+        LightColorSpecs(glm::vec3(0.1), glm::vec3(0.3, 0.3, 0), glm::vec3(0.01)), LightAttenuationSpecs(15))); \
     lamp_light_##NUM##_symm.AddComponent<TransformComponent>(glm::vec3(2, 8, 2));
 
   CREATE_2LIGHTS(0)
