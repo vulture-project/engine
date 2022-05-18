@@ -110,11 +110,11 @@ class Sink final : public BaseSink {
     //                        std::bind(F, std::placeholders::_1));
   }
 
-  // FIXME:
   template <auto F, typename U>
   void Disconnect(U& instance) {
+    Functor<function_type> f{ArgConnector<F>{}, instance};
     for (auto it = callback_.begin(); it != callback_.end(); ++it) {
-      if (std::get<0>(*it) == reinterpret_cast<void*>(F) && std::get<1>(*it) == reinterpret_cast<void*>(&instance)) {
+      if (*it == f) {
         callback_.erase(it);
         break;
       }
@@ -123,8 +123,9 @@ class Sink final : public BaseSink {
 
   template <auto F>
   void Disconnect() {
+    Functor<function_type> f{ArgConnector<F>{}};
     for (auto it = callback_.begin(); it != callback_.end(); ++it) {
-      if (std::get<0>(*it) == reinterpret_cast<void*>(F) && std::get<1>(*it) == nullptr) {
+      if (*it == f) {
         callback_.erase(it);
         break;
       }
