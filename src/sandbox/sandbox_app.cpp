@@ -32,11 +32,21 @@
 #include "renderer/3d/renderer3d.hpp"
 #include "core/resource_manager.hpp"
 
+#include "audio/AudioDevice.h"
+#include "audio/AudioSource.h"
+
 using namespace vulture;
 
 bool running = true;
 
 vulture::Dispatcher dispatcher;
+
+using namespace sound;
+
+AudioDevice device;
+AudioContext* context;
+sound::Source* source_woof;
+AudioBuffer* buffer_woof;
 
 SandboxApp::SandboxApp() : window_(1280, 960) {}
 
@@ -49,8 +59,27 @@ int SandboxApp::Init() {
   InputEventManager::SetWindowAndDispatcher(&window_, &dispatcher);
 
   dispatcher.GetSink<KeyEvent>().Connect<&ProcessKeyEvent>();
+
+
+  device.Open();
+  context = device.CreateContext();
+  context->MakeCurrentPlaying();
+  source_woof = context->CreateSource();
+  buffer_woof = new AudioBuffer("res/sounds/woof.wav");
+  source_woof->SetBuf(buffer_woof);
+
   return 0;
 }
+
+SandboxApp::~SandboxApp() {
+  source_woof->ReleaseBuf();
+
+  delete buffer_woof;
+
+  context->DestroySource(source_woof);
+  device.DestroyContext(context);
+  device.Close();
+};
 
 class JumpEvent {};
 
@@ -253,12 +282,16 @@ void SandboxApp::Run() {
 void ProcessKeyEvent(const vulture::KeyEvent& event) {
   int key = event.key;
   int action = (int)event.action;
-  
+
   if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
     running = false;
   }
 
   if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE) {
     dispatcher.Trigger<JumpEvent>();
+  }
+
+  if (key == GLFW_KEY_E && action == GLFW_PRESS) {
+    source_woof->Play();
   }
 }

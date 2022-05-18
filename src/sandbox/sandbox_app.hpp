@@ -40,6 +40,7 @@ void ProcessKeyEvent(const vulture::KeyEvent& event);
 class SandboxApp : public vulture::Application {
  public:
   SandboxApp();
+  ~SandboxApp();
 
   virtual int Init() override;
   virtual void Run() override;

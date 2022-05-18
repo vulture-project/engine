@@ -27,10 +27,22 @@
 
 #include "sandbox/sandbox_app.hpp"
 
+#include "audio/AudioDevice.h"
+#include "audio/AudioSource.h"
+
+#include <stdio.h>
+#include <cassert>
+#include <filesystem>
+#include <iostream>
+
+#include <unistd.h>
+
+using namespace sound;
+namespace fs = std::filesystem;
+
 int main() {
   SandboxApp app{};
   app.Init();
   app.Run();
-
   return 0;
 }
