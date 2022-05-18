@@ -28,10 +28,14 @@
 #pragma once
 
 #include "app/app.hpp"
+#include "event_system/event_system.hpp"
 #include "platform/event.hpp"
 #include "platform/window.hpp"
 #include "renderer/3d/scene3d.hpp"
 #include "scene/scene.hpp"
+
+void ProcessMoveEvent(const vulture::MouseMoveEvent& event);
+void ProcessKeyEvent(const vulture::KeyEvent& event);
 
 class SandboxApp : public vulture::Application {
  public:
@@ -40,14 +44,11 @@ class SandboxApp : public vulture::Application {
   virtual int Init() override;
   virtual void Run() override;
 
-  void ProcessEvent(vulture::Event* event);
-  void ProcessMoveEvent(vulture::Event* event);
-  void ProcessKeyEvent(vulture::Event* event);
 
  private:
   vulture::Window window_;
   vulture::Scene scene_;
-
+  vulture::Dispatcher dispatcher_;
   // vulture::LightSourceNode3D* directional_light_node_{nullptr};
   // vulture::LightSourceNode3D* spot_light_node_{nullptr};
   // vulture::ModelNode3D* skybox_node_{nullptr};

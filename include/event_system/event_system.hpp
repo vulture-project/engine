@@ -9,6 +9,8 @@
  *
  */
 
+#pragma once
+
 #include <cassert>
 #include <cstdlib>
 #include <functional>
@@ -37,35 +39,27 @@ struct EventIdHolder {
 
 class BaseSink {
  public:
-  virtual ~BaseSink(){};
+  virtual ~BaseSink() {};
 };
 
-template <typename T>
+template <typename EventT>
 class Sink final : public BaseSink {
  public:
   template <auto F, typename U>
   void Connect(U& instance) {
-    callback_.emplace_back(reinterpret_cast<void*>(F),
+    callback_.emplace_back(reinterpret_cast<void*>(NULL), //FIXME:
                            std::bind(F, instance, std::placeholders::_1));
   }
 
   template <auto F>
   void Connect() {
-    callback_.emplace_back(reinterpret_cast<void*>(F),
+    callback_.emplace_back(reinterpret_cast<void*>(NULL), //FIXME:
                            std::bind(F, std::placeholders::_1));
   }
 
+  //FIXME:
   template <auto F, typename U>
-  void Disonnect(U& instance) {
-    for (auto it = callback_.begin(); it != callback_.end(); ++it) {
-      if (it->first == reinterpret_cast<void*>(F)) {
-        callback_.erase(it);
-        break;
-      }
-    }
-  }
-  template <auto F>
-  void Disonnect() {
+  void Disconnect(U& /*instance*/) {
     for (auto it = callback_.begin(); it != callback_.end(); ++it) {
       if (it->first == reinterpret_cast<void*>(F)) {
         callback_.erase(it);
@@ -74,7 +68,17 @@ class Sink final : public BaseSink {
     }
   }
 
-  void Publish(T& event) {
+  template <auto F>
+  void Disconnect() {
+    for (auto it = callback_.begin(); it != callback_.end(); ++it) {
+      if (it->first == reinterpret_cast<void*>(F)) {
+        callback_.erase(it);
+        break;
+      }
+    }
+  }
+
+  void Publish(const EventT& event) {
     for (size_t i = 0; i < callback_.size(); ++i) {
       (callback_[i].second)(event);
     }
@@ -82,8 +86,8 @@ class Sink final : public BaseSink {
 
  private:
   // std pair just for now, then we will write our own std::function with
-  // operator
-  std::vector<std::pair<void*, std::function<void(T&)>>> callback_;
+  // operator ==
+  std::vector<std::pair<void*, std::function<void(const EventT&)>>> callback_;
 };
 
 class Dispatcher {
@@ -97,6 +101,7 @@ class Dispatcher {
     } else {
       ans_ptr = dispatchers[id];
     }
+
     assert(ans_ptr != nullptr);
     return *static_cast<Sink<EventType>*>(ans_ptr);
   }
@@ -106,9 +111,10 @@ class Dispatcher {
     return Assure<EventType>(EventIdHolder<EventType>::GetId());
   }
 
-  template <typename EventType>
-  void Trigger(EventType& event) {
-    Assure<EventType>(EventIdHolder<EventType>::GetId()).Publish(event);
+  template <typename EventType, typename... Args>
+  void Trigger(Args&&... args) {
+    EventType e{std::forward<Args>(args)...};
+    Assure<EventType>(EventIdHolder<EventType>::GetId()).Publish(e);
   }
 
   ~Dispatcher() {
