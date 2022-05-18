@@ -34,11 +34,19 @@ using namespace vulture;
 
 EntityRegistry& Scene::GetEntityRegistry() { return entities_; }
 
+void Scene::OnStart(Dispatcher& dispatcher) {
+  /* Script attach */
+  auto scripts = GetView<ScriptComponent>(entities_);
+  for (auto [entity, script] : scripts) {
+    script->script->OnAttach(entity, dispatcher);
+  }
+}
+
 void Scene::OnUpdate(float timestep) {
   /* Script update */
   auto scripts = GetView<ScriptComponent>(entities_);
   for (auto [entity, script] : scripts) {
-    script->script->OnUpdate(entity, timestep);
+    script->script->OnUpdate(timestep);
   }
 }
 
@@ -54,9 +62,6 @@ void Scene::Render() {
 
     assert(entity.HasComponent<TransformComponent>());
     light->runtime_node->transform = ComputeWorldSpaceTransform(entity);
-
-    // glm::vec3 translation = ComputeWorldSpaceTransform(entity).translation;
-    // LOG_WARN(Scene, "Transform.translation = {}, {}, {}", translation.x, translation.y, translation.z);
   }
 
   auto models = GetView<MeshComponent>(entities_);

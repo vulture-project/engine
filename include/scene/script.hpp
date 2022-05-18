@@ -35,7 +35,8 @@ class IScript {
  public:
   virtual ~IScript() = default;
 
-  virtual void OnUpdate(EntityHandle entity, float timestep) = 0;
+  virtual void OnAttach(EntityHandle entity, Dispatcher& dispatcher) = 0;
+  virtual void OnUpdate(float timestep) = 0;
 };
 
 }  // namespace vulture

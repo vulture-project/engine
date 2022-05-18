@@ -25,6 +25,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#pragma once
+
 namespace vulture {
 
 template <typename ComponentT, typename... Args>

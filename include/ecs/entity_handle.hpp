@@ -34,6 +34,9 @@ namespace vulture {
 class EntityHandle {
  public:
   EntityHandle(EntityId id, EntityRegistry& registry);
+  EntityHandle(const EntityHandle& other) : id_(other.id_), registry_(other.registry_) {}
+
+  EntityHandle& operator=(const EntityHandle& other);
 
   void Destroy();
 

@@ -27,6 +27,7 @@
 
 #pragma once
 
+#include "event_system/event_system.hpp"
 #include "renderer/3d/scene3d.hpp"
 #include "scene/components.hpp"
 
@@ -35,6 +36,8 @@ namespace vulture {
 class Scene {
  public:
   EntityRegistry& GetEntityRegistry();
+
+  void OnStart(Dispatcher& dispatcher);
 
   /**
    * @brief Simulate the game world.

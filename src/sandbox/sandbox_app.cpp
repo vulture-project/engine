@@ -34,6 +34,8 @@
 
 using namespace vulture;
 
+bool running = true;
+
 SandboxApp::SandboxApp() : window_(1280, 960) {}
 
 int SandboxApp::Init() {
@@ -45,16 +47,35 @@ int SandboxApp::Init() {
   InputEventManager::SetWindowAndDispatcher(&window_, &dispatcher_);
 
   dispatcher_.GetSink<KeyEvent>().Connect<&ProcessKeyEvent>();
-  dispatcher_.GetSink<MouseMoveEvent>().Connect<&ProcessMoveEvent>();
   return 0;
 }
 
-class CameraMovementScript : public IScript {
+class PlayerMovementScript : public IScript {
  public:
   constexpr static float kSpeed = 15;
 
-  virtual void OnUpdate(EntityHandle entity, float timestep) override {
-    Transform* transform = &entity.GetComponent<TransformComponent>()->transform;
+  void OnMouseMove(const MouseMoveEvent& event) {
+    static float prev_x = 0;
+    static float prev_y = 0;
+    
+    float dx = prev_x - event.x;
+    float dy = prev_y - event.y;
+
+    Transform* transform = &entity_->GetComponent<TransformComponent>()->transform;
+    transform->rotation.y += 0.001f * dx;
+    // transform->rotation.x += 0.001f * dy;
+    
+    prev_x = event.x;
+    prev_y = event.y;
+  }
+
+  virtual void OnAttach(EntityHandle entity, Dispatcher& dispatcher) override {
+    entity_ = new EntityHandle(entity);
+    dispatcher.GetSink<MouseMoveEvent>().Connect<&PlayerMovementScript::OnMouseMove>(*this);
+  }
+
+  virtual void OnUpdate(float timestep) override {
+    Transform* transform = &entity_->GetComponent<TransformComponent>()->transform;
 
     glm::vec3 forward = transform->CalculateRotationMatrix() * glm::vec4(kDefaultForwardVector, 1);
     glm::vec3 right = transform->CalculateRotationMatrix() * glm::vec4(kDefaultRightVector, 1);
@@ -72,7 +93,12 @@ class CameraMovementScript : public IScript {
     } else if (Keyboard::Pressed(Keys::kAKey)) {
       transform->translation -= disp * right;
     }
+
+    transform->translation.y = 0;
   }
+
+private:
+  EntityHandle* entity_{nullptr}; // FIXME:
 };
 
 void SandboxApp::Run() {
@@ -82,11 +108,6 @@ void SandboxApp::Run() {
 
   float aspect_ratio = (float)frame_buffer_width / (float)frame_buffer_height;
 
-  EntityHandle camera = scene_.CreateEntity();
-  camera.AddComponent<CameraComponent>(PerspectiveCameraSpecs(aspect_ratio), true);
-  camera.AddComponent<TransformComponent>(glm::vec3{10, 3, 10});
-  camera.AddComponent<ScriptComponent>(new CameraMovementScript());
-
   EntityHandle nk = scene_.CreateEntity();
   nk.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/nk.obj"));
   nk.AddComponent<TransformComponent>();
@@ -94,6 +115,19 @@ void SandboxApp::Run() {
   EntityHandle watch_tower = scene_.CreateEntity();
   // watch_tower.AddComponent<MeshComponent>(ResourcseManager::LoadMesh("res/meshes/wooden_watch_tower.obj"));
   watch_tower.AddComponent<TransformComponent>();
+
+  EntityHandle bench = scene_.CreateEntity();
+  bench.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/bench.obj"));
+  bench.AddComponent<TransformComponent>(Transform(glm::vec3(1, 0, 0), glm::vec3(0), glm::vec3(1)));
+
+  EntityHandle dog = scene_.CreateEntity();
+  dog.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/dog.obj"));
+  dog.AddComponent<TransformComponent>(Transform(glm::vec3(8, 0, 0), glm::vec3(0), glm::vec3(0.5, 0.4, 0.4)));
+  dog.AddComponent<ScriptComponent>(new PlayerMovementScript());
+
+  EntityHandle camera = scene_.CreateChildEntity(dog);
+  camera.AddComponent<CameraComponent>(PerspectiveCameraSpecs(aspect_ratio), true);
+  camera.AddComponent<TransformComponent>(Transform(glm::vec3{0, 7, 8}, glm::vec3(-0.3, 0, 0)));
 
   EntityHandle street_lamp1 = scene_.CreateEntity();
   street_lamp1.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/street_lamp.obj"));
@@ -140,6 +174,8 @@ void SandboxApp::Run() {
   glfwSetInputMode(window_.GetNativeWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwSetCursorPos(window_.GetNativeWindow(), frame_buffer_width / 2, frame_buffer_height / 2);
 
+  scene_.OnStart(dispatcher_);
+
   clock_t time_start = clock();
   while (running) {
     float timestep = (0.0f + clock() - time_start) / CLOCKS_PER_SEC;
@@ -155,72 +191,11 @@ void SandboxApp::Run() {
   }
 }
 
-void ProcessMoveEvent(const vulture::MouseMoveEvent& event) {
-  std::cout << "QQQQQQQQQQQQQQQQQ\n";
-  // static float prev_x = 0;
-  // static float prev_y = 0;
-  //
-  // float dx = prev_x - event->GetMove().x;
-  // float dy = prev_y - event->GetMove().y;
-  //
-  // scene_.GetMainCamera()->transform.rotation.y += 0.001f * dx;
-  // scene_.GetMainCamera()->transform.rotation.x += 0.001f * dy;
-  //
-  // spot_light_node_->transform = scene_.GetMainCamera()->transform;
-  // skybox_node_->transform.translation = scene_.GetMainCamera()->transform.translation;
-  //
-  // prev_x = event->GetMove().x;
-  // prev_y = event->GetMove().y;
-}
-
 void ProcessKeyEvent(const vulture::KeyEvent& event) {
-  std::cout << "JEJJJJJJJJJJJJJJJJJJJJJJJJJJ\n";
-  
   int key = event.key;
   int action = (int)event.action;
-
-  // float speed = 0.5;
-  //
-  // glm::vec3 forward = scene_.GetMainCamera()->CalculateForwardVector();
-  // glm::vec3 right = scene_.GetMainCamera()->CalculateRightVector();
   
   if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
-    std::cout << "EXIT\n";
-    // running = false;
+    running = false;
   }
-
-  // if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-  //   scene_.GetMainCamera()->transform.translation += speed * forward;
-  // }
-  //
-  // if (key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-  //   scene_.GetMainCamera()->transform.translation -= speed * forward;
-  // }
-  //
-  // if (key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-  //   scene_.GetMainCamera()->transform.translation -= speed * right;
-  // }
-  //
-  // if (key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-  //   scene_.GetMainCamera()->transform.translation += speed * right;
-  // }
-  //
-  // if (key == GLFW_KEY_Q && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-  //   scene_.GetMainCamera()->transform.translation.y -= 1;
-  // }
-  //
-  // if (key == GLFW_KEY_E && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-  //   scene_.GetMainCamera()->transform.translation.y += 1;
-  // }
-  //
-  // if (key == GLFW_KEY_F && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-  //   spot_light_node_->SetEnabled(!spot_light_node_->IsEnabled());
-  // }
-  //
-  // if (key == GLFW_KEY_J && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-  //   directional_light_node_->SetEnabled(!directional_light_node_->IsEnabled());
-  // }
-  //
-  // spot_light_node_->transform = scene_.GetMainCamera()->transform;
-  // skybox_node_->transform.translation = scene_.GetMainCamera()->transform.translation;
 }
