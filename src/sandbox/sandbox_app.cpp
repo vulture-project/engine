@@ -42,8 +42,10 @@ int SandboxApp::Init() {
     return -1;
   }
 
-  EventQueue::SetWindow(&window_);
+  InputEventManager::SetWindowAndDispatcher(&window_, &dispatcher_);
 
+  dispatcher_.GetSink<KeyEvent>().Connect<&ProcessKeyEvent>();
+  dispatcher_.GetSink<MouseMoveEvent>().Connect<&ProcessMoveEvent>();
   return 0;
 }
 
@@ -154,16 +156,12 @@ void SandboxApp::Run() {
   glfwSetInputMode(window_.GetNativeWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwSetCursorPos(window_.GetNativeWindow(), frame_buffer_width / 2, frame_buffer_height / 2);
 
-  Event event{};
-
   clock_t time_start = clock();
   while (running) {
     float timestep = (0.0f + clock() - time_start) / CLOCKS_PER_SEC;
     time_start = clock();
 
-    while (PollEvent(&event)) {
-      ProcessEvent(&event);
-    }
+    InputEventManager::TriggerEvents();
 
     scene_.OnUpdate(timestep);
     scene_.Render();
@@ -173,30 +171,8 @@ void SandboxApp::Run() {
   }
 }
 
-void SandboxApp::ProcessEvent(Event* event) {
-  assert(event);
-
-  switch (event->GetType()) {
-    case kQuit:
-      running = false;
-      break;
-
-    case kKey:
-      ProcessKeyEvent(event);
-      break;
-
-    case kMouseMove:
-      ProcessMoveEvent(event);
-      break;
-
-    default:
-      break;
-  }
-}
-
-void SandboxApp::ProcessMoveEvent(Event* event) {
-  assert(event);
-
+void ProcessMoveEvent(const vulture::MouseMoveEvent& event) {
+  std::cout << "QQQQQQQQQQQQQQQQQ\n";
   // static float prev_x = 0;
   // static float prev_y = 0;
   //
@@ -213,11 +189,11 @@ void SandboxApp::ProcessMoveEvent(Event* event) {
   // prev_y = event->GetMove().y;
 }
 
-void SandboxApp::ProcessKeyEvent(Event* event) {
-  assert(event);
-
-  int key = event->GetKey().key;
-  int action = (int)event->GetKey().action;
+void ProcessKeyEvent(const vulture::KeyEvent& event) {
+  std::cout << "JEJJJJJJJJJJJJJJJJJJJJJJJJJJ\n";
+  
+  int key = event.key;
+  int action = (int)event.action;
 
   // float speed = 0.5;
   //
@@ -225,7 +201,8 @@ void SandboxApp::ProcessKeyEvent(Event* event) {
   // glm::vec3 right = scene_.GetMainCamera()->CalculateRightVector();
   
   if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
-    running = false;
+    std::cout << "EXIT\n";
+    // running = false;
   }
 
   // if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)) {

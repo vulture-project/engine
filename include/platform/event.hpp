@@ -31,20 +31,9 @@
 #include <vector>
 
 #include "platform/window.hpp"
+#include "event_system/event_system.hpp"
 
 namespace vulture {
-
-enum EventType {
-  kNoEvent,
-  kQuit,
-  kKey,
-  kMouseButton,
-  kMouseMove,
-  kMouseScroll,
-
-  // kMouseEnter,
-  // kMouseLeave,
-};
 
 enum Action {
   kPress,
@@ -69,83 +58,39 @@ struct ButtonMods {
   bool alt_pressed   : 1;
 };
 
-struct ScrollEventData {
+struct QuitEvent {};
+
+struct ScrollEvent {
+  ScrollEvent(int dx, int dy) : dx(dx), dy(dy) {}
+
   int dx;
   int dy;
 };
 
-struct MouseMoveEventData {         // Do we need dx and dy here?
+struct MouseMoveEvent {         // Do we need dx and dy here?
+  MouseMoveEvent(int x, int y) : x(x), y(y) {}
+
   int x;
   int y;
 };
 
-struct MouseButtonEventData {       // Do we need coords here?
-  MouseButtonEventData() = default;
-  MouseButtonEventData(int button, int action, int mods);
+struct MouseButtonEvent {       // Do we need coords here?
+  MouseButtonEvent() = default;
+  MouseButtonEvent(int button, int action, int mods);
 
   MouseButton button;
   Action action;
   ButtonMods mods;
 };
 
-struct KeyEventData {
-  KeyEventData() = default;
-  KeyEventData(int key, int scancode, int action, int mods);
+struct KeyEvent {
+  KeyEvent() = default;
+  KeyEvent(int key, int scancode, int action, int mods);
 
-    int key;
-    int scancode;
-    Action action;
-    ButtonMods mods;
-};
-
-union EventData {
-  EventData() = default;
-  explicit EventData(const MouseMoveEventData&   data) : move(data) {}
-  explicit EventData(const MouseButtonEventData& data) : button(data) {}
-  explicit EventData(const KeyEventData&         data) : key(data) {}
-  explicit EventData(const ScrollEventData&      data) : scroll(data) {}
-
-  MouseMoveEventData   move;
-  MouseButtonEventData button;
-  KeyEventData         key;
-  ScrollEventData      scroll;
-};
-
-class Event
-{
- public:
-  Event() = default;
-  explicit Event(EventType type) : type_(type) {}
-  Event(EventType type, const EventData& data)
-    : type_(type), data_(data) {}
-
-  EventType& GetType() {
-      return type_;
-  }
-
-  EventData& GetData() {
-      return data_;
-  }
-
-  MouseButtonEventData& GetButton() {
-      return data_.button;
-  }
-
-  MouseMoveEventData& GetMove() {
-      return data_.move;
-  }
-
-  KeyEventData& GetKey() {
-      return data_.key;
-  }
-
-  ScrollEventData& GetScroll() {
-      return data_.scroll;
-  }
-
- private:
-  EventType type_{kNoEvent};
-  EventData data_;
+  int key;
+  int scancode;
+  Action action;
+  ButtonMods mods;
 };
 
 enum class Keys {
@@ -200,17 +145,14 @@ enum class Keys {
   kEnterKey = GLFW_KEY_ENTER,
 };
 
-bool PollEvent(Event* event);
-
-class EventQueue {
+class InputEventManager {
  private:
-  EventQueue() = default;
+  InputEventManager() = default;
 
  public:
-  static void SetWindow(Window* window);
+  static void SetWindowAndDispatcher(Window* window, Dispatcher* dispatcher);
 
-  static void PostEvent(const Event& event);
-  static bool PollEvent(Event* event);
+  static void TriggerEvents();
 
  private:
   static void KeyCallback        (GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -220,7 +162,7 @@ class EventQueue {
   static void ScrollCallback     (GLFWwindow* window, double dx, double dy);
 
   static Window* window_;
-  static std::queue<Event> queue_;
+  static Dispatcher* dispatcher_;
 };
 
 class Keyboard {

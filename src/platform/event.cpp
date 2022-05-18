@@ -26,6 +26,7 @@
  */
 
 #include "platform/event.hpp"
+#include "core/logger.hpp"
 
 #include <GLFW/glfw3.h>
 
@@ -34,8 +35,8 @@
 namespace vulture {
 
 // Static fields initialization
-Window* EventQueue::window_ = nullptr;
-std::queue<Event> EventQueue::queue_{};
+Window* InputEventManager::window_ = nullptr;
+Dispatcher* InputEventManager::dispatcher_ = nullptr;
 
 std::vector<bool> Keyboard::keys_pressed_(kMaxKey + 1, false);
 
@@ -45,50 +46,60 @@ ButtonMods::ButtonMods(int mods) {
   alt_pressed = static_cast<bool>(mods & GLFW_MOD_ALT);
 }
 
-MouseButtonEventData::MouseButtonEventData(int button, int action, int mods)
+MouseButtonEvent::MouseButtonEvent(int button, int action, int mods)
     : button(static_cast<MouseButton>(button)), action(static_cast<Action>(action)), mods(mods) {}
 
-KeyEventData::KeyEventData(int key, int scancode, int action, int mods)
+KeyEvent::KeyEvent(int key, int scancode, int action, int mods)
     : key(key), scancode(scancode), action(static_cast<Action>(action)), mods(mods) {}
 
-void EventQueue::ScrollCallback(GLFWwindow* window, double dx, double dy) {
-  assert(window);
+void InputEventManager::ScrollCallback(GLFWwindow* /*window*/, double dx, double dy) {
+  LOG_INFO(Logger, "Triggering scroll event {} {}", dx, dy);
 
-  queue_.emplace(kMouseScroll, EventData(ScrollEventData{static_cast<int>(dx), static_cast<int>(dy)}));
+  dispatcher_->Trigger<ScrollEvent>(static_cast<int>(dx), static_cast<int>(dy));
 }
 
-void EventQueue::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
-  assert(window);
+void InputEventManager::MouseButtonCallback(GLFWwindow* /*window*/, int button, int action, int mods) {
+  LOG_INFO(Logger, "Triggering mouse button event {} {} {}", button, action, mods);
 
-  queue_.emplace(kMouseButton, EventData(MouseButtonEventData(button, action, mods)));
+  dispatcher_->Trigger<MouseButtonEvent>(button, action, mods);
 }
 
-void EventQueue::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-  assert(window);
-
-  queue_.emplace(kKey, EventData(KeyEventData(key, scancode, action, mods)));
+void InputEventManager::KeyCallback(GLFWwindow* /*window*/, int key, int scancode, int action, int mods) {
+  LOG_INFO(Logger, "Triggering key event {} {} {} {}", key, scancode, action, mods);
 
   if (action == GLFW_PRESS) {
     Keyboard::GetKeys()[key] = true;
   } else if (action == GLFW_RELEASE) {
     Keyboard::GetKeys()[key] = false;
   }
+
+  dispatcher_->Trigger<KeyEvent>(key, scancode, action, mods);
 }
 
-void EventQueue::MouseMoveCallback(GLFWwindow* window, double xpos, double ypos) {
-  assert(window);
+void InputEventManager::MouseMoveCallback(GLFWwindow* /*window*/, double xpos, double ypos) {
+  LOG_INFO(Logger, "Triggering mouse move event {} {}", xpos, ypos);
 
-  queue_.emplace(kMouseMove, EventData(MouseMoveEventData{static_cast<int>(xpos), static_cast<int>(ypos)}));
+  dispatcher_->Trigger<MouseMoveEvent>(static_cast<int>(xpos), static_cast<int>(ypos));
 }
 
-void EventQueue::CloseCallback(GLFWwindow* window) {
-  assert(window);
+void InputEventManager::CloseCallback(GLFWwindow* /*window*/) {
+  LOG_INFO(Logger, "Triggering quit event");
 
-  queue_.emplace(kQuit);
+  dispatcher_->Trigger<QuitEvent>();
 }
 
-void EventQueue::SetWindow(Window* window) {
+void InputEventManager::TriggerEvents() {
+  assert(window_);
+  assert(dispatcher_);
+
+  glfwPollEvents();
+}
+
+void InputEventManager::SetWindowAndDispatcher(Window* window, Dispatcher* dispatcher) {
   assert(window);
+  assert(dispatcher);
+
+  dispatcher_ = dispatcher;
 
   window_ = window;
   GLFWwindow* native_window = window_->GetNativeWindow();
@@ -99,22 +110,5 @@ void EventQueue::SetWindow(Window* window) {
   glfwSetMouseButtonCallback(native_window, MouseButtonCallback);
   glfwSetScrollCallback(native_window, ScrollCallback);
 }
-
-void EventQueue::PostEvent(const Event& event) { queue_.push(event); }
-
-bool EventQueue::PollEvent(Event* event) {
-  glfwPollEvents();
-
-  if (!queue_.empty()) {
-    *event = queue_.front();
-    queue_.pop();
-
-    return true;
-  }
-
-  return false;
-}
-
-bool PollEvent(Event* event) { return EventQueue::PollEvent(event); }
 
 }  // namespace vulture
