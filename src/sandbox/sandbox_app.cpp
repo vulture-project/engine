@@ -36,6 +36,8 @@ using namespace vulture;
 
 bool running = true;
 
+vulture::Dispatcher dispatcher;
+
 SandboxApp::SandboxApp() : window_(1280, 960) {}
 
 int SandboxApp::Init() {
@@ -44,11 +46,15 @@ int SandboxApp::Init() {
     return -1;
   }
 
-  InputEventManager::SetWindowAndDispatcher(&window_, &dispatcher_);
+  InputEventManager::SetWindowAndDispatcher(&window_, &dispatcher);
 
-  dispatcher_.GetSink<KeyEvent>().Connect<&ProcessKeyEvent>();
+  dispatcher.GetSink<KeyEvent>().Connect<&ProcessKeyEvent>();
   return 0;
 }
+
+class JumpEvent {};
+
+glm::vec3 speed{0, 0, 0};
 
 class PlayerMovementScript : public IScript {
  public:
@@ -94,7 +100,14 @@ class PlayerMovementScript : public IScript {
       transform->translation -= disp * right;
     }
 
-    transform->translation.y = 0;
+    speed -= glm::vec3(0, 10, 0) * timestep;
+    transform->translation += speed * timestep;
+
+    transform->translation.y = std::max(0.0f, transform->translation.y);
+  }
+
+  void OnJump(const JumpEvent&) {
+    speed = glm::vec3(0, 4, 0);
   }
 
 private:
@@ -123,7 +136,9 @@ void SandboxApp::Run() {
   EntityHandle dog = scene_.CreateEntity();
   dog.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/dog.obj"));
   dog.AddComponent<TransformComponent>(Transform(glm::vec3(8, 0, 0), glm::vec3(0), glm::vec3(0.5, 0.4, 0.4)));
-  dog.AddComponent<ScriptComponent>(new PlayerMovementScript());
+  PlayerMovementScript* dog_movement = new PlayerMovementScript;
+  dispatcher.GetSink<JumpEvent>().Connect<&PlayerMovementScript::OnJump>(*dog_movement);
+  dog.AddComponent<ScriptComponent>(dog_movement);
 
   EntityHandle camera = scene_.CreateChildEntity(dog);
   camera.AddComponent<CameraComponent>(PerspectiveCameraSpecs(aspect_ratio), true);
@@ -174,7 +189,7 @@ void SandboxApp::Run() {
   glfwSetInputMode(window_.GetNativeWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwSetCursorPos(window_.GetNativeWindow(), frame_buffer_width / 2, frame_buffer_height / 2);
 
-  scene_.OnStart(dispatcher_);
+  scene_.OnStart(dispatcher);
 
   clock_t time_start = clock();
   while (running) {
@@ -197,5 +212,9 @@ void ProcessKeyEvent(const vulture::KeyEvent& event) {
   
   if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
     running = false;
+  }
+
+  if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE) {
+    dispatcher.Trigger<JumpEvent>();
   }
 }

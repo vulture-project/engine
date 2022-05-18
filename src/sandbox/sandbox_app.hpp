@@ -47,5 +47,4 @@ class SandboxApp : public vulture::Application {
  private:
   vulture::Window window_;
   vulture::Scene scene_;
-  vulture::Dispatcher dispatcher_;
 };

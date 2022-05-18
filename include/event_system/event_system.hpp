@@ -48,7 +48,7 @@ class Sink final : public BaseSink {
  public:
   template <auto F, typename U>
   void Connect(U& instance) {
-    callback_.emplace_back(reinterpret_cast<void*>(NULL), //FIXME:
+    callback_.emplace_back(reinterpret_cast<void*>(NULL), //FIXME: bind does not work
                            std::bind(F, instance, std::placeholders::_1));
   }
 
