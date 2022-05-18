@@ -54,8 +54,6 @@ int SandboxApp::Init() {
 
 class JumpEvent {};
 
-glm::vec3 speed{0, 0, 0};
-
 class PlayerMovementScript : public IScript {
  public:
   constexpr static float kSpeed = 15;
@@ -111,6 +109,7 @@ class PlayerMovementScript : public IScript {
   }
 
 private:
+  glm::vec3 speed{0, 0, 0};
   EntityHandle* entity_{nullptr}; // FIXME:
 };
 
