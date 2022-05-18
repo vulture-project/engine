@@ -16,6 +16,7 @@
 #include <functional>
 #include <unordered_map>
 #include <vector>
+#include <tuple>
 
 #include "core/logger.hpp"
 
@@ -45,24 +46,27 @@ class BaseSink {
 
 template <typename EventT>
 class Sink final : public BaseSink {
+  using function_type = void(const EventT&);
  public:
   template <auto F, typename U>
   void Connect(U& instance) {
-    callback_.emplace_back(reinterpret_cast<void*>(NULL), //FIXME: bind does not work
-                           std::bind(F, instance, std::placeholders::_1));
+    callback_.emplace_back(reinterpret_cast<void*>(F), reinterpret_cast<void*>(&instance), std::bind(F, &instance, std::placeholders::_1));
+    // callback_.emplace_back(reinterpret_cast<void*>(F), //FIXME: bind does not work
+    //                        std::bind(F, instance, std::placeholders::_1));
   }
 
   template <auto F>
   void Connect() {
-    callback_.emplace_back(reinterpret_cast<void*>(NULL), //FIXME:
-                           std::bind(F, std::placeholders::_1));
+    callback_.emplace_back(reinterpret_cast<void*>(F), nullptr, std::bind(F, std::placeholders::_1));
+    // callback_.emplace_back(reinterpret_cast<void*>(F), //FIXME:
+    //                        std::bind(F, std::placeholders::_1));
   }
 
   //FIXME:
   template <auto F, typename U>
-  void Disconnect(U& /*instance*/) {
+  void Disconnect(U& instance) {
     for (auto it = callback_.begin(); it != callback_.end(); ++it) {
-      if (it->first == reinterpret_cast<void*>(F)) {
+      if (std::get<0>(*it) == reinterpret_cast<void*>(F) && std::get<1>(*it) == reinterpret_cast<void*>(&instance)) {
         callback_.erase(it);
         break;
       }
@@ -72,7 +76,7 @@ class Sink final : public BaseSink {
   template <auto F>
   void Disconnect() {
     for (auto it = callback_.begin(); it != callback_.end(); ++it) {
-      if (it->first == reinterpret_cast<void*>(F)) {
+      if (std::get<0>(*it) == reinterpret_cast<void*>(F) && std::get<1>(*it) == nullptr) {
         callback_.erase(it);
         break;
       }
@@ -81,14 +85,15 @@ class Sink final : public BaseSink {
 
   void Publish(const EventT& event) {
     for (size_t i = 0; i < callback_.size(); ++i) {
-      (callback_[i].second)(event);
+      std::get<2>(callback_[i])(event);
     }
   }
 
  private:
   // std pair just for now, then we will write our own std::function with
   // operator ==
-  std::vector<std::pair<void*, std::function<void(const EventT&)>>> callback_;
+  std::vector<std::tuple<void*, void*, std::function<function_type>>> callback_;
+  // std::vector<std::pair<void*, std::function<void(const EventT&)>>> callback_;
 };
 
 class Dispatcher {
