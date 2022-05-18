@@ -53,7 +53,10 @@ void Scene::Render() {
     }
 
     assert(entity.HasComponent<TransformComponent>());
-    light->runtime_node->transform = entity.GetComponent<TransformComponent>()->transform;
+    light->runtime_node->transform = ComputeWorldSpaceTransform(entity);
+
+    // glm::vec3 translation = ComputeWorldSpaceTransform(entity).translation;
+    // LOG_WARN(Scene, "Transform.translation = {}, {}, {}", translation.x, translation.y, translation.z);
   }
 
   auto models = GetView<MeshComponent>(entities_);
@@ -65,7 +68,7 @@ void Scene::Render() {
     }
 
     assert(entity.HasComponent<TransformComponent>());
-    model->runtime_node->transform = entity.GetComponent<TransformComponent>()->transform;
+    model->runtime_node->transform = ComputeWorldSpaceTransform(entity);
   }
 
   auto cameras = GetView<CameraComponent>(entities_);
@@ -78,7 +81,7 @@ void Scene::Render() {
     }
 
     assert(entity.HasComponent<TransformComponent>());
-    camera->runtime_node->transform = entity.GetComponent<TransformComponent>()->transform;
+    camera->runtime_node->transform = ComputeWorldSpaceTransform(entity);
 
     if (camera->is_main) {
       if (!main_camera_found) {
@@ -103,16 +106,27 @@ EntityHandle Scene::CreateEntity() {
 EntityHandle Scene::CreateChildEntity(EntityHandle parent) {
   EntityHandle entity = vulture::CreateEntity(entities_);
   entity.AddComponent<HierarchyComponent>(parent);
+
+  if (!parent.HasComponent<HierarchyComponent>()) {
+    parent.AddComponent<HierarchyComponent>();
+  }
+
+  parent.GetComponent<HierarchyComponent>()->children.push_back(entity);
+
   return entity;
 }
 
-glm::mat4 Scene::ComputeWorldSpaceTransformMatrix(EntityHandle entity) {
+glm::mat4 Scene::ComputeWorldSpaceMatrix(EntityHandle entity) {
   if (!entity.HasComponent<TransformComponent>()) {
-    return glm::mat4(1);
+    return {};
   }
 
   auto parent = entity.GetComponent<HierarchyComponent>()->parent;
+  const Transform& transform = entity.GetComponent<TransformComponent>()->transform;
+  return parent.has_value() ? ComputeWorldSpaceMatrix(parent.value()) * transform.CalculateMatrix()
+                            : transform.CalculateMatrix();
+}
 
-  return parent ? ComputeWorldSpaceTransformMatrix(parent.value())
-                : entity.GetComponent<TransformComponent>()->transform.CalculateMatrix();
+Transform Scene::ComputeWorldSpaceTransform(EntityHandle entity) {
+  return Transform(ComputeWorldSpaceMatrix(entity));
 }

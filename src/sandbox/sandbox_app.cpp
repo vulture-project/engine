@@ -49,7 +49,7 @@ int SandboxApp::Init() {
 
 class CameraMovementScript : public IScript {
  public:
-  constexpr static float kSpeed = 10;
+  constexpr static float kSpeed = 15;
 
   virtual void OnUpdate(EntityHandle entity, float timestep) override {
     Transform* transform = &entity.GetComponent<TransformComponent>()->transform;
@@ -85,66 +85,50 @@ void SandboxApp::Run() {
   camera.AddComponent<TransformComponent>(glm::vec3{10, 3, 10});
   camera.AddComponent<ScriptComponent>(new CameraMovementScript());
 
-  EntityHandle street_lamp_light1 = scene_.CreateEntity();
+  EntityHandle nk = scene_.CreateEntity();
+  nk.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/nk.obj"));
+  nk.AddComponent<TransformComponent>();
+
+  EntityHandle watch_tower = scene_.CreateEntity();
+  // watch_tower.AddComponent<MeshComponent>(ResourcseManager::LoadMesh("res/meshes/wooden_watch_tower.obj"));
+  watch_tower.AddComponent<TransformComponent>();
+
+  EntityHandle street_lamp1 = scene_.CreateEntity();
+  street_lamp1.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/street_lamp.obj"));
+  street_lamp1.AddComponent<TransformComponent>(Transform(glm::vec3(3, 0, 0), glm::vec3(0), glm::vec3(0.6f)));
+
+  EntityHandle street_lamp2 = scene_.CreateEntity();
+  street_lamp2.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/street_lamp.obj"));
+  street_lamp2.AddComponent<TransformComponent>(Transform(glm::vec3(-3, 0, 0), glm::vec3(0), glm::vec3(0.6f)));
+
+  EntityHandle skybox = scene_.CreateChildEntity(camera);
+  skybox.AddComponent<MeshComponent>(CreateSkyboxMesh({"res/textures/skybox_night_sky/skybox_night_sky_right.png",
+                                                       "res/textures/skybox_night_sky/skybox_night_sky_left.png",
+                                                       "res/textures/skybox_night_sky/skybox_night_sky_top.png",
+                                                       "res/textures/skybox_night_sky/skybox_night_sky_bottom.png",
+                                                       "res/textures/skybox_night_sky/skybox_night_sky_front.png",
+                                                       "res/textures/skybox_night_sky/skybox_night_sky_back.png"}));
+  skybox.AddComponent<TransformComponent>();
+
+  EntityHandle street_lamp_light1 = scene_.CreateChildEntity(street_lamp1);
   street_lamp_light1.AddComponent<LightSourceComponent>(PointLightSpecs(
       LightColorSpecs(glm::vec3(0.1), glm::vec3(0.4, 0.34, 0), glm::vec3(0.1)), LightAttenuationSpecs(3)));
-  street_lamp_light1.AddComponent<TransformComponent>(glm::vec3(4, 3, 0));
+  street_lamp_light1.AddComponent<TransformComponent>(glm::vec3(0, 5.3, 0));
 
-  EntityHandle street_lamp_light2 = scene_.CreateEntity();
+  EntityHandle street_lamp_light2 = scene_.CreateChildEntity(street_lamp2);
   street_lamp_light2.AddComponent<LightSourceComponent>(PointLightSpecs(
       LightColorSpecs(glm::vec3(0.1), glm::vec3(0.4, 0.2, 0.2), glm::vec3(0.1)), LightAttenuationSpecs(3)));
-  street_lamp_light2.AddComponent<TransformComponent>(glm::vec3(-4, 3, 0));
+  street_lamp_light2.AddComponent<TransformComponent>(glm::vec3(0, 5.3, 0));
 
   EntityHandle dir_light = scene_.CreateEntity();
   dir_light.AddComponent<LightSourceComponent>(
       DirectionalLightSpecs(LightColorSpecs(glm::vec3(0.2), glm::vec3(0.2), glm::vec3(0.1))));
   dir_light.AddComponent<TransformComponent>(Transform(glm::vec3(0), glm::vec3(-0.5, 0, 0)));
 
-  EntityHandle spot_light = scene_.CreateEntity();
+  EntityHandle spot_light = scene_.CreateChildEntity(camera);
   spot_light.AddComponent<LightSourceComponent>(SpotLightSpecs(
       LightColorSpecs(glm::vec3(0.3), glm::vec3(0.3), glm::vec3(0)), LightAttenuationSpecs(2), cosf(0.2), cos(0.3)));
-  spot_light.AddComponent<TransformComponent>(*camera.GetComponent<TransformComponent>());
-
-  EntityHandle nk = scene_.CreateEntity();
-  nk.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/nk.obj"));
-  nk.AddComponent<TransformComponent>();
-
-  EntityHandle watch_tower = scene_.CreateEntity();
-  watch_tower.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/wooden_watch_tower.obj"));
-  watch_tower.AddComponent<TransformComponent>();
-
-  EntityHandle street_lamp1 = scene_.CreateEntity();
-  street_lamp1.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/street_lamp.obj"));
-  street_lamp1.AddComponent<TransformComponent>(Transform(glm::vec3(3, 0, 0), glm::vec3(0), glm::vec3(0.6)));
-
-  EntityHandle street_lamp2 = scene_.CreateEntity();
-  street_lamp2.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/street_lamp.obj"));
-  street_lamp2.AddComponent<TransformComponent>(Transform(glm::vec3(-3, 0, 0), glm::vec3(0), glm::vec3(0.6)));
-
-  // EntityHandle skybox = scene_.CreateEntity();
-  // skybox.AddComponent<MeshComponent>(CreateSkyboxMesh({"res/textures/skybox_night_sky/skybox_night_sky_right.png",
-  //                                                      "res/textures/skybox_night_sky/skybox_night_sky_left.png",
-  //                                                      "res/textures/skybox_night_sky/skybox_night_sky_top.png",
-  //                                                      "res/textures/skybox_night_sky/skybox_night_sky_bottom.png",
-  //                                                      "res/textures/skybox_night_sky/skybox_night_sky_front.png",
-  //                                                      "res/textures/skybox_night_sky/skybox_night_sky_back.png"}));
-  // skybox.AddComponent<TransformComponent>();
-  //
-  // skybox_node_ = new ModelNode3D(CreateSkyboxMesh(
-  //     {"res/textures/skybox_forest/skybox_forest_right.png", "res/textures/skybox_forest/skybox_forest_left.png",
-  //      "res/textures/skybox_forest/skybox_forest_top.png", "res/textures/skybox_forest/skybox_forest_bottom.png",
-  //      "res/textures/skybox_forest/skybox_forest_front.png", "res/textures/skybox_forest/skybox_forest_back.png"}));
-  //
-  // skybox_node_ = new ModelNode3D(CreateSkyboxMesh({"res/textures/skybox_ocean_sunset/skybox_ocean_sunset_right.png",
-  //                                                   "res/textures/skybox_ocean_sunset/skybox_ocean_sunset_left.png",
-  //                                                   "res/textures/skybox_ocean_sunset/skybox_ocean_sunset_top.png",
-  //                                                   "res/textures/skybox_ocean_sunset/skybox_ocean_sunset_bottom.png",
-  //                                                   "res/textures/skybox_ocean_sunset/skybox_ocean_sunset_front.png",
-  //                                                   "res/textures/skybox_ocean_sunset/skybox_ocean_sunset_back.png"}));
-  //
-  // scene_.AddModel(skybox_node_);
-  //
-  // skybox_node_->transform.translation = scene_.GetMainCamera()->transform.translation;
+  spot_light.AddComponent<TransformComponent>();
 
   Renderer3D::Init();
   Renderer3D::SetViewport(
