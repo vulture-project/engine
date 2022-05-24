@@ -1,21 +1,21 @@
 /**
- * @author Nikita Mochalov (github.com/tralf-strues)
- * @file main.cpp
- * @date 2022-04-26
- *
+ * @author Viktor Baranov (github.com/baranov-V-V)
+ * @file audio_listener.hpp
+ * @date 2022-05-23
+ * 
  * The MIT License (MIT)
  * Copyright (c) vulture-project
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
  * the rights to use, copy, modify, merge, publish, distribute, sublicense,
  * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,47 +25,32 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "sandbox/sandbox_app.hpp"
+#pragma once
 
-#include "audio/audio_device.hpp"
-#include "audio/audio_source.hpp"
-#include "audio/audio_context.hpp"
-#include "audio/buffer_manager.hpp"
+#include <glm/vec3.hpp>
 
-#include <stdio.h>
-#include <cassert>
-#include <filesystem>
-#include <iostream>
+using Vec3f = glm::vec3;
 
-#include <fcntl.h>
-#include <unistd.h>
+namespace vulture {
 
-using namespace vulture;
+class AudioContext;
 
-int main() {
-  AudioDevice device;
-  device.DumpAvailableDevices();
-  device.Open();
+class AudioListener {
+ public:
+  AudioListener(AudioContext* context);
 
-  {
-    AudioContext context = device.CreateContext();
-    context.CreateSource("s1");
+  bool IsCurrent();
 
-    BufferManager buffer_manager;
-    buffer_manager.LoadAudioFile("../res/sounds/woof.wav", "5");
+  void GetLocation(Vec3f& loc);
+  void GetOrientation(Vec3f& at, Vec3f& up);
+  float GetVolume();
 
-    { //work with handle SEGV
-      vulture::AudioSource::Handle s1_h = context.GetSource("s1").value();
-      s1_h.SetBuf(buffer_manager.GetBuffer("5").value());
-      s1_h.Play();
-      sleep(3);
-    }
+  void SetLocation(const Vec3f& location);
+  void SetOrientation(const Vec3f& at, const Vec3f& up); /*const float& atx, const float& aty, const float& atz, const float& upx, const float& upy, const float& upz*/
+  void SetVolume(const float& val);
 
-  }
-  
-  device.Close();
-  //SandboxApp app{};
-  //app.Init();
-  //app.Run();
-  return 0;
-}
+private:	
+  AudioContext* context_;
+};
+
+} // namespace vulture

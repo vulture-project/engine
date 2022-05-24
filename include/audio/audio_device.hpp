@@ -1,7 +1,7 @@
 /**
- * @author Nikita Mochalov (github.com/tralf-strues)
- * @file main.cpp
- * @date 2022-04-26
+ * @author Viktor Baranov (github.com/baranov-V-V)
+ * @file api.hpp
+ * @date 2022-05-19
  *
  * The MIT License (MIT)
  * Copyright (c) vulture-project
@@ -25,47 +25,43 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "sandbox/sandbox_app.hpp"
+#pragma once
 
-#include "audio/audio_device.hpp"
-#include "audio/audio_source.hpp"
-#include "audio/audio_context.hpp"
-#include "audio/buffer_manager.hpp"
+#include <set>
+#include <vector>
+#include <string>
 
-#include <stdio.h>
-#include <cassert>
-#include <filesystem>
-#include <iostream>
+#include <AL/alc.h>
+#include <AL/al.h>
 
-#include <fcntl.h>
-#include <unistd.h>
+namespace vulture {
 
-using namespace vulture;
+class AudioContext;
 
-int main() {
-  AudioDevice device;
-  device.DumpAvailableDevices();
-  device.Open();
+//----------------------------------------TODO---------------------------------------
+//1)rewrite device class:
+//2)add list of available devices
+//3)more convinient name to it
 
-  {
-    AudioContext context = device.CreateContext();
-    context.CreateSource("s1");
+class AudioDevice {
+ public:
+  friend class AudioContext;
 
-    BufferManager buffer_manager;
-    buffer_manager.LoadAudioFile("../res/sounds/woof.wav", "5");
+  AudioDevice();
+  ~AudioDevice();
 
-    { //work with handle SEGV
-      vulture::AudioSource::Handle s1_h = context.GetSource("s1").value();
-      s1_h.SetBuf(buffer_manager.GetBuffer("5").value());
-      s1_h.Play();
-      sleep(3);
-    }
+  void Open(const char* device_name = nullptr);
 
-  }
-  
-  device.Close();
-  //SandboxApp app{};
-  //app.Init();
-  //app.Run();
-  return 0;
-}
+  std::vector<std::string> GetAvailableDevices();
+  void DumpAvailableDevices();
+
+  void Close();
+
+  AudioContext CreateContext();
+
+private:
+  ALCdevice* al_device_;
+  size_t context_count_;
+};
+
+} // namespace vulture

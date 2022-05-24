@@ -1,9 +1,9 @@
-cmake_minimum_required(VERSION 3.7)
+cmake_minimum_required(VERSION 3.13)
 
 project(ENGINE)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -DGLFW_INCLUDE_NONE -g -fsanitize=address -fno-optimize-sibling-calls -fPIC")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -DGLFW_INCLUDE_NONE -g -fsanitize=address -fno-optimize-sibling-calls -fPIC -pthread")
 
 add_executable(engine)
 
@@ -18,4 +18,10 @@ target_link_libraries(engine
     glm
     stb_image
     OpenAL
+    vorbisfile
+  )
+
+target_link_options(OpenAL
+  PUBLIC
+  "LINKER:-lpthread"
   )

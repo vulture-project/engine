@@ -77,7 +77,7 @@ void InputEventManager::KeyCallback(GLFWwindow* /*window*/, int key, int scancod
 }
 
 void InputEventManager::MouseMoveCallback(GLFWwindow* /*window*/, double xpos, double ypos) {
-  LOG_INFO(Logger, "Triggering mouse move event {} {}", xpos, ypos);
+  //LOG_INFO(Logger, "Triggering mouse move event {} {}", xpos, ypos);
 
   dispatcher_->Trigger<MouseMoveEvent>(static_cast<int>(xpos), static_cast<int>(ypos));
 }

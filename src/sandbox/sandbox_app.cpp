@@ -32,8 +32,9 @@
 #include "renderer/3d/renderer3d.hpp"
 #include "core/resource_manager.hpp"
 
-#include "audio/AudioDevice.h"
-#include "audio/AudioSource.h"
+#include "audio/audio_device.hpp"
+#include "audio/audio_context.hpp"
+#include "audio/audio_source.hpp"
 
 using namespace vulture;
 
@@ -41,12 +42,7 @@ bool running = true;
 
 vulture::Dispatcher dispatcher;
 
-using namespace sound;
-
-AudioDevice device;
-AudioContext* context;
-sound::Source* source_woof;
-AudioBuffer* buffer_woof;
+using namespace vulture;
 
 SandboxApp::SandboxApp() : window_(1280, 960) {}
 
@@ -60,26 +56,12 @@ int SandboxApp::Init() {
 
   dispatcher.GetSink<KeyEvent>().Connect<&ProcessKeyEvent>();
 
-
-  device.Open();
-  context = device.CreateContext();
-  context->MakeCurrentPlaying();
-  source_woof = context->CreateSource();
-  buffer_woof = new AudioBuffer("res/sounds/woof.wav");
-  source_woof->SetBuf(buffer_woof);
-
   return 0;
 }
 
 SandboxApp::~SandboxApp() {
-  source_woof->ReleaseBuf();
 
-  delete buffer_woof;
-
-  context->DestroySource(source_woof);
-  device.DestroyContext(context);
-  device.Close();
-};
+}
 
 class JumpEvent {};
 
@@ -292,6 +274,6 @@ void ProcessKeyEvent(const vulture::KeyEvent& event) {
   }
 
   if (key == GLFW_KEY_E && action == GLFW_PRESS) {
-    source_woof->Play();
+    //insert sound here
   }
 }

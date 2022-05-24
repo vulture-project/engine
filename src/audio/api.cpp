@@ -1,7 +1,7 @@
 /**
- * @author Nikita Mochalov (github.com/tralf-strues)
- * @file main.cpp
- * @date 2022-04-26
+ * @author Viktor Baranov (github.com/baranov-V-V)
+ * @file api.cpp
+ * @date 2022-05-19
  *
  * The MIT License (MIT)
  * Copyright (c) vulture-project
@@ -25,47 +25,4 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "sandbox/sandbox_app.hpp"
-
-#include "audio/audio_device.hpp"
-#include "audio/audio_source.hpp"
-#include "audio/audio_context.hpp"
-#include "audio/buffer_manager.hpp"
-
-#include <stdio.h>
-#include <cassert>
-#include <filesystem>
-#include <iostream>
-
-#include <fcntl.h>
-#include <unistd.h>
-
-using namespace vulture;
-
-int main() {
-  AudioDevice device;
-  device.DumpAvailableDevices();
-  device.Open();
-
-  {
-    AudioContext context = device.CreateContext();
-    context.CreateSource("s1");
-
-    BufferManager buffer_manager;
-    buffer_manager.LoadAudioFile("../res/sounds/woof.wav", "5");
-
-    { //work with handle SEGV
-      vulture::AudioSource::Handle s1_h = context.GetSource("s1").value();
-      s1_h.SetBuf(buffer_manager.GetBuffer("5").value());
-      s1_h.Play();
-      sleep(3);
-    }
-
-  }
-  
-  device.Close();
-  //SandboxApp app{};
-  //app.Init();
-  //app.Run();
-  return 0;
-}
+#include "audio/api.hpp"

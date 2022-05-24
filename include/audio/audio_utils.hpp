@@ -1,7 +1,7 @@
 /**
- * @author Nikita Mochalov (github.com/tralf-strues)
- * @file main.cpp
- * @date 2022-04-26
+ * @author Viktor Baranov (github.com/baranov-V-V)
+ * @file audio_utils.hpp
+ * @date 2022-05-19
  *
  * The MIT License (MIT)
  * Copyright (c) vulture-project
@@ -25,47 +25,52 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "sandbox/sandbox_app.hpp"
+#pragma once
 
-#include "audio/audio_device.hpp"
-#include "audio/audio_source.hpp"
-#include "audio/audio_context.hpp"
-#include "audio/buffer_manager.hpp"
+#include "audio/audio_buffer.hpp"
 
-#include <stdio.h>
-#include <cassert>
-#include <filesystem>
-#include <iostream>
+namespace vulture {
 
-#include <fcntl.h>
-#include <unistd.h>
+struct Chunk {
+	Chunk(size_t capacity) : capacity(capacity), size(0) {
+		data = operator new(capacity);
+	}
+	
+	~Chunk() {
+		operator delete(data);
+	}
 
-using namespace vulture;
+	Chunk(const Chunk&) = delete;
+	Chunk(Chunk&& chunk) noexcept : data(chunk.data), capacity(chunk.capacity), size(chunk.size) {
+		chunk.data = nullptr;
+		chunk.capacity = 0;
+		chunk.size = 0;
+	};
 
-int main() {
-  AudioDevice device;
-  device.DumpAvailableDevices();
-  device.Open();
+	void* data;
+	size_t capacity;
+	size_t size;
+};
 
-  {
-    AudioContext context = device.CreateContext();
-    context.CreateSource("s1");
+struct WavHeader {
+    char chunk_id[4];
+    uint32_t chunk_size;
+    char format[4];
 
-    BufferManager buffer_manager;
-    buffer_manager.LoadAudioFile("../res/sounds/woof.wav", "5");
+    char subchunk1_id[4];
+    uint32_t subchunk1_size;
+    uint16_t audio_format;
+    uint16_t channels_count;
+    uint32_t sample_rate;
+    uint32_t byte_rate;
+    uint16_t block_align;
+    uint16_t bits_per_sample;
 
-    { //work with handle SEGV
-      vulture::AudioSource::Handle s1_h = context.GetSource("s1").value();
-      s1_h.SetBuf(buffer_manager.GetBuffer("5").value());
-      s1_h.Play();
-      sleep(3);
-    }
+    char subchunk2_id[4];
+    uint32_t subchunk2_size;
+};
 
-  }
-  
-  device.Close();
-  //SandboxApp app{};
-  //app.Init();
-  //app.Run();
-  return 0;
-}
+RawAudioData ParseOgg(const char* filename);
+RawAudioData ParseWav(const char* filename);
+
+} // namespace vulture

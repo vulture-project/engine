@@ -10,3 +10,6 @@
 [submodule "third_party/openal-soft"]
 	path = third_party/openal-soft
 	url = https://github.com/kcat/openal-soft.git
+[submodule "third_party/vorbis"]
+	path = third_party/vorbis
+	url = https://github.com/xiph/vorbis.git
