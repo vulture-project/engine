@@ -61,7 +61,7 @@ RawAudioData ParseWav(const char* filename) {
 	raw_data.sample_rate_	 	 = wav_header.sample_rate;
 	raw_data.data_size_ 	   = wav_header.subchunk2_size;
 
-	LOG_DEBUG(audio_utils, "raw_data size: {}", raw_data.data_size_);
+	LOG_DEBUG(AudioUtils, "raw_data size: {}", raw_data.data_size_);
 
 	raw_data.data_ 				   = operator new(raw_data.data_size_);
 
@@ -138,7 +138,6 @@ RawAudioData ParseOgg(const char* filename) {
     curr_fill_pos += chunked_audio[i].size;
 	}
 
-	//causes segfault
 	ov_clear(&vf);
 
 	return raw_data;

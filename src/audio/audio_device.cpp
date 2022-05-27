@@ -50,7 +50,7 @@ void AudioDevice::Open(const char* device_name) {
 		name = alcGetString(al_device_, ALC_DEVICE_SPECIFIER);
 	}
 
-	LOG_INFO(audio_device, "Opened {}", name);
+	LOG_INFO(AudioDevice, "Opened {}", name);
 }
 
 std::vector<std::string> AudioDevice::GetAvailableDevices() {
@@ -69,18 +69,18 @@ std::vector<std::string> AudioDevice::GetAvailableDevices() {
 
 void AudioDevice::DumpAvailableDevices() {
 	std::vector<std::string> device_list = GetAvailableDevices();
-	LOG_INFO(audio_device, "Available devices:");
+	LOG_INFO(AudioDevice, "Available devices:");
 	for (const auto& device_name : device_list) {
-		LOG_INFO(audio_device, "{}", device_name);
+		LOG_INFO(AudioDevice, "{}", device_name);
 	}
 }
 
 void AudioDevice::Close() {
 	if (context_count_ != 0) {
 		const char* device_name = alcGetString(al_device_, ALC_DEVICE_SPECIFIER);
-		LOG_ERROR(audio_device, "At Close Device: {} context_count is not 0: {}", device_name, context_count_);
+		LOG_ERROR(AudioDevice, "At Close Device: {} context_count is not 0: {}", device_name, context_count_);
 	}
-	LOG_INFO(audio_device, "Close device");
+	LOG_INFO(AudioDevice, "Close device");
 	
 	alcCloseDevice(al_device_);
 }

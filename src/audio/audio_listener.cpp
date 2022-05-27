@@ -30,47 +30,57 @@
 #include <audio/audio_listener.hpp>
 #include <audio/audio_context.hpp>
 
+#include <core/logger.hpp>
+
 namespace vulture {
   
-AudioListener::AudioListener(AudioContext* context) : context_(context) {}
+AudioListener::AudioListener(AudioContext* context) : context_(context),
+  pos_(0, 0, 0), at_(0, 0, 0), up_(0, 0, 0), volume_(0) {}
+
+AudioListener::AudioListener(AudioListener&& listener) : context_(listener.context_),
+  pos_(listener.pos_), at_(listener.at_), up_(listener.up_), volume_(listener.volume_) {
+  listener.context_ = nullptr;
+}
 
 bool AudioListener::IsCurrent() {
-  return context_->IsCurrent();
+  return context_->current_listener_ == this;
+}
+
+void AudioListener::MakeCurrent() {
+  if (context_->IsCurrent()) {
+    context_->current_listener_ = this;
+    SetLocation(pos_);
+    SetOrientation(at_, up_);
+    SetVolume(volume_);
+  } else {
+    LOG_WARN(AudioListener, "Trying to make active a listener of NOT an active context");
+  }
 }
 
 void AudioListener::GetLocation(Vec3f& loc) {
-  if (context_->IsCurrent()) {
-    alGetListener3f(AL_POSITION, &loc.x, &loc.y, &loc.z);
-  }
+  loc = pos_;
 }
 
 void AudioListener::GetOrientation(Vec3f& at, Vec3f& up) {
-  if (context_->IsCurrent()) {
-    float buf[6] = {};
-    alGetListenerfv(AL_ORIENTATION, buf);
-    at = {buf[0], buf[1], buf[2]};
-    up = {buf[3], buf[4], buf[5]};
-  }
+  at = at_;
+  up_ = up;
 }
 
 float AudioListener::GetVolume() {
-  if (context_->IsCurrent()) {
-    float volume;
-    alGetListenerf(AL_GAIN, &volume);
-    return volume;
-  } else {
-    return 0;
-  }
+  return volume_;
 }
 
 void AudioListener::SetLocation(const Vec3f& location) {
-  if (context_->IsCurrent()) {
+  pos_ = location;
+  if (IsCurrent()) {
     alListener3f(AL_POSITION, location.x, location.y, location.z);
   }
 }
 
 void AudioListener::SetOrientation(const Vec3f& at, const Vec3f& up) {
-  if (context_->IsCurrent()) {
+  at_ = at;
+  up_ = up;
+  if (IsCurrent()) {
     float buf[6] = {};
     buf[0] = at.x;
     buf[1] = at.y;
@@ -83,15 +93,17 @@ void AudioListener::SetOrientation(const Vec3f& at, const Vec3f& up) {
 }
 
 void AudioListener::SetVolume(const float& volume) {
-  if (context_->IsCurrent()) {
-    float new_volume = volume;
-    if (new_volume < 0.f) {
-        new_volume = 0.f;
-    }
-    else if (new_volume > 1.f) {
-        new_volume = 1.f;
-    }
+  float new_volume = volume;
+  if (new_volume < 0.f) {
+      new_volume = 0.f;
+  }
+  else if (new_volume > 1.f) {
+      new_volume = 1.f;
+  }
 
+  volume_ = new_volume;
+
+  if (IsCurrent()) {
     alListenerf(AL_GAIN, new_volume);
   }
 }

@@ -43,6 +43,7 @@
 using namespace vulture;
 
 int main() {
+  /*
   AudioDevice device;
   device.DumpAvailableDevices();
   device.Open();
@@ -64,8 +65,11 @@ int main() {
   }
   
   device.Close();
-  //SandboxApp app{};
-  //app.Init();
-  //app.Run();
+
+  */
+ 
+  SandboxApp app{};
+  app.Init();
+  app.Run();
   return 0;
 }

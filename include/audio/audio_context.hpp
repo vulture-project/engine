@@ -43,7 +43,7 @@ class AudioDevice;
 
 class AudioContext {
  public:
-	friend class Listener;
+	friend class AudioListener;
 
 	AudioContext(AudioDevice* device);
 	~AudioContext();
@@ -55,7 +55,7 @@ class AudioContext {
 	bool MakeCurrent();
 	bool IsCurrent();
 
-	AudioListener GetListener();
+	AudioListener GetNewListener();
 
 	bool CreateSource(const char* name);
 	std::optional<AudioSource::Handle> GetSource(const char* name);
@@ -72,6 +72,8 @@ class AudioContext {
 	ALCcontext* context_;
 
 	AudioDevice* device_owner_;
+
+	AudioListener* current_listener_;
 };
 
 } // namespace vulture

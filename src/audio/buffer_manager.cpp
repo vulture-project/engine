@@ -55,7 +55,7 @@ bool BufferManager::LoadAudioFile(const char* path, const char* name) {
 			raw_data.ReplaceMove(std::move(ParseOgg(path)));
 		}
 	} catch(std::runtime_error& e) {
-		LOG_ERROR(buffer_manager, "Could not load sound {} into raw_data, caught exeption: {}", path, e.what());
+		LOG_ERROR(BufferManager, "Could not load sound {} into raw_data, caught exeption: {}", path, e.what());
 	}
 	
 	std::string buf_name;
@@ -70,7 +70,7 @@ bool BufferManager::LoadAudioFile(const char* path, const char* name) {
 	try {
 		buffer = new AudioBuffer(std::move(raw_data));
 	} catch(std::runtime_error& e) {
-		LOG_ERROR(buffer_manager, "{}", e.what());
+		LOG_ERROR(BufferManager, "{}", e.what());
 		return false;
 	}
 
@@ -78,7 +78,7 @@ bool BufferManager::LoadAudioFile(const char* path, const char* name) {
 
 	if (result_it.second == false) {
 		delete buffer;
-		LOG_ERROR(buffer_manager, "Could not insert buffer {} in storage", buf_name);
+		LOG_ERROR(BufferManager, "Could not insert buffer {} in storage", buf_name);
 		return false;
 	}
 

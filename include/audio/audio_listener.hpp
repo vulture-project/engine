@@ -37,9 +37,14 @@ class AudioContext;
 
 class AudioListener {
  public:
+
   AudioListener(AudioContext* context);
 
+  AudioListener(const AudioListener&) = delete;
+  AudioListener(AudioListener&& listener);
+
   bool IsCurrent();
+  void MakeCurrent();
 
   void GetLocation(Vec3f& loc);
   void GetOrientation(Vec3f& at, Vec3f& up);
@@ -51,6 +56,11 @@ class AudioListener {
 
 private:	
   AudioContext* context_;
+  Vec3f pos_;
+  Vec3f at_;
+  Vec3f up_;
+  float volume_;
+  bool is_current_;
 };
 
 } // namespace vulture

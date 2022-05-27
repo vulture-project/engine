@@ -36,15 +36,12 @@ namespace vulture {
 AudioContext::AudioContext(AudioDevice* device) : pool_(), context_(nullptr), device_owner_(device) {
   context_ = alcCreateContext(device->al_device_, nullptr);
   
-  assert(context_ != nullptr);
-  
-  ALCcontext* prev_context_ = alcGetCurrentContext();
-  alcMakeContextCurrent(context_);
-  alcMakeContextCurrent(prev_context_);
-  
+  //dont fall on assert
   assert(context_ != nullptr);
 
   ++device_owner_->context_count_;
+
+  //mb skip this line?
   MakeCurrent();
 }
 
@@ -71,7 +68,7 @@ bool AudioContext::IsCurrent() {
   return alcGetCurrentContext() == context_;
 }
 
-AudioListener AudioContext::GetListener() {
+AudioListener AudioContext::GetNewListener() {
   return AudioListener(this);
 }
 

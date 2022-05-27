@@ -51,7 +51,8 @@ AudioBuffer::AudioBuffer(RawAudioData&& raw_data) : al_buffer_handle_(0), audio_
 	
 	ALenum error = alGetError();
 	if (error != AL_NO_ERROR) {
-		LOG_ERROR(audio_buffer, "Can not generate al_buffer, error: {0:#X}", error);
+		LOG_ERROR(AudioBuffer, "Can not generate al_buffer, error: {0:#X}", error);
+		LOG_ERROR(AudioBuffer, "Maybe if error is 0xA004 there is no current context to generate buffers in");
 		throw std::runtime_error("Can not generate buffer");
 	}
 
@@ -74,7 +75,7 @@ AudioBuffer::AudioBuffer(RawAudioData&& raw_data) : al_buffer_handle_(0), audio_
 
 	error = alGetError();
 	if (error != AL_NO_ERROR) {
-		LOG_ERROR(audio_buffer, "Can not fill buffer with data, error: {0:#X}", error);
+		LOG_ERROR(AudioBuffer, "Can not fill buffer with data, error: {0:#X}", error);
 		throw std::runtime_error("Can not fill buffer");
 	}
 
@@ -93,7 +94,7 @@ AudioBuffer::AudioBuffer(AudioBuffer&& buffer) {
 AudioBuffer::~AudioBuffer() {
 	if (al_buffer_handle_ != 0) {
 		if (handle_count_ != 0) {
-			LOG_ERROR(audio_buffer, "Deleting buffer with al_handle : {} but handle_count is not 0: {}", handle_count_);
+			LOG_ERROR(AudioBuffer, "Deleting buffer with al_handle : {} but handle_count is not 0: {}", handle_count_);
 		}
 
 		operator delete(audio_data_);

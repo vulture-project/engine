@@ -35,6 +35,8 @@
 #include "audio/audio_device.hpp"
 #include "audio/audio_context.hpp"
 #include "audio/audio_source.hpp"
+#include "audio/audio_listener.hpp"
+#include "audio/buffer_manager.hpp"
 
 using namespace vulture;
 
@@ -43,6 +45,12 @@ bool running = true;
 vulture::Dispatcher dispatcher;
 
 using namespace vulture;
+
+
+AudioDevice* device;
+AudioContext* context;
+BufferManager* manager;
+
 
 SandboxApp::SandboxApp() : window_(1280, 960) {}
 
@@ -56,11 +64,23 @@ int SandboxApp::Init() {
 
   dispatcher.GetSink<KeyEvent>().Connect<&ProcessKeyEvent>();
 
+  device = new AudioDevice();
+  device->Open();
+
+  context = new AudioContext(device);
+  context->MakeCurrent();
+  
+  manager = new BufferManager();
+
   return 0;
 }
 
 SandboxApp::~SandboxApp() {
+  delete context;
+  delete manager;
 
+  device->Close();
+  delete device;
 }
 
 class JumpEvent {};

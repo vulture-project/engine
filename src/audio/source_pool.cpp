@@ -50,7 +50,7 @@ bool SourcePool::CreateSource(const char* name) {
 	
 	if (result_it.second == false) {
 		delete source;
-		LOG_DEBUG(source_pool, "Could not create insert source in pool with name {}", name);
+		LOG_ERROR(SourcePool, "Could not create insert source in pool with name {}", name);
 		return false;
 	}
 
