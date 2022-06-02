@@ -44,12 +44,10 @@ bool running = true;
 
 vulture::Dispatcher dispatcher;
 
-using namespace vulture;
-
-
 AudioDevice* device;
 AudioContext* context;
 BufferManager* manager;
+AudioListener* listener;
 
 
 SandboxApp::SandboxApp() : window_(1280, 960) {}
@@ -69,18 +67,32 @@ int SandboxApp::Init() {
 
   context = new AudioContext(device);
   context->MakeCurrent();
+
+  listener = new AudioListener(context);
+  listener->MakeCurrent();
+  listener->SetVolume(1);
   
   manager = new BufferManager();
+  manager->LoadAudioFile("res/sounds/woof.wav", "woof");
+
+  context->CreateSource("woof_source");
+
+  vulture::AudioSource::Handle source_handle = context->GetSource("woof_source").value();
+  source_handle.SetBuf(manager->GetBuffer("woof").value());
+  source_handle.SetLocation({0, 0, 0});
+  source_handle.SetDirection({1, 1, 1});
 
   return 0;
 }
 
 SandboxApp::~SandboxApp() {
+  delete listener;
   delete context;
   delete manager;
 
   device->Close();
   delete device;
+
 }
 
 class JumpEvent {};
@@ -98,8 +110,14 @@ class PlayerMovementScript : public IScript {
 
     Transform* transform = &entity_->GetComponent<TransformComponent>()->transform;
     transform->rotation.y += 0.001f * dx;
+
     // transform->rotation.x += 0.001f * dy;
-    
+
+    /*
+    listener->SetOrientation(transform->CalculateMatrix() * glm::vec4(kDefaultForwardVector, 1),
+                             transform->CalculateMatrix() * glm::vec4(kDefaultUpVector, 1));
+    */
+
     prev_x = event.x;
     prev_y = event.y;
   }
@@ -133,6 +151,10 @@ class PlayerMovementScript : public IScript {
     transform->translation += speed_ * timestep;
 
     transform->translation.y = std::max(0.0f, transform->translation.y);
+
+    listener->SetLocation(transform->translation);
+
+    //LOG_INFO(ListenerLocation, "Location: ({}, {}, {})", transform->translation.x, transform->translation.y, transform->translation.z);
   }
 
   void OnJump(const JumpEvent&) {
@@ -221,6 +243,7 @@ void SandboxApp::Run() {
   dispatcher.GetSink<JumpEvent>().Connect<&PlayerMovementScript::OnJump>(*dog_movement);
   dog.AddComponent<ScriptComponent>(dog_movement);
 
+  /*
   EntityHandle statue1 = scene_.CreateEntity();
   statue1.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/statue.obj"));
   statue1.AddComponent<TransformComponent>(Transform(glm::vec3(-6, 0, 8), glm::vec3(0, glm::radians(240.0f), 0), glm::vec3(1)));
@@ -232,6 +255,7 @@ void SandboxApp::Run() {
   EntityHandle statue3 = scene_.CreateEntity();
   statue3.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/statue.obj"));
   statue3.AddComponent<TransformComponent>(Transform(glm::vec3(-12, 0, 10), glm::vec3(0, glm::radians(150.0f), 0), glm::vec3(1)));
+  */
 
   EntityHandle camera = scene_.CreateChildEntity(dog);
   camera.AddComponent<CameraComponent>(PerspectiveCameraSpecs(aspect_ratio), true);
@@ -294,6 +318,7 @@ void ProcessKeyEvent(const vulture::KeyEvent& event) {
   }
 
   if (key == GLFW_KEY_E && action == GLFW_PRESS) {
+    context->GetSource("woof_source").value().Play();
     //insert sound here
   }
 }

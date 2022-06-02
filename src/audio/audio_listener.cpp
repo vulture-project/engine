@@ -35,7 +35,7 @@
 namespace vulture {
   
 AudioListener::AudioListener(AudioContext* context) : context_(context),
-  pos_(0, 0, 0), at_(0, 0, 0), up_(0, 0, 0), volume_(0) {}
+  pos_(0, 0, 0), at_(0, 0, 0), up_(0, 0, 0), volume_(1) {}
 
 AudioListener::AudioListener(AudioListener&& listener) : context_(listener.context_),
   pos_(listener.pos_), at_(listener.at_), up_(listener.up_), volume_(listener.volume_) {
@@ -74,6 +74,8 @@ void AudioListener::SetLocation(const Vec3f& location) {
   pos_ = location;
   if (IsCurrent()) {
     alListener3f(AL_POSITION, location.x, location.y, location.z);
+  } else {
+    LOG_INFO(AudioListener, "Call to SetLocation of not current listener");
   }
 }
 
@@ -89,6 +91,8 @@ void AudioListener::SetOrientation(const Vec3f& at, const Vec3f& up) {
     buf[4] = up.y;
     buf[5] = up.z;
     alListenerfv(AL_ORIENTATION, buf);
+  } else {
+    LOG_INFO(AudioListener, "Call to SetOrientation of not current listener");
   }
 }
 
@@ -105,6 +109,8 @@ void AudioListener::SetVolume(const float& volume) {
 
   if (IsCurrent()) {
     alListenerf(AL_GAIN, new_volume);
+  } else {
+    LOG_INFO(AudioListener, "Call to SetVolume of not current listener");
   }
 }
 

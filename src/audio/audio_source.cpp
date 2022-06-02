@@ -25,13 +25,14 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#include "audio/audio_context.hpp"
 #include "audio/audio_source.hpp"
 
 #include "core/logger.hpp"
 
 namespace vulture {
 
-AudioSource::AudioSource() : handle_count_(0) {
+AudioSource::AudioSource() : handle_count_(0), belonged_context_(nullptr) {
 	alGenSources(1, &al_source_);
 	LOG_INFO(AudioSource, "source_id generated: {}", al_source_);
 }
@@ -55,6 +56,13 @@ AudioSource::Handle AudioSource::GetHandle() {
 void AudioSource::Handle::Play() {
 	//LOG_DEBUG(audio_source, "started playing. {}", audio_source_->al_source_);
 	//LOG_DEBUG(audio_source, "with buf no. {}", audio_source_->buffer_->al_buffer_handle_);
+	
+	/*
+	if (!belonged_context_->IsCurrent()) {
+
+	}
+	*/
+
 	alSourcePlay(audio_source_->al_source_);
 }
 
@@ -82,6 +90,27 @@ bool AudioSource::Handle::IsLooping() {
 	ALint is_loop;
 	alGetSourcei(audio_source_->al_source_, AL_LOOPING, &is_loop);
 	return is_loop;
+}
+
+void AudioSource::Handle::SetProperty(ALenum property, const glm::vec3& argument) {
+	alGetError();
+	alSource3f(audio_source_->al_source_, property, argument.x, argument.y, argument.z);
+	ALenum error = alGetError();
+	if (error != AL_NO_ERROR) {
+		LOG_ERROR(AudioSource::Handle, "Error: {0:#X} in setting Property: {0:#X}", error, property); 
+	}
+}
+
+void AudioSource::Handle::SetLocation(const glm::vec3& loc) {
+	SetProperty(AL_POSITION, loc);
+}
+
+void AudioSource::Handle::SetDirection(const glm::vec3& dir) {
+	SetProperty(AL_DIRECTION, dir);
+}
+
+void AudioSource::Handle::SetVelocity(const glm::vec3& vel) {
+	SetProperty(AL_VELOCITY, vel);
 }
 
 void AudioSource::Handle::SetVolume(float volume) {

@@ -51,7 +51,7 @@ class AudioListener {
   float GetVolume();
 
   void SetLocation(const Vec3f& location);
-  void SetOrientation(const Vec3f& at, const Vec3f& up); /*const float& atx, const float& aty, const float& atz, const float& upx, const float& upy, const float& upz*/
+  void SetOrientation(const Vec3f& at, const Vec3f& up);
   void SetVolume(const float& val);
 
 private:	

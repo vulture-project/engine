@@ -68,7 +68,11 @@ AudioBuffer::AudioBuffer(RawAudioData&& raw_data) : al_buffer_handle_(0), audio_
 	}
 	else if (raw_data.channels_count_ == 4) {
 		format = AL_FORMAT_BFORMAT3D_16;
+	} else {
+		LOG_ERROR(AudioBuffer, "Wrong hannels count in raw_data: {}", raw_data.channels_count_);
 	}
+
+	LOG_INFO(AudioBuffer, "Buffer {} channels {}", al_buffer_handle_, raw_data.channels_count_);
 
 	alGetError();
 	alBufferData(al_buffer_handle_, format, raw_data.data_, raw_data.data_size_, raw_data.sample_rate_);

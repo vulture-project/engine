@@ -32,8 +32,6 @@
 
 #include <cstddef>
 
-class AudioSource;
-
 namespace vulture {
 
 struct RawAudioData {

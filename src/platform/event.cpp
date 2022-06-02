@@ -53,19 +53,19 @@ KeyEvent::KeyEvent(int key, int scancode, int action, int mods)
     : key(key), scancode(scancode), action(static_cast<Action>(action)), mods(mods) {}
 
 void InputEventManager::ScrollCallback(GLFWwindow* /*window*/, double dx, double dy) {
-  LOG_INFO(Logger, "Triggering scroll event {} {}", dx, dy);
+  //LOG_INFO(Logger, "Triggering scroll event {} {}", dx, dy);
 
   dispatcher_->Trigger<ScrollEvent>(static_cast<int>(dx), static_cast<int>(dy));
 }
 
 void InputEventManager::MouseButtonCallback(GLFWwindow* /*window*/, int button, int action, int mods) {
-  LOG_INFO(Logger, "Triggering mouse button event {} {} {}", button, action, mods);
+  //LOG_INFO(Logger, "Triggering mouse button event {} {} {}", button, action, mods);
 
   dispatcher_->Trigger<MouseButtonEvent>(button, action, mods);
 }
 
 void InputEventManager::KeyCallback(GLFWwindow* /*window*/, int key, int scancode, int action, int mods) {
-  LOG_INFO(Logger, "Triggering key event {} {} {} {}", key, scancode, action, mods);
+  //LOG_INFO(Logger, "Triggering key event {} {} {} {}", key, scancode, action, mods);
 
   if (action == GLFW_PRESS) {
     Keyboard::GetKeys()[key] = true;

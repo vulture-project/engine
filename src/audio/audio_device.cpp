@@ -50,6 +50,8 @@ void AudioDevice::Open(const char* device_name) {
 		name = alcGetString(al_device_, ALC_DEVICE_SPECIFIER);
 	}
 
+	alDistanceModel(AL_INVERSE_DISTANCE_CLAMPED);
+
 	LOG_INFO(AudioDevice, "Opened {}", name);
 }
 

@@ -28,10 +28,13 @@
 #pragma once
 
 #include <AL/al.h>
+#include <glm/vec3.hpp>
 
 #include "audio/audio_buffer.hpp"
 
 namespace vulture {
+
+class AudioContext;
 
 class AudioSource {
  public:
@@ -72,6 +75,10 @@ class AudioSource {
     bool IsPlaying();
     bool IsLooping();
 
+    void SetLocation (const glm::vec3& loc);
+    void SetDirection(const glm::vec3& dir);
+    void SetVelocity (const glm::vec3& vel);
+
     void SetVolume(float volume);
     void SetLooping(bool is_loop);
 
@@ -80,6 +87,8 @@ class AudioSource {
 
    private:
     AudioSource* audio_source_;
+
+    void SetProperty(ALenum property, const glm::vec3& argument);
   };
 
   Handle GetHandle();
@@ -90,7 +99,7 @@ class AudioSource {
 
   size_t handle_count_;
 
-  const ALCcontext* belonged_al_context_;
+  AudioContext* belonged_context_;
 };
 
 } // namespace vulture
