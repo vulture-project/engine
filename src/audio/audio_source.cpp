@@ -32,12 +32,16 @@
 
 namespace vulture {
 
-AudioSource::AudioSource() : handle_count_(0), belonged_context_(nullptr) {
+AudioSource::AudioSource(AudioContext* context) : handle_count_(0), belonged_context_(context) {
 	alGenSources(1, &al_source_);
 	LOG_INFO(AudioSource, "source_id generated: {}", al_source_);
 }
 
 AudioSource::~AudioSource() {
+	if (handle_count_ != 0) {
+		LOG_ERROR(AudioSource, "Deleting source {} with handle_count != 0 {}", al_source_, handle_count_);
+	}
+
 	alSourcei(al_source_, AL_BUFFER, 0);
 	alDeleteSources(1, &al_source_);
 }
@@ -57,26 +61,38 @@ void AudioSource::Handle::Play() {
 	//LOG_DEBUG(audio_source, "started playing. {}", audio_source_->al_source_);
 	//LOG_DEBUG(audio_source, "with buf no. {}", audio_source_->buffer_->al_buffer_handle_);
 	
-	/*
-	if (!belonged_context_->IsCurrent()) {
+	if (audio_source_->belonged_context_->IsCurrent()) {
+		alSourcePlay(audio_source_->al_source_);
+	} else {
+		LOG_WARN(AudioSource, "Trying to play source: {} of not current context", audio_source_->al_source_);
+	} 
 
-	}
-	*/
-
-	alSourcePlay(audio_source_->al_source_);
 }
 
 void AudioSource::Handle::Pause() {
-	alSourcePause(audio_source_->al_source_);
+	if (audio_source_->belonged_context_->IsCurrent()) {
+		alSourcePause(audio_source_->al_source_);
+	} else {
+		LOG_WARN(AudioSource, "Trying to pause source: {} of not current context", audio_source_->al_source_);
+	}
+	
 }
 
 void AudioSource::Handle::Stop() {
-	alSourceStop(audio_source_->al_source_);
+	if (audio_source_->belonged_context_->IsCurrent()) {
+		alSourceStop(audio_source_->al_source_);
+	} else {
+		LOG_WARN(AudioSource, "Trying to stop source: {} of not current context", audio_source_->al_source_);
+	}
 }
 
 void AudioSource::Handle::Resume() {
-	if (!IsPlaying()) {
-		alSourcePlay(audio_source_->al_source_);
+	if (IsPlaying()) {
+		if (!audio_source_->belonged_context_->IsCurrent()) {
+			alSourcePlay(audio_source_->al_source_);
+		} else {
+			LOG_WARN(AudioSource, "Trying to resume source: {} of not current context", audio_source_->al_source_);
+		}
 	}
 }
 

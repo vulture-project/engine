@@ -74,18 +74,29 @@ int SandboxApp::Init() {
   
   manager = new BufferManager();
   manager->LoadAudioFile("res/sounds/woof.wav", "woof");
+  manager->LoadAudioFile("res/sounds/sci-fidrone.ogg", "noice");
 
   context->CreateSource("woof_source");
+  context->CreateSource("noice_source");
 
-  vulture::AudioSource::Handle source_handle = context->GetSource("woof_source").value();
-  source_handle.SetBuf(manager->GetBuffer("woof").value());
+  vulture::AudioSource::Handle source_handle = context->GetSource("noice_source").value();
+  source_handle.SetBuf(manager->GetBuffer("noice").value());
   source_handle.SetLocation({0, 0, 0});
-  source_handle.SetDirection({1, 1, 1});
+  source_handle.SetLooping(true);
+  source_handle.Play();
+
+  vulture::AudioSource::Handle source_handle2 = context->GetSource("woof_source").value();
+  source_handle2.SetBuf(manager->GetBuffer("woof").value());
 
   return 0;
 }
 
 SandboxApp::~SandboxApp() {
+  {
+    vulture::AudioSource::Handle source_handle = context->GetSource("noice_source").value();
+    source_handle.Stop();
+  }
+
   delete listener;
   delete context;
   delete manager;
@@ -113,10 +124,10 @@ class PlayerMovementScript : public IScript {
 
     // transform->rotation.x += 0.001f * dy;
 
-    /*
+    
     listener->SetOrientation(transform->CalculateMatrix() * glm::vec4(kDefaultForwardVector, 1),
                              transform->CalculateMatrix() * glm::vec4(kDefaultUpVector, 1));
-    */
+    
 
     prev_x = event.x;
     prev_y = event.y;
@@ -154,7 +165,7 @@ class PlayerMovementScript : public IScript {
 
     listener->SetLocation(transform->translation);
 
-    //LOG_INFO(ListenerLocation, "Location: ({}, {}, {})", transform->translation.x, transform->translation.y, transform->translation.z);
+    LOG_INFO(ListenerLocation, "Location: ({}, {}, {})", transform->translation.x, transform->translation.y, transform->translation.z);
   }
 
   void OnJump(const JumpEvent&) {

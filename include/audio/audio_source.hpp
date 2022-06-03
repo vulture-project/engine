@@ -40,7 +40,7 @@ class AudioSource {
  public:
   friend class AudioBuffer;
 
-  AudioSource();
+  AudioSource(AudioContext* context);
   ~AudioSource();
 
   class Handle {

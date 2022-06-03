@@ -66,14 +66,16 @@ int AudioSandbox::Init() {
   listener->SetLocation({0, 0, 0});
   
   manager = new BufferManager();
-  manager->LoadAudioFile("res/sounds/woof.wav", "woof");
-
+  manager->LoadAudioFile("res/sounds/sci-fidrone.ogg", "woof");
   context->CreateSource("woof_source");
 
   vulture::AudioSource::Handle source_handle = context->GetSource("woof_source").value();
   source_handle.SetBuf(manager->GetBuffer("woof").value());
   source_handle.SetLocation({10, 10, 0});
   //source_handle.SetDirection({1, 1, 1});
+
+  source_handle.SetLooping(true);
+  source_handle.Play();
 
   return 0;
 }

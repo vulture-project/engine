@@ -69,15 +69,16 @@ int main() {
   device.Close();
 
   */
-  /*
+  
   SandboxApp app{};
   app.Init();
   app.Run();
   return 0;
-  */
   
+  /*
   AudioSandbox app{};
   app.Init();
   app.Run();
   return 0;
+  */
 }

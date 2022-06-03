@@ -44,7 +44,6 @@ RawAudioData ParseWav(const char* filename) {
 
 	std::FILE* audio_file = fopen(filename, "rb");
 	if (audio_file == nullptr) {
-		fclose(audio_file);
 		throw std::runtime_error("Can not open audio file " + std::string(filename));
 	}
 

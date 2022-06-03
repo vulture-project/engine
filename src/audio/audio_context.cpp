@@ -73,7 +73,7 @@ AudioListener AudioContext::GetNewListener() {
 }
 
 bool AudioContext::CreateSource(const char* name) {
-  return pool_.CreateSource(name);
+  return pool_.CreateSource(this, name);
 }
 
 std::optional<AudioSource::Handle> AudioContext::GetSource(const char* name) {

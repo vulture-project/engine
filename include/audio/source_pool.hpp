@@ -38,6 +38,8 @@
 //makes its own context
 namespace vulture {
 
+class AudioContext;
+
 class SourcePool {
  public:
   friend class AudioSource;
@@ -50,7 +52,7 @@ class SourcePool {
   SourcePool(const SourcePool&) = delete;
   SourcePool(SourcePool&& pool);
 	
-	bool CreateSource(const char* name);
+	bool CreateSource(AudioContext* context, const char* name);
 	std::optional<AudioSource::Handle> GetSource(const char* name);
 
 	bool Destroy(const char* name);

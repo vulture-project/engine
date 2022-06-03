@@ -29,6 +29,7 @@
 #include <utility>
 
 #include "audio/source_pool.hpp"
+#include "audio/audio_context.hpp"
 
 #include "core/logger.hpp"
 
@@ -42,10 +43,10 @@ SourcePool::SourcePool(SourcePool&& pool) :
 	sources_(std::move(pool.sources_)) {
 }
 
-bool SourcePool::CreateSource(const char* name) {
+bool SourcePool::CreateSource(AudioContext* context, const char* name) {
 	std::string source_name(name);
 
-	AudioSource* source = new AudioSource();
+	AudioSource* source = new AudioSource(context);
 	auto result_it = sources_.emplace(std::make_pair(std::move(source_name), source));
 	
 	if (result_it.second == false) {
