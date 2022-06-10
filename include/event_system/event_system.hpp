@@ -14,13 +14,58 @@
 #include <cassert>
 #include <cstdlib>
 #include <functional>
+#include <tuple>
+#include <type_traits>
 #include <unordered_map>
 #include <vector>
-#include <tuple>
 
 #include "core/logger.hpp"
 
 namespace vulture {
+
+template <auto Fu>
+struct ArgConnector {};
+
+template <typename>
+class Functor;
+
+template <typename Ret, typename... Args>
+class Functor<Ret(Args...)> {
+  using target_signature = Ret(void*, Args...);
+  using function_signature = Ret(Args...);
+
+ public:
+  template <auto F, typename... Type>
+  Functor(ArgConnector<F> /*f*/, Type&&... instance_or_args) {
+    connect<F>(std::forward<Type>(instance_or_args)...);
+  }
+
+  template <auto Candidate>
+  void connect() {
+    callable_ = [](void*, Args... args) { return Ret(Candidate(std::forward<Args>(args)...)); };
+  }
+
+  template <auto Candidate, typename Type>
+  void connect(Type& instance) {
+    instance_ = &instance;
+    callable_ = [](void* instance, Args... args) {
+      return Ret(((reinterpret_cast<Type*>(instance))->*(Candidate))(std::forward<Args>(args)...));
+    };
+  }
+
+  Ret operator()(Args... args) {
+    assert(callable_ != nullptr);
+    return callable_(instance_, args...);
+  }
+
+  bool operator==(const Functor<Ret(Args...)>& other) {
+    return callable_ == other.callable_ && instance_ == other.instance_;
+  }
+
+ private:
+  void* instance_ = nullptr;
+  target_signature* callable_ = nullptr;
+};
 
 using EventId = size_t;
 
@@ -41,32 +86,35 @@ struct EventIdHolder {
 
 class BaseSink {
  public:
-  virtual ~BaseSink() {};
+  virtual ~BaseSink(){};
 };
 
 template <typename EventT>
 class Sink final : public BaseSink {
   using function_type = void(const EventT&);
+
  public:
   template <auto F, typename U>
   void Connect(U& instance) {
-    callback_.emplace_back(reinterpret_cast<void*>(NULL), reinterpret_cast<void*>(&instance), std::bind(F, &instance, std::placeholders::_1));
-    // callback_.emplace_back(reinterpret_cast<void*>(F), //FIXME: bind does not work
+    callback_.emplace_back(ArgConnector<F>{}, instance);
+    // callback_.emplace_back(reinterpret_cast<void*>(NULL), reinterpret_cast<void*>(&instance), std::bind(F, &instance,
+    // std::placeholders::_1)); callback_.emplace_back(reinterpret_cast<void*>(F), //FIXME: bind does not work
     //                        std::bind(F, instance, std::placeholders::_1));
   }
 
   template <auto F>
   void Connect() {
-    callback_.emplace_back(reinterpret_cast<void*>(NULL), nullptr, std::bind(F, std::placeholders::_1));
+    // callback_.emplace_back(reinterpret_cast<void*>(NULL), nullptr, std::bind(F, std::placeholders::_1));
+    callback_.emplace_back(ArgConnector<F>{});
     // callback_.emplace_back(reinterpret_cast<void*>(F), //FIXME:
     //                        std::bind(F, std::placeholders::_1));
   }
 
-  //FIXME:
   template <auto F, typename U>
   void Disconnect(U& instance) {
+    Functor<function_type> f{ArgConnector<F>{}, instance};
     for (auto it = callback_.begin(); it != callback_.end(); ++it) {
-      if (std::get<0>(*it) == reinterpret_cast<void*>(F) && std::get<1>(*it) == reinterpret_cast<void*>(&instance)) {
+      if (*it == f) {
         callback_.erase(it);
         break;
       }
@@ -75,8 +123,9 @@ class Sink final : public BaseSink {
 
   template <auto F>
   void Disconnect() {
+    Functor<function_type> f{ArgConnector<F>{}};
     for (auto it = callback_.begin(); it != callback_.end(); ++it) {
-      if (std::get<0>(*it) == reinterpret_cast<void*>(F) && std::get<1>(*it) == nullptr) {
+      if (*it == f) {
         callback_.erase(it);
         break;
       }
@@ -85,14 +134,15 @@ class Sink final : public BaseSink {
 
   void Publish(const EventT& event) {
     for (size_t i = 0; i < callback_.size(); ++i) {
-      std::get<2>(callback_[i])(event);
+      callback_[i](event);
     }
   }
 
  private:
   // std pair just for now, then we will write our own std::function with
   // operator ==
-  std::vector<std::tuple<void*, void*, std::function<function_type>>> callback_;
+  // std::vector<std::tuple<void*, void*, std::function<function_type>>> callback_;
+  std::vector<Functor<function_type>> callback_;
   // std::vector<std::pair<void*, std::function<void(const EventT&)>>> callback_;
 };
 

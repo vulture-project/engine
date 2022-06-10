@@ -109,6 +109,7 @@ class PlayerMovementScript : public IScript {
   }
 
 private:
+  glm::vec3 speed{0, 0, 0};
   EntityHandle* entity_{nullptr}; // FIXME:
   glm::vec3 speed_{0};
 };
