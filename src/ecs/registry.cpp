@@ -43,7 +43,8 @@ void EntityRegistry::DestroyEntity(EntityId id) {
   for (auto it = entities_[id].begin(); it != entities_[id].end(); ++it) {
     ComponentTypeId component_type_id = it->first;
 
-    IComponentHolder* component_to_remove_holder = components_[component_type_id].find(id)->second;
+    // IComponentHolder* component_to_remove_holder = components_[component_type_id].find(id)->second;
+    IComponentHolder* component_to_remove_holder = it->second;
     components_[component_type_id].erase(id);
     delete component_to_remove_holder;
   }
@@ -52,9 +53,15 @@ void EntityRegistry::DestroyEntity(EntityId id) {
 }
 
 void EntityRegistry::DestroyAllEntities() {
-  for (auto iter = entities_.begin(); iter != entities_.end(); ++iter) {
-    DestroyEntity(iter->first);
+  for (auto iter = entities_.begin(); iter != entities_.end();) {
+    EntityId id_to_delete = iter->first;
+    iter++;
+    DestroyEntity(id_to_delete);
   }
+}
+
+EntityRegistry::~EntityRegistry() {
+  DestroyAllEntities();
 }
 
 }  // namespace vulture

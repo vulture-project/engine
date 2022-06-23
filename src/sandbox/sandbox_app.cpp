@@ -108,6 +108,10 @@ class PlayerMovementScript : public IScript {
     speed_ = glm::vec3(0, 4, 0);
   }
 
+  virtual ~PlayerMovementScript() override {
+    delete entity_;
+  }
+
 private:
   glm::vec3 speed{0, 0, 0};
   EntityHandle* entity_{nullptr}; // FIXME:

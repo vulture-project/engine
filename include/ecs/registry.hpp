@@ -68,6 +68,8 @@ class EntityRegistry {
   template <typename ComponentT>
   EntityMap& GetEntityMap();
 
+  ~EntityRegistry();
+
  private:
   using EntityStorage = std::unordered_map<EntityId, ComponentMap>;
   using ComponentStorage = std::unordered_map<ComponentTypeId, EntityMap>;
