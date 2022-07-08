@@ -93,4 +93,4 @@ struct LightSourceComponent {
   LightSourceComponent(const SpotLightSpecs& specs) : specs(specs) {}
 };
 
-};  // namespace vulture
+}  // namespace vulture

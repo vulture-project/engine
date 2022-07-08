@@ -1,21 +1,21 @@
 /**
- * @author Nikita Mochalov (github.com/tralf-strues)
- * @file main.cpp
- * @date 2022-04-26
- *
+ * @author Viktor Baranov (github.com/baranov-V-V)
+ * @file buffer_manager.hpp
+ * @date 2022-05-21
+ * 
  * The MIT License (MIT)
  * Copyright (c) vulture-project
- *
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
  * the rights to use, copy, modify, merge, publish, distribute, sublicense,
  * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,60 +25,35 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "sandbox/sandbox_app.hpp"
+#pragma once
 
-#include "sandbox/audio_sandbox.hpp"
+#include <map>
+#include <initializer_list>
+#include <utility>
+#include <optional>
 
-#include "audio/audio_device.hpp"
-#include "audio/audio_source.hpp"
-#include "audio/audio_context.hpp"
-#include "audio/buffer_manager.hpp"
+#include "audio/audio_buffer.hpp"
 
-#include <stdio.h>
-#include <cassert>
-#include <filesystem>
-#include <iostream>
+namespace vulture {
 
-#include <fcntl.h>
-#include <unistd.h>
+class BufferManager {
+ public:
+	using BufferStorage = std::map<std::string, AudioBuffer*>;
 
-using namespace vulture;
+	BufferManager() = default;
+	~BufferManager();
 
-int main() {
-  /*
-  AudioDevice device;
-  device.DumpAvailableDevices();
-  device.Open();
+	bool LoadAudioFile(const char* filename, const char* name = nullptr);
+	
+	std::optional<AudioBuffer::Handle> GetBuffer(const char* name);
+	
+	bool DeleteBuffer(const char* name);
 
-  {
-    AudioContext context = device.CreateContext();
-    context.CreateSource("s1");
+ private:
+	BufferStorage buffers_;
 
-    BufferManager buffer_manager;
-    buffer_manager.LoadAudioFile("../res/sounds/woof.wav", "5");
+	bool LoadOgg();
+	bool LoadWave();
+};
 
-    { //work with handle SEGV
-      vulture::AudioSource::Handle s1_h = context.GetSource("s1").value();
-      s1_h.SetBuf(buffer_manager.GetBuffer("5").value());
-      s1_h.Play();
-      sleep(3);
-    }
-
-  }
-  
-  device.Close();
-
-  */
-  
-  SandboxApp app{};
-  app.Init();
-  app.Run();
-  return 0;
-  
-  /*
-  AudioSandbox app{};
-  app.Init();
-  app.Run();
-  return 0;
-  */
-}
+} // namespace vulture

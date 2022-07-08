@@ -32,11 +32,23 @@
 #include "renderer/3d/renderer3d.hpp"
 #include "core/resource_manager.hpp"
 
+#include "audio/audio_device.hpp"
+#include "audio/audio_context.hpp"
+#include "audio/audio_source.hpp"
+#include "audio/audio_listener.hpp"
+#include "audio/buffer_manager.hpp"
+
 using namespace vulture;
 
 bool running = true;
 
 vulture::Dispatcher dispatcher;
+
+AudioDevice* device;
+AudioContext* context;
+BufferManager* manager;
+AudioListener* listener;
+
 
 SandboxApp::SandboxApp() : window_(1280, 960) {}
 
@@ -49,7 +61,49 @@ int SandboxApp::Init() {
   InputEventManager::SetWindowAndDispatcher(&window_, &dispatcher);
 
   dispatcher.GetSink<KeyEvent>().Connect<&ProcessKeyEvent>();
+
+  device = new AudioDevice();
+  device->Open();
+
+  context = new AudioContext(device);
+  context->MakeCurrent();
+
+  listener = new AudioListener(context);
+  listener->MakeCurrent();
+  listener->SetVolume(1);
+  
+  manager = new BufferManager();
+  manager->LoadAudioFile("res/sounds/woof.wav", "woof");
+  manager->LoadAudioFile("res/sounds/sci-fidrone.ogg", "noice");
+
+  context->CreateSource("woof_source");
+  context->CreateSource("noice_source");
+
+  vulture::AudioSource::Handle source_handle = context->GetSource("noice_source").value();
+  source_handle.SetBuf(manager->GetBuffer("noice").value());
+  source_handle.SetLocation({0, 0, 0});
+  source_handle.SetLooping(true);
+  source_handle.Play();
+
+  vulture::AudioSource::Handle source_handle2 = context->GetSource("woof_source").value();
+  source_handle2.SetBuf(manager->GetBuffer("woof").value());
+
   return 0;
+}
+
+SandboxApp::~SandboxApp() {
+  {
+    vulture::AudioSource::Handle source_handle = context->GetSource("noice_source").value();
+    source_handle.Stop();
+  }
+
+  delete listener;
+  delete context;
+  delete manager;
+
+  device->Close();
+  delete device;
+
 }
 
 class JumpEvent {};
@@ -67,8 +121,14 @@ class PlayerMovementScript : public IScript {
 
     Transform* transform = &entity_->GetComponent<TransformComponent>()->transform;
     transform->rotation.y += 0.001f * dx;
+
     // transform->rotation.x += 0.001f * dy;
+
     
+    listener->SetOrientation(transform->CalculateMatrix() * glm::vec4(kDefaultForwardVector, 1),
+                             transform->CalculateMatrix() * glm::vec4(kDefaultUpVector, 1));
+    
+
     prev_x = event.x;
     prev_y = event.y;
   }
@@ -102,6 +162,10 @@ class PlayerMovementScript : public IScript {
     transform->translation += speed_ * timestep;
 
     transform->translation.y = std::max(0.0f, transform->translation.y);
+
+    listener->SetLocation(transform->translation);
+
+    LOG_INFO(ListenerLocation, "Location: ({}, {}, {})", transform->translation.x, transform->translation.y, transform->translation.z);
   }
 
   void OnJump(const JumpEvent&) {
@@ -195,13 +259,23 @@ void SandboxApp::Run() {
   dispatcher.GetSink<JumpEvent>().Connect<&PlayerMovementScript::OnJump>(*dog_movement);
   dog.AddComponent<ScriptComponent>(dog_movement);
 
-  EntityHandle statue = scene_.CreateEntity();
-  statue.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/statue.obj"));
-  statue.AddComponent<TransformComponent>(Transform(glm::vec3(2, 0, 2), glm::vec3(0), glm::vec3(1)));
+  /*
+  EntityHandle statue1 = scene_.CreateEntity();
+  statue1.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/statue.obj"));
+  statue1.AddComponent<TransformComponent>(Transform(glm::vec3(-6, 0, 8), glm::vec3(0, glm::radians(240.0f), 0), glm::vec3(1)));
+
+  EntityHandle statue2 = scene_.CreateEntity();
+  statue2.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/statue.obj"));
+  statue2.AddComponent<TransformComponent>(Transform(glm::vec3(-10, 0, 2), glm::vec3(0, glm::radians(250.0f), 0), glm::vec3(1)));
+
+  EntityHandle statue3 = scene_.CreateEntity();
+  statue3.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/statue.obj"));
+  statue3.AddComponent<TransformComponent>(Transform(glm::vec3(-12, 0, 10), glm::vec3(0, glm::radians(150.0f), 0), glm::vec3(1)));
+  */
 
   EntityHandle camera = scene_.CreateChildEntity(dog);
   camera.AddComponent<CameraComponent>(PerspectiveCameraSpecs(aspect_ratio), true);
-  camera.AddComponent<TransformComponent>(Transform(glm::vec3{0, 7, 8}, glm::vec3(-0.3, 0, 0)));
+  camera.AddComponent<TransformComponent>(Transform(glm::vec3{0, 7, 10}, glm::vec3(-0.3, 0, 0)));
 
   EntityHandle skybox = scene_.CreateChildEntity(camera);
   skybox.AddComponent<MeshComponent>(CreateSkyboxMesh({"res/textures/skybox_night_sky/skybox_night_sky_right.png",
@@ -217,10 +291,10 @@ void SandboxApp::Run() {
       DirectionalLightSpecs(LightColorSpecs(glm::vec3(0.2), glm::vec3(0.2), glm::vec3(0.1))));
   dir_light.AddComponent<TransformComponent>(Transform(glm::vec3(0), glm::vec3(-0.5, 0, 0)));
 
-  EntityHandle spot_light = scene_.CreateChildEntity(camera);
+  EntityHandle spot_light = scene_.CreateChildEntity(dog);
   spot_light.AddComponent<LightSourceComponent>(SpotLightSpecs(
-      LightColorSpecs(glm::vec3(0.3), glm::vec3(0.3), glm::vec3(0)), LightAttenuationSpecs(2), cosf(0.2), cos(0.3)));
-  spot_light.AddComponent<TransformComponent>();
+      LightColorSpecs(glm::vec3(0.6, 0, 0), glm::vec3(0.6, 0, 0), glm::vec3(0)), LightAttenuationSpecs(100), cosf(0.2), cos(0.3)));
+  spot_light.AddComponent<TransformComponent>(glm::vec3(0, 3, -3));
 
   Renderer3D::Init();
   Renderer3D::SetViewport(
@@ -250,12 +324,17 @@ void SandboxApp::Run() {
 void ProcessKeyEvent(const vulture::KeyEvent& event) {
   int key = event.key;
   int action = (int)event.action;
-  
+
   if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
     running = false;
   }
 
   if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE) {
     dispatcher.Trigger<JumpEvent>();
+  }
+
+  if (key == GLFW_KEY_E && action == GLFW_PRESS) {
+    context->GetSource("woof_source").value().Play();
+    //insert sound here
   }
 }

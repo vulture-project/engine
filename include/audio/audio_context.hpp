@@ -1,7 +1,7 @@
 /**
- * @author Nikita Mochalov (github.com/tralf-strues)
- * @file main.cpp
- * @date 2022-04-26
+ * @author Viktor Baranov (github.com/baranov-V-V)
+ * @file audio_context.hpp
+ * @date 2022-05-19
  *
  * The MIT License (MIT)
  * Copyright (c) vulture-project
@@ -25,60 +25,55 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "sandbox/sandbox_app.hpp"
+#pragma once
 
-#include "sandbox/audio_sandbox.hpp"
+#include <AL/alc.h>
+#include <glm/vec3.hpp>
+#include <optional>
 
-#include "audio/audio_device.hpp"
+#include "audio/source_pool.hpp"
 #include "audio/audio_source.hpp"
-#include "audio/audio_context.hpp"
-#include "audio/buffer_manager.hpp"
 
-#include <stdio.h>
-#include <cassert>
-#include <filesystem>
-#include <iostream>
+using Vec3f = glm::vec3;
 
-#include <fcntl.h>
-#include <unistd.h>
+namespace vulture {
 
-using namespace vulture;
+class AudioListener;
+class AudioDevice;
 
-int main() {
-  /*
-  AudioDevice device;
-  device.DumpAvailableDevices();
-  device.Open();
+class AudioContext {
+ public:
+	friend class AudioListener;
 
-  {
-    AudioContext context = device.CreateContext();
-    context.CreateSource("s1");
+	AudioContext(AudioDevice* device);
+	~AudioContext();
 
-    BufferManager buffer_manager;
-    buffer_manager.LoadAudioFile("../res/sounds/woof.wav", "5");
+	AudioContext(const AudioContext&) = delete;
 
-    { //work with handle SEGV
-      vulture::AudioSource::Handle s1_h = context.GetSource("s1").value();
-      s1_h.SetBuf(buffer_manager.GetBuffer("5").value());
-      s1_h.Play();
-      sleep(3);
-    }
+	AudioContext(AudioContext&& context);
 
-  }
-  
-  device.Close();
+	bool MakeCurrent();
+	bool IsCurrent();
 
-  */
-  
-  SandboxApp app{};
-  app.Init();
-  app.Run();
-  return 0;
-  
-  /*
-  AudioSandbox app{};
-  app.Init();
-  app.Run();
-  return 0;
-  */
-}
+	AudioListener GetNewListener();
+
+	bool CreateSource(const char* name);
+	std::optional<AudioSource::Handle> GetSource(const char* name);
+	
+	bool DestroySource(const char* name);
+
+	//using iterator of pool
+	void StopAllSounds();
+  void PauseAllSounds();
+  void ResumeAllSounds();
+
+ private:
+	SourcePool pool_;
+	ALCcontext* context_;
+
+	AudioDevice* device_owner_;
+
+	AudioListener* current_listener_;
+};
+
+} // namespace vulture
