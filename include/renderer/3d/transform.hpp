@@ -37,13 +37,18 @@ namespace vulture {
 
 struct Transform {
   glm::vec3 translation;
-  glm::vec3 rotation;
+  glm::quat rotation;
   glm::vec3 scale;
 
-  Transform(const glm::vec3& translation = glm::vec3{0.0f}, const glm::vec3& rotation = glm::vec3{0.0f},
-            const glm::vec3& scale = glm::vec3{1.0f})
+  Transform(const glm::vec3& translation = glm::vec3{0.0f},
+            const glm::quat& rotation = glm::angleAxis(0.0f, glm::vec3(0, 0, 1)),
+            const glm::vec3& scale = glm::vec3{1.0f, 1.0f, 1.0f})
       : translation(translation), rotation(rotation), scale(scale) {}
 
+  /**
+   * @warning Prone to precision errors! Should be avoided when possible.
+   * @param matrix
+   */
   Transform(const glm::mat4& matrix) {
     glm::vec3 decomposed_scale;
     glm::quat decomposed_rotation;
@@ -85,8 +90,12 @@ struct Transform {
   }
 
   glm::mat4 CalculateTranslationMatrix() const { return glm::translate(glm::identity<glm::mat4>(), translation); }
-  glm::mat4 CalculateRotationMatrix() const { return glm::toMat4(glm::quat(rotation)); }
+  glm::mat4 CalculateRotationMatrix() const { return glm::mat4_cast(rotation); }
   glm::mat4 CalculateScaleMatrix() const { return glm::scale(glm::identity<glm::mat4>(), scale); }
+
+  void Rotate(float angle, const glm::vec3& axis) {
+    rotation = glm::angleAxis(angle, axis) * rotation;
+  }
 };
 
 }  //  namespace vulture

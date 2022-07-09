@@ -54,7 +54,7 @@ void Scene::Render() {
   /* Scene3D sync */
   auto lights = GetView<LightSourceComponent>(entities_);
   for (auto [entity, light] : lights) {
-    // TODO: (tralf-strues) Add component create listeners to not check the existing of runtime nodes
+    // TODO: (tralf-strues) Add component create listeners to not check the existence of runtime nodes
     if (!light->runtime_node) {
       light->runtime_node = new LightSourceNode3D(light->specs);
       scene_.AddLightSource(light->runtime_node);
@@ -66,7 +66,7 @@ void Scene::Render() {
 
   auto models = GetView<MeshComponent>(entities_);
   for (auto [entity, model] : models) {
-    // TODO: (tralf-strues) Add component create listeners to not check the existing of runtime nodes
+    // TODO: (tralf-strues) Add component create listeners to not check the existence of runtime nodes
     if (!model->runtime_node) {
       model->runtime_node = new ModelNode3D(model->mesh);
       scene_.AddModel(model->runtime_node);
@@ -79,7 +79,7 @@ void Scene::Render() {
   auto cameras = GetView<CameraComponent>(entities_);
   bool main_camera_found = false;
   for (auto [entity, camera] : cameras) {
-    // TODO: (tralf-strues) Add component create listeners to not check the existing of runtime nodes
+    // TODO: (tralf-strues) Add component create listeners to not check the existence of runtime nodes
     if (!camera->runtime_node) {
       camera->runtime_node = new CameraNode3D(camera->specs);
       scene_.AddCamera(camera->runtime_node);
@@ -122,16 +122,25 @@ EntityHandle Scene::CreateChildEntity(EntityHandle parent) {
 }
 
 glm::mat4 Scene::ComputeWorldSpaceMatrix(EntityHandle entity) {
+  return ComputeWorldSpaceTransform(entity).CalculateMatrix();
+}
+
+Transform Scene::ComputeWorldSpaceTransform(EntityHandle entity) {
   if (!entity.HasComponent<TransformComponent>()) {
     return {};
   }
 
-  auto parent = entity.GetComponent<HierarchyComponent>()->parent;
-  const Transform& transform = entity.GetComponent<TransformComponent>()->transform;
-  return parent.has_value() ? ComputeWorldSpaceMatrix(parent.value()) * transform.CalculateMatrix()
-                            : transform.CalculateMatrix();
-}
+  const Transform& local_transform = entity.GetComponent<TransformComponent>()->transform;
 
-Transform Scene::ComputeWorldSpaceTransform(EntityHandle entity) {
-  return Transform(ComputeWorldSpaceMatrix(entity));
+  auto parent = entity.GetComponent<HierarchyComponent>()->parent;
+  if (parent.has_value()) {
+    const Transform& parent_transform = ComputeWorldSpaceTransform(parent.value());
+    glm::vec4 local_translation = glm::vec4(parent_transform.scale * local_transform.translation, 1.0f);
+
+    return Transform(
+        parent_transform.translation + glm::vec3(parent_transform.CalculateRotationMatrix() * local_translation),
+        parent_transform.rotation * local_transform.rotation, parent_transform.scale * local_transform.scale);
+  }
+
+  return local_transform;
 }

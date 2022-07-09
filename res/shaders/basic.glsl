@@ -14,9 +14,10 @@ uniform mat4 u_model;
 
 void main()
 {
-    ws_position = (u_model * vec4(in_ms_position, 1.0)).xyz;
+    ws_position = vec3(u_model * vec4(in_ms_position, 1.0));
     uv          = in_uv;
-    ws_normal   = (u_model * vec4(in_ms_normal, 1.0)).xyz;
+    // ws_normal   = vec3(u_model * vec4(in_ms_normal, 1.0));
+    ws_normal   = transpose(inverse(mat3(u_model))) * in_ms_normal;
     gl_Position = u_projection_view * vec4(ws_position, 1.0);
 }
 
@@ -97,33 +98,36 @@ uniform vec3 u_ws_camera;
 
 uniform Material u_material;
 
-vec3 CalculateDirectionalLight(DirectionalLight light, vec3 ws_position, vec3 ws_normal, vec3 ws_to_camera);
-vec3 CalculatePointLight(PointLight light, vec3 ws_position, vec3 ws_normal, vec3 ws_to_camera);
-vec3 CalculateSpotLight(SpotLight light, vec3 ws_position, vec3 ws_normal, vec3 ws_to_camera);
+vec3 CalculateDirectionalLight(DirectionalLight light, vec3 ws_normal, vec3 ws_to_camera);
+vec3 CalculatePointLight(PointLight light, vec3 ws_normal, vec3 ws_to_camera);
+vec3 CalculateSpotLight(SpotLight light, vec3 ws_normal, vec3 ws_to_camera);
 
 void main()
 {
+    vec3 ws_normalized_normal = normalize(ws_normal);
+    vec3 ws_normalized_to_camera = normalize(u_ws_camera - ws_position);
+
     out_color = vec4(0, 0, 0, 1);
 
     for (int i = 0; i < u_directional_lights_count; ++i)
     {
-        out_color += vec4(CalculateDirectionalLight(u_directional_lights[i], ws_position, normalize(ws_normal), normalize(u_ws_camera - ws_position)), 0);
+        out_color += vec4(CalculateDirectionalLight(u_directional_lights[i], ws_normalized_normal, ws_normalized_to_camera), 0);
     }
 
     for (int i = 0; i < u_point_lights_count; ++i)
     {
-        out_color += vec4(CalculatePointLight(u_point_lights[i], ws_position, normalize(ws_normal), normalize(u_ws_camera - ws_position)), 0);
+        out_color += vec4(CalculatePointLight(u_point_lights[i], ws_normalized_normal, ws_normalized_to_camera), 0);
     }
 
     for (int i = 0; i < u_spot_lights_count; ++i)
     {
-        out_color += vec4(CalculateSpotLight(u_spot_lights[i], ws_position, normalize(ws_normal), normalize(u_ws_camera - ws_position)), 0);
+        out_color += vec4(CalculateSpotLight(u_spot_lights[i], ws_normalized_normal, ws_normalized_to_camera), 0);
     }
 }
 
-vec3 CalculateDirectionalLight(DirectionalLight light, vec3 ws_position, vec3 ws_normal, vec3 ws_to_camera)
+vec3 CalculateDirectionalLight(DirectionalLight light, vec3 ws_normal, vec3 ws_to_camera)
 {
-    vec3 texture_diffuse = texture(u_material.map_diffuse, uv).rgb;
+    vec3 texture_diffuse = vec3(texture(u_material.map_diffuse, uv));
 
     // Ambient
     vec3 ambient = light.color_ambient * u_material.color_ambient * texture_diffuse;
@@ -139,10 +143,10 @@ vec3 CalculateDirectionalLight(DirectionalLight light, vec3 ws_position, vec3 ws
     return ambient + diffuse + specular;
 }
 
-vec3 CalculatePointLight(PointLight light, vec3 ws_position, vec3 ws_normal, vec3 ws_to_camera)
+vec3 CalculatePointLight(PointLight light, vec3 ws_normal, vec3 ws_to_camera)
 {
     vec3 ws_to_light = normalize(light.ws_position - ws_position);
-    vec3 texture_diffuse = texture(u_material.map_diffuse, uv).rgb;
+    vec3 texture_diffuse = vec3(texture(u_material.map_diffuse, uv));
 
     // Ambient
     vec3 ambient = light.color_ambient * u_material.color_ambient * texture_diffuse;
@@ -162,10 +166,10 @@ vec3 CalculatePointLight(PointLight light, vec3 ws_position, vec3 ws_normal, vec
     return attenuation * (ambient + diffuse + specular);
 }
 
-vec3 CalculateSpotLight(SpotLight light, vec3 ws_position, vec3 ws_normal, vec3 ws_to_camera)
+vec3 CalculateSpotLight(SpotLight light, vec3 ws_normal, vec3 ws_to_camera)
 {
     vec3 ws_to_light = normalize(light.ws_position - ws_position);
-    vec3 texture_diffuse = texture(u_material.map_diffuse, uv).rgb;
+    vec3 texture_diffuse = vec3(texture(u_material.map_diffuse, uv));
 
     // Ambient
     vec3 ambient = light.color_ambient * u_material.color_ambient * texture_diffuse;

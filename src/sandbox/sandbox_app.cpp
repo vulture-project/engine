@@ -40,7 +40,10 @@
 
 using namespace vulture;
 
+// FIXME: (tralf-strues) get rid of global variables!
 bool running = true;
+EntityHandle* spot_light{nullptr}; // FIXME: (tralf-strues)
+EntityHandle* dir_light{nullptr};
 
 vulture::Dispatcher dispatcher;
 
@@ -82,7 +85,7 @@ int SandboxApp::Init() {
   source_handle.SetBuf(manager->GetBuffer("noice").value());
   source_handle.SetLocation({0, 0, 0});
   source_handle.SetLooping(true);
-  source_handle.Play();
+  // source_handle.Play();
 
   vulture::AudioSource::Handle source_handle2 = context->GetSource("woof_source").value();
   source_handle2.SetBuf(manager->GetBuffer("woof").value());
@@ -118,14 +121,12 @@ class PlayerMovementScript : public IScript {
     float dy = prev_y - event.y;
 
     Transform* transform = &entity_->GetComponent<TransformComponent>()->transform;
-    transform->rotation.y += 0.001f * dx;
+    transform->Rotate(0.001f * dx, kDefaultUpVector);
 
     //transform->rotation.x += 0.001f * dy;
 
-    
     listener->SetOrientation(transform->CalculateMatrix() * glm::vec4(kDefaultForwardVector, 1),
                              transform->CalculateMatrix() * glm::vec4(kDefaultUpVector, 1));
-    
 
     prev_x = event.x;
     prev_y = event.y;
@@ -162,8 +163,6 @@ class PlayerMovementScript : public IScript {
     transform->translation.y = std::max(0.0f, transform->translation.y);
 
     listener->SetLocation(transform->translation);
-
-    LOG_INFO(ListenerLocation, "Location: ({}, {}, {})", transform->translation.x, transform->translation.y, transform->translation.z);
   }
 
   void OnJump(const JumpEvent&) {
@@ -214,15 +213,13 @@ void SandboxApp::Run() {
 
   #undef CREATE_2BENCHES
 
-  double lamp_x_coord = 9;
   #define CREATE_2LAMPS(NUM) \
     EntityHandle street_lamp##NUM = scene_.CreateEntity(); \
     street_lamp##NUM.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/street_lamp.obj")); \
-    street_lamp##NUM.AddComponent<TransformComponent>(Transform(glm::vec3(lamp_x_coord, 0, 12.5), glm::vec3(0), glm::vec3(0.6f))); \
+    street_lamp##NUM.AddComponent<TransformComponent>(Transform(glm::vec3(9 - NUM * 4.55, 0, 12.5), glm::vec3(0), glm::vec3(0.6f))); \
     EntityHandle street_lamp##NUM##_symm = scene_.CreateEntity(); \
     street_lamp##NUM##_symm.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/street_lamp.obj")); \
-    street_lamp##NUM##_symm.AddComponent<TransformComponent>(Transform(glm::vec3(lamp_x_coord, 0, -12.5), glm::vec3(0), glm::vec3(0.6f))); \
-    lamp_x_coord -= 4.55;
+    street_lamp##NUM##_symm.AddComponent<TransformComponent>(Transform(glm::vec3(9 - NUM * 4.55, 0, -12.5), glm::vec3(0), glm::vec3(0.6f))); \
 
   CREATE_2LAMPS(0)
   CREATE_2LAMPS(1)
@@ -235,12 +232,12 @@ void SandboxApp::Run() {
   #define CREATE_2LIGHTS(NUM) \
     EntityHandle lamp_light_##NUM = scene_.CreateChildEntity(street_lamp##NUM); \
     lamp_light_##NUM.AddComponent<LightSourceComponent>(PointLightSpecs( \
-        LightColorSpecs(glm::vec3(0.1), glm::vec3(0.3, 0.3, 0), glm::vec3(0.01)), LightAttenuationSpecs(15))); \
-    lamp_light_##NUM.AddComponent<TransformComponent>(glm::vec3(2, 8, 2)); \
+        LightColorSpecs(glm::vec3(0.01), glm::vec3(0.15, 0.15, 0), glm::vec3(0.01)), LightAttenuationSpecs(15))); \
+    lamp_light_##NUM.AddComponent<TransformComponent>(glm::vec3(0, 8, 0)); \
     EntityHandle lamp_light_##NUM##_symm = scene_.CreateChildEntity(street_lamp##NUM##_symm); \
     lamp_light_##NUM##_symm.AddComponent<LightSourceComponent>(PointLightSpecs( \
-        LightColorSpecs(glm::vec3(0.1), glm::vec3(0.3, 0.3, 0), glm::vec3(0.01)), LightAttenuationSpecs(15))); \
-    lamp_light_##NUM##_symm.AddComponent<TransformComponent>(glm::vec3(2, 8, 2));
+        LightColorSpecs(glm::vec3(0.01), glm::vec3(0.15, 0.15, 0), glm::vec3(0.01)), LightAttenuationSpecs(15))); \
+    lamp_light_##NUM##_symm.AddComponent<TransformComponent>(glm::vec3(0, 8, 0));
 
   CREATE_2LIGHTS(0)
   CREATE_2LIGHTS(1)
@@ -271,9 +268,14 @@ void SandboxApp::Run() {
   statue3.AddComponent<TransformComponent>(Transform(glm::vec3(-12, 0, 10), glm::vec3(0, glm::radians(150.0f), 0), glm::vec3(1)));
   */
 
+  // EntityHandle point_light = scene_.CreateEntity();
+  // point_light.AddComponent<TransformComponent>();
+  // point_light.AddComponent<LightSourceComponent>(PointLightSpecs(
+  //     LightColorSpecs(glm::vec3(0.1), glm::vec3(0.3, 0.3, 0), glm::vec3(0.01)), LightAttenuationSpecs(15)));
+
   EntityHandle camera = scene_.CreateChildEntity(dog);
   camera.AddComponent<CameraComponent>(PerspectiveCameraSpecs(aspect_ratio), true);
-  camera.AddComponent<TransformComponent>(Transform(glm::vec3{0, 7, 10}, glm::vec3(-0.3, 0, 0)));
+  camera.AddComponent<TransformComponent>(Transform(glm::vec3{0, 7, 10}, glm::angleAxis(-0.3f, glm::vec3(1.0f, 0.0f, 0.0f))));
 
   EntityHandle skybox = scene_.CreateChildEntity(camera);
   skybox.AddComponent<MeshComponent>(CreateSkyboxMesh({"res/textures/skybox_night_sky/skybox_night_sky_right.png",
@@ -284,15 +286,15 @@ void SandboxApp::Run() {
                                                        "res/textures/skybox_night_sky/skybox_night_sky_back.png"}));
   skybox.AddComponent<TransformComponent>();
 
-  EntityHandle dir_light = scene_.CreateEntity();
-  dir_light.AddComponent<LightSourceComponent>(
-      DirectionalLightSpecs(LightColorSpecs(glm::vec3(0.2), glm::vec3(0.2), glm::vec3(0.1))));
-  dir_light.AddComponent<TransformComponent>(Transform(glm::vec3(0), glm::vec3(-0.5, 0, 0)));
+  dir_light = new EntityHandle(scene_.CreateEntity());
+  dir_light->AddComponent<LightSourceComponent>(
+      DirectionalLightSpecs(LightColorSpecs(glm::vec3(0.01), glm::vec3(0.01), glm::vec3(0.01))));
+  dir_light->AddComponent<TransformComponent>(Transform(glm::vec3(0), glm::vec3(-0.5, 0, 0)));
 
-  EntityHandle spot_light = scene_.CreateChildEntity(dog);
-  spot_light.AddComponent<LightSourceComponent>(SpotLightSpecs(
+  spot_light = new EntityHandle(scene_.CreateChildEntity(dog));
+  spot_light->AddComponent<LightSourceComponent>(SpotLightSpecs(
       LightColorSpecs(glm::vec3(0.6, 0, 0), glm::vec3(0.6, 0, 0), glm::vec3(0)), LightAttenuationSpecs(100), cosf(0.2), cos(0.3)));
-  spot_light.AddComponent<TransformComponent>(glm::vec3(0, 3, -3));
+  spot_light->AddComponent<TransformComponent>(glm::vec3(0, 3, -3));
 
   Renderer3D::Init();
   Renderer3D::SetViewport(
@@ -334,5 +336,15 @@ void ProcessKeyEvent(const vulture::KeyEvent& event) {
   if (key == GLFW_KEY_E && action == GLFW_PRESS) {
     context->GetSource("woof_source").value().Play();
     //insert sound here
+  }
+
+  if (key == GLFW_KEY_F && action == GLFW_PRESS) {
+    spot_light->GetComponent<LightSourceComponent>()->runtime_node->SetEnabled(
+        !spot_light->GetComponent<LightSourceComponent>()->runtime_node->IsEnabled());
+  }
+
+  if (key == GLFW_KEY_G && action == GLFW_PRESS) {
+    dir_light->GetComponent<LightSourceComponent>()->runtime_node->SetEnabled(
+        !dir_light->GetComponent<LightSourceComponent>()->runtime_node->IsEnabled());
   }
 }

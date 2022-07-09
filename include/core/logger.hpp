@@ -75,7 +75,7 @@ class Logger {
     }
 
     fmt::print(log_file_, "[{}] [{}] ", GetCurrentTime(), module);
-    fmt::print(log_file_, LevelToTextStyle(level), "{:<{}} ", LevelToString(level), kLevelStringAlignment);
+    fmt::print(log_file_, LevelToTextStyle(level), "{:<{}}", LevelToString(level), kLevelStringAlignment);
     fmt::print(log_file_, "{:<{}} ", place.substr(project_start), kFilenameAlignment);
 
     fmt::print(log_file_, LevelToTextStyle(level), std::forward<Args>(args)...);
@@ -91,4 +91,22 @@ class Logger {
 
  private:
   static FILE* log_file_;
+};
+
+/**
+ * Custom-type logging.
+ */
+#include "glm/glm.hpp"
+
+template <>
+struct fmt::formatter<glm::vec3> {
+  template <typename ParseContext>
+  constexpr auto parse(ParseContext& ctx) {
+    return ctx.begin();
+  }
+
+  template <typename FormatContext>
+  auto format(const glm::vec3& vector, FormatContext& ctx) {
+    return fmt::format_to(ctx.out(), "(x={}, y={}, z={})", vector.x, vector.y, vector.z);
+  }
 };
