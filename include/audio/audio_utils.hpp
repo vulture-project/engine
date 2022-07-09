@@ -27,6 +27,8 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include "audio/audio_buffer.hpp"
 
 namespace vulture {
