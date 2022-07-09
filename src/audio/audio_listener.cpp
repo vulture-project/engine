@@ -63,7 +63,7 @@ void AudioListener::GetLocation(Vec3f& loc) {
 
 void AudioListener::GetOrientation(Vec3f& at, Vec3f& up) {
   at = at_;
-  up_ = up;
+  up = up_;
 }
 
 float AudioListener::GetVolume() {
@@ -75,7 +75,7 @@ void AudioListener::SetLocation(const Vec3f& location) {
   if (IsCurrent()) {
     alListener3f(AL_POSITION, location.x, location.y, location.z);
   } else {
-    LOG_INFO(AudioListener, "Call to SetLocation of not current listener");
+    LOG_WARN(AudioListener, "Call to SetLocation of not current listener");
   }
 }
 
@@ -92,7 +92,7 @@ void AudioListener::SetOrientation(const Vec3f& at, const Vec3f& up) {
     buf[5] = up.z;
     alListenerfv(AL_ORIENTATION, buf);
   } else {
-    LOG_INFO(AudioListener, "Call to SetOrientation of not current listener");
+    LOG_WARN(AudioListener, "Call to SetOrientation of not current listener");
   }
 }
 
@@ -110,7 +110,7 @@ void AudioListener::SetVolume(const float& volume) {
   if (IsCurrent()) {
     alListenerf(AL_GAIN, new_volume);
   } else {
-    LOG_INFO(AudioListener, "Call to SetVolume of not current listener");
+    LOG_WARN(AudioListener, "Call to SetVolume of not current listener");
   }
 }
 

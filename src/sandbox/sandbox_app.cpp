@@ -49,7 +49,6 @@ AudioContext* context;
 BufferManager* manager;
 AudioListener* listener;
 
-
 SandboxApp::SandboxApp() : window_(1280, 960) {}
 
 int SandboxApp::Init() {
@@ -103,7 +102,6 @@ SandboxApp::~SandboxApp() {
 
   device->Close();
   delete device;
-
 }
 
 class JumpEvent {};
@@ -122,7 +120,7 @@ class PlayerMovementScript : public IScript {
     Transform* transform = &entity_->GetComponent<TransformComponent>()->transform;
     transform->rotation.y += 0.001f * dx;
 
-    // transform->rotation.x += 0.001f * dy;
+    //transform->rotation.x += 0.001f * dy;
 
     
     listener->SetOrientation(transform->CalculateMatrix() * glm::vec4(kDefaultForwardVector, 1),
