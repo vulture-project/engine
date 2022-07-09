@@ -27,50 +27,48 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include "audio/audio_buffer.hpp"
 
 namespace vulture {
 
 struct Chunk {
-	Chunk(size_t capacity) : capacity(capacity), size(0) {
-		data = operator new(capacity);
-	}
-	
-	~Chunk() {
-		operator delete(data);
-	}
+  Chunk(size_t capacity) : capacity(capacity), size(0) { data = operator new(capacity); }
 
-	Chunk(const Chunk&) = delete;
-	Chunk(Chunk&& chunk) noexcept : data(chunk.data), capacity(chunk.capacity), size(chunk.size) {
-		chunk.data = nullptr;
-		chunk.capacity = 0;
-		chunk.size = 0;
-	};
+  ~Chunk() { operator delete(data); }
 
-	void* data;
-	size_t capacity;
-	size_t size;
+  Chunk(const Chunk&) = delete;
+  Chunk(Chunk&& chunk) noexcept : data(chunk.data), capacity(chunk.capacity), size(chunk.size) {
+    chunk.data = nullptr;
+    chunk.capacity = 0;
+    chunk.size = 0;
+  };
+
+  void* data;
+  size_t capacity;
+  size_t size;
 };
 
 struct WavHeader {
-    char chunk_id[4];
-    uint32_t chunk_size;
-    char format[4];
+  char chunk_id[4];
+  uint32_t chunk_size;
+  char format[4];
 
-    char subchunk1_id[4];
-    uint32_t subchunk1_size;
-    uint16_t audio_format;
-    uint16_t channels_count;
-    uint32_t sample_rate;
-    uint32_t byte_rate;
-    uint16_t block_align;
-    uint16_t bits_per_sample;
+  char subchunk1_id[4];
+  uint32_t subchunk1_size;
+  uint16_t audio_format;
+  uint16_t channels_count;
+  uint32_t sample_rate;
+  uint32_t byte_rate;
+  uint16_t block_align;
+  uint16_t bits_per_sample;
 
-    char subchunk2_id[4];
-    uint32_t subchunk2_size;
+  char subchunk2_id[4];
+  uint32_t subchunk2_size;
 };
 
 RawAudioData ParseOgg(const char* filename);
 RawAudioData ParseWav(const char* filename);
 
-} // namespace vulture
+}  // namespace vulture'

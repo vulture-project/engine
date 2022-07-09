@@ -28,11 +28,12 @@
 #pragma once
 
 #include <AL/alc.h>
+
 #include <glm/vec3.hpp>
 #include <optional>
 
-#include "audio/source_pool.hpp"
 #include "audio/audio_source.hpp"
+#include "audio/source_pool.hpp"
 
 using Vec3f = glm::vec3;
 
@@ -43,37 +44,37 @@ class AudioDevice;
 
 class AudioContext {
  public:
-	friend class AudioListener;
+  friend class AudioListener;
 
-	AudioContext(AudioDevice* device);
-	~AudioContext();
+  AudioContext(AudioDevice* device);
+  ~AudioContext();
 
-	AudioContext(const AudioContext&) = delete;
+  AudioContext(const AudioContext&) = delete;
 
-	AudioContext(AudioContext&& context);
+  AudioContext(AudioContext&& context);
 
-	bool MakeCurrent();
-	bool IsCurrent();
+  bool MakeCurrent();
+  bool IsCurrent();
 
-	AudioListener GetNewListener();
+  AudioListener GetNewListener();
 
-	bool CreateSource(const char* name);
-	std::optional<AudioSource::Handle> GetSource(const char* name);
-	
-	bool DestroySource(const char* name);
+  bool CreateSource(const char* name);
+  std::optional<AudioSource::Handle> GetSource(const char* name);
 
-	//using iterator of pool
-	void StopAllSounds();
+  bool DestroySource(const char* name);
+
+  // using iterator of pool
+  void StopAllSounds();
   void PauseAllSounds();
   void ResumeAllSounds();
 
  private:
-	SourcePool pool_;
-	ALCcontext* context_;
+  SourcePool pool_;
+  ALCcontext* context_;
 
-	AudioDevice* device_owner_;
+  AudioDevice* device_owner_;
 
-	AudioListener* current_listener_;
+  AudioListener* current_listener_;
 };
 
-} // namespace vulture
+}  // namespace vulture

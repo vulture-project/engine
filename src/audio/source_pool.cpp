@@ -25,60 +25,56 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#include "audio/source_pool.hpp"
+
 #include <cassert>
 #include <utility>
 
-#include "audio/source_pool.hpp"
 #include "audio/audio_context.hpp"
-
 #include "core/logger.hpp"
 
 namespace vulture {
 
-SourcePool::~SourcePool() {
-	ClearStorage(sources_);
-}
+SourcePool::~SourcePool() { ClearStorage(sources_); }
 
-SourcePool::SourcePool(SourcePool&& pool) :
-	sources_(std::move(pool.sources_)) {
-}
+SourcePool::SourcePool(SourcePool&& pool) : sources_(std::move(pool.sources_)) {}
 
 bool SourcePool::CreateSource(AudioContext* context, const char* name) {
-	std::string source_name(name);
+  std::string source_name(name);
 
-	AudioSource* source = new AudioSource(context);
-	auto result_it = sources_.emplace(std::make_pair(std::move(source_name), source));
-	
-	if (result_it.second == false) {
-		delete source;
-		LOG_ERROR(SourcePool, "Could not create insert source in pool with name {}", name);
-		return false;
-	}
+  AudioSource* source = new AudioSource(context);
+  auto result_it = sources_.emplace(std::make_pair(std::move(source_name), source));
 
-	return true;
+  if (result_it.second == false) {
+    delete source;
+    LOG_ERROR(SourcePool, "Could not create insert source in pool with name {}", name);
+    return false;
+  }
+
+  return true;
 }
 
 std::optional<AudioSource::Handle> SourcePool::GetSource(const char* name) {
-	auto it = sources_.find(std::string(name));
+  auto it = sources_.find(std::string(name));
 
-	if (it == sources_.end()) {
-		return std::nullopt;
-	}
+  if (it == sources_.end()) {
+    return std::nullopt;
+  }
 
-	return std::optional<AudioSource::Handle>(it->second);	
+  return std::optional<AudioSource::Handle>(it->second);
 }
 
 bool SourcePool::Destroy(const char* name) {
-	size_t count = sources_.erase(std::string(name));
-	return count != 0;
+  size_t count = sources_.erase(std::string(name));
+  return count != 0;
 }
 
 void SourcePool::ClearStorage(SourceStorage& storage) {
-	while (!storage.empty()) {
-		AudioSource* source = storage.begin()->second;
-		storage.erase(storage.begin());
-		delete source;
-	}
+  while (!storage.empty()) {
+    AudioSource* source = storage.begin()->second;
+    storage.erase(storage.begin());
+    delete source;
+  }
 }
 
-} // namespace vulture
+}  // namespace vulture

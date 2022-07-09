@@ -31,6 +31,7 @@
 #include <unordered_map>
 #include <map>
 #include <queue>
+#include <string>
 
 #include "audio/audio_source.hpp"
 

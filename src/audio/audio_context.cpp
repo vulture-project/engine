@@ -25,23 +25,24 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#include "audio/audio_context.hpp"
+
 #include <AL/al.h>
 
-#include "audio/audio_context.hpp"
-#include "audio/audio_listener.hpp"
 #include "audio/audio_device.hpp"
+#include "audio/audio_listener.hpp"
 
 namespace vulture {
 
 AudioContext::AudioContext(AudioDevice* device) : pool_(), context_(nullptr), device_owner_(device) {
   context_ = alcCreateContext(device->al_device_, nullptr);
-  
-  //dont fall on assert
+
+  // dont fall on assert
   assert(context_ != nullptr);
 
   ++device_owner_->context_count_;
 
-  //mb skip this line?
+  // mb skip this line?
   MakeCurrent();
 }
 
@@ -53,36 +54,24 @@ AudioContext::~AudioContext() {
   }
 }
 
-AudioContext::AudioContext(AudioContext&& context) :
-  pool_(std::move(context.pool_)),
-  context_(std::move(context.context_)),
-  device_owner_(std::move(context.device_owner_)) {
+AudioContext::AudioContext(AudioContext&& context)
+    : pool_(std::move(context.pool_)),
+      context_(std::move(context.context_)),
+      device_owner_(std::move(context.device_owner_)) {
   context.device_owner_ = nullptr;
 }
 
-bool AudioContext::MakeCurrent() {
-  return alcMakeContextCurrent(context_);
-}
+bool AudioContext::MakeCurrent() { return alcMakeContextCurrent(context_); }
 
-bool AudioContext::IsCurrent() {
-  return alcGetCurrentContext() == context_;
-}
+bool AudioContext::IsCurrent() { return alcGetCurrentContext() == context_; }
 
-AudioListener AudioContext::GetNewListener() {
-  return AudioListener(this);
-}
+AudioListener AudioContext::GetNewListener() { return AudioListener(this); }
 
-bool AudioContext::CreateSource(const char* name) {
-  return pool_.CreateSource(this, name);
-}
+bool AudioContext::CreateSource(const char* name) { return pool_.CreateSource(this, name); }
 
-std::optional<AudioSource::Handle> AudioContext::GetSource(const char* name) {
-  return pool_.GetSource(name);
-}
-	
-bool AudioContext::DestroySource(const char* name) {
-  return pool_.Destroy(name);
-}
+std::optional<AudioSource::Handle> AudioContext::GetSource(const char* name) { return pool_.GetSource(name); }
+
+bool AudioContext::DestroySource(const char* name) { return pool_.Destroy(name); }
 
 void AudioContext::StopAllSounds() {
   for (SourcePool::Iterator it = pool_.Begin(); it != pool_.End(); ++it) {
@@ -102,4 +91,4 @@ void AudioContext::ResumeAllSounds() {
   }
 }
 
-} // namespace vulture
+}  // namespace vulture
