@@ -27,21 +27,21 @@
 
 #pragma once
 
-#include <set>
-#include <vector>
-#include <string>
-
-#include <AL/alc.h>
 #include <AL/al.h>
+#include <AL/alc.h>
+
+#include <set>
+#include <string>
+#include <vector>
 
 namespace vulture {
 
 class AudioContext;
 
 //----------------------------------------TODO---------------------------------------
-//1)rewrite device class:
-//2)add list of available devices
-//3)more convinient name to it
+// 1)rewrite device class:
+// 2)add list of available devices
+// 3)more convinient name to it
 
 class AudioDevice {
  public:
@@ -59,9 +59,9 @@ class AudioDevice {
 
   AudioContext CreateContext();
 
-private:
+ private:
   ALCdevice* al_device_;
   size_t context_count_;
 };
 
-} // namespace vulture
+}  // namespace vulture

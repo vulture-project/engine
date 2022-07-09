@@ -28,6 +28,7 @@
 #pragma once
 
 #include <AL/al.h>
+
 #include <glm/vec3.hpp>
 
 #include "audio/audio_buffer.hpp"
@@ -44,12 +45,10 @@ class AudioSource {
   ~AudioSource();
 
   class Handle {
-    public:
+   public:
     friend class AudioSource;
 
-    Handle(AudioSource* source) : audio_source_(source) {
-      ++audio_source_->handle_count_;
-    };
+    Handle(AudioSource* source) : audio_source_(source) { ++audio_source_->handle_count_; };
 
     ~Handle() {
       if (audio_source_ != nullptr) {
@@ -57,13 +56,9 @@ class AudioSource {
       }
     };
 
-    Handle(const Handle& handle) : audio_source_(handle.audio_source_) {
-      ++audio_source_->handle_count_;
-    };
+    Handle(const Handle& handle) : audio_source_(handle.audio_source_) { ++audio_source_->handle_count_; };
 
-    Handle(Handle&& handle) : audio_source_(handle.audio_source_) {
-      handle.audio_source_ = nullptr;
-    };
+    Handle(Handle&& handle) : audio_source_(handle.audio_source_) { handle.audio_source_ = nullptr; };
 
     void SetBuf(AudioBuffer::Handle handle);
 
@@ -75,9 +70,9 @@ class AudioSource {
     bool IsPlaying();
     bool IsLooping();
 
-    void SetLocation (const glm::vec3& loc);
+    void SetLocation(const glm::vec3& loc);
     void SetDirection(const glm::vec3& dir);
-    void SetVelocity (const glm::vec3& vel);
+    void SetVelocity(const glm::vec3& vel);
 
     void SetVolume(float volume);
     void SetLooping(bool is_loop);
@@ -102,4 +97,4 @@ class AudioSource {
   AudioContext* belonged_context_;
 };
 
-} // namespace vulture
+}  // namespace vulture

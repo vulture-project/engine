@@ -35,106 +35,88 @@
 namespace vulture {
 
 struct RawAudioData {
+  RawAudioData() = default;
 
-	RawAudioData() = default;
-	
-	RawAudioData(size_t alloc_size) : data_size_(alloc_size) {
-		data_ = operator new(data_size_);	
-	};
+  RawAudioData(size_t alloc_size) : data_size_(alloc_size) { data_ = operator new(data_size_); };
 
-	~RawAudioData() {
-		operator delete(data_);
-	};
+  ~RawAudioData() { operator delete(data_); };
 
-	RawAudioData(const RawAudioData&) = delete;
-	
-	RawAudioData(RawAudioData&& raw_data) {
-		data_ = raw_data.data_;
-		channels_count_ = raw_data.channels_count_;
-		sample_rate_ = raw_data.sample_rate_;
-		bits_per_sample = raw_data.bits_per_sample;
-		data_size_ = raw_data.data_size_;
+  RawAudioData(const RawAudioData&) = delete;
 
-		raw_data.data_ = nullptr;
-		raw_data.data_size_ = 0;
-	};
+  RawAudioData(RawAudioData&& raw_data) {
+    data_ = raw_data.data_;
+    channels_count_ = raw_data.channels_count_;
+    sample_rate_ = raw_data.sample_rate_;
+    bits_per_sample = raw_data.bits_per_sample;
+    data_size_ = raw_data.data_size_;
 
-	void ReplaceMove(RawAudioData&& raw_data) {
-		data_ = raw_data.data_;
-		channels_count_ = raw_data.channels_count_;
-		sample_rate_ = raw_data.sample_rate_;
-		bits_per_sample = raw_data.bits_per_sample;
-		data_size_ = raw_data.data_size_;
+    raw_data.data_ = nullptr;
+    raw_data.data_size_ = 0;
+  };
 
-		raw_data.data_ = nullptr;
-		raw_data.data_size_ = 0;
-	};
+  void ReplaceMove(RawAudioData&& raw_data) {
+    data_ = raw_data.data_;
+    channels_count_ = raw_data.channels_count_;
+    sample_rate_ = raw_data.sample_rate_;
+    bits_per_sample = raw_data.bits_per_sample;
+    data_size_ = raw_data.data_size_;
 
-	size_t channels_count_;
-	size_t sample_rate_;
-	size_t bits_per_sample;
-	size_t data_size_;
-	void* data_;
+    raw_data.data_ = nullptr;
+    raw_data.data_size_ = 0;
+  };
+
+  size_t channels_count_;
+  size_t sample_rate_;
+  size_t bits_per_sample;
+  size_t data_size_;
+  void* data_;
 };
 
-
 //----------------------------------------TODO---------------------------------------
-//rewrite buffer class:
-//1)add loading from file + parsing
-//2)
-
+// rewrite buffer class:
+// 1)add loading from file + parsing
+// 2)
 
 class AudioBuffer {
  public:
-	friend class AudioSource;
-	
-	AudioBuffer(RawAudioData&& raw_data);
-	~AudioBuffer();
+  friend class AudioSource;
 
-	AudioBuffer(const AudioBuffer&) = delete;
-	AudioBuffer(AudioBuffer&& buffer);
-	
-	class Handle {
-	 public:
-		friend class AudioBuffer;
+  AudioBuffer(RawAudioData&& raw_data);
+  ~AudioBuffer();
 
-		Handle(AudioBuffer* buffer) : buffer_(buffer) {
-			++buffer_->handle_count_;
-		};
+  AudioBuffer(const AudioBuffer&) = delete;
+  AudioBuffer(AudioBuffer&& buffer);
 
-		~Handle() {
-			if (buffer_ != nullptr) {
-				--buffer_->handle_count_;
-			}
-		}
+  class Handle {
+   public:
+    friend class AudioBuffer;
 
-		Handle(const Handle& handle) : buffer_(handle.buffer_) {
-			++buffer_->handle_count_;
-		};
+    Handle(AudioBuffer* buffer) : buffer_(buffer) { ++buffer_->handle_count_; };
 
-		Handle(Handle&& handle) : buffer_(handle.buffer_) {
-      handle.buffer_ = nullptr;
-    };
+    ~Handle() {
+      if (buffer_ != nullptr) {
+        --buffer_->handle_count_;
+      }
+    }
 
-		
-		//mb skip this func? yeah need to skip
-		AudioBuffer* GetBuffer() {
-			return buffer_;
-		}
+    Handle(const Handle& handle) : buffer_(handle.buffer_) { ++buffer_->handle_count_; };
 
-	 private:
-		AudioBuffer* buffer_;
-	};
+    Handle(Handle&& handle) : buffer_(handle.buffer_) { handle.buffer_ = nullptr; };
 
-	Handle GetHandle() {
-		return Handle(this);
-	}
+    // mb skip this func? yeah need to skip
+    AudioBuffer* GetBuffer() { return buffer_; }
+
+   private:
+    AudioBuffer* buffer_;
+  };
+
+  Handle GetHandle() { return Handle(this); }
 
  public:
-	ALuint al_buffer_handle_;
-	void* audio_data_;
+  ALuint al_buffer_handle_;
+  void* audio_data_;
 
-	size_t handle_count_{0};
+  size_t handle_count_{0};
 };
 
-} // namespace vulture
+}  // namespace vulture

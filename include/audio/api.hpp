@@ -27,26 +27,25 @@
 
 #pragma once
 
-#include "audio/audio_source.hpp"
-#include "audio/audio_buffer.hpp"
-#include "audio/buffer_manager.hpp"
-
-#include "core/logger.hpp"
-
 #include <filesystem>
+
+#include "audio/audio_buffer.hpp"
+#include "audio/audio_source.hpp"
+#include "audio/buffer_manager.hpp"
+#include "core/logger.hpp"
 
 namespace vulture {
 
 void LoadFromFolder(BufferManager* manager, const char* folder_path) {
-    std::filesystem::path folder(folder_path);
-    for(auto const& dir_entry: std::filesystem::directory_iterator(folder)) {
-        std::filesystem::path curr_path(dir_entry);
-        if (manager->LoadAudioFile(curr_path.c_str())) {
-            LOG_ERROR(audio_loader, "Could Load file {} into BufferManager", curr_path.c_str());
-        } else {
-            LOG_INFO(audio_loader, "Loaded file {} into BufferManager", curr_path.c_str());
-        }
+  std::filesystem::path folder(folder_path);
+  for (auto const& dir_entry : std::filesystem::directory_iterator(folder)) {
+    std::filesystem::path curr_path(dir_entry);
+    if (manager->LoadAudioFile(curr_path.c_str())) {
+      LOG_ERROR(audio_loader, "Could Load file {} into BufferManager", curr_path.c_str());
+    } else {
+      LOG_INFO(audio_loader, "Loaded file {} into BufferManager", curr_path.c_str());
     }
+  }
 }
 
-} // namespace vulture
+}  // namespace vulture
