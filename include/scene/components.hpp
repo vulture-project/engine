@@ -68,7 +68,7 @@ struct CameraComponent {
 struct MeshComponent {
   SharedPtr<Mesh> mesh{nullptr};
 
-  ModelNode3D* runtime_node{nullptr};
+  MeshNode3D* runtime_node{nullptr};
 
   MeshComponent() = default;
   MeshComponent(SharedPtr<Mesh> mesh) : mesh(mesh) {}

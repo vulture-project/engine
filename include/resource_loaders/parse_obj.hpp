@@ -44,12 +44,15 @@ namespace vulture {
  */
 SharedPtr<Mesh> ParseMeshWavefront(const std::string& filename);
 
+using MapMaterials = std::map<std::string, SharedPtr<Material>>;
+
 /**
- * @brief Loads a Material from the specified Wavefront file.
+ * @brief Loads materials from the specified Wavefront (.mtl) file.
  * 
  * @param filename 
- * @return SharedPtr<Material> 
+ * @param materials 
+ * @return Whether parsed successfully.
  */
-SharedPtr<Material> ParseMaterialWavefront(const std::string& filename);
+bool ParseMaterialsWavefront(const std::string& filename, MapMaterials& materials);
 
 }  // namespace vulture

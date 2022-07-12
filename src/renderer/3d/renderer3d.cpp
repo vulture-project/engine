@@ -51,22 +51,24 @@ void Renderer3D::RenderScene(Scene3D* scene) {
     return;
   }
 
-  for (const auto& model : scene->GetModels()) {
-    auto shader = model->mesh->GetMaterial()->GetShader();
-    shader->Bind();
+  for (const auto& mesh : scene->GetMeshes()) {
+    for (auto& submesh : mesh->mesh->GetSubmeshes()) {
+      auto shader = submesh.GetMaterial()->GetShader();
+      shader->Bind();
 
-    SetUpCamera(scene, shader);
-    SetUpLights(scene, shader);
+      SetUpCamera(scene, shader);
+      SetUpLights(scene, shader);
 
-    /* Setting up transformation matrices */
-    shader->LoadUniformMat4(scene->GetMainCamera()->CalculateProjectionViewMatrix(), kUniformNameProjectionView);
-    shader->LoadUniformMat4(model->transform.CalculateMatrix(), kUniformNameModel);
+      /* Setting up transformation matrices */
+      shader->LoadUniformMat4(scene->GetMainCamera()->CalculateProjectionViewMatrix(), kUniformNameProjectionView);
+      shader->LoadUniformMat4(mesh->transform.CalculateMatrix(), kUniformNameModel);
 
-    /* Setting up material info */
-    model->mesh->GetMaterial()->LoadUniformsToShader();
+      /* Setting up material info */
+      submesh.GetMaterial()->LoadUniformsToShader();
 
-    /* Drawing */
-    rendererAPI_->Draw(*model->mesh->GetVertexArray());
+      /* Drawing */
+      rendererAPI_->Draw(*submesh.GetVertexArray());
+    }
   }
 }
 

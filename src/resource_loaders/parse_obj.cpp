@@ -69,10 +69,19 @@ SharedPtr<Mesh> vulture::ParseMeshWavefront(const std::string& filename) {
   };
 
   struct Face {
+    SharedPtr<Material> material{nullptr};
     Vertex vertices[3];
   };
 
   LOG_INFO(Renderer, "Loading mesh from file \"{}\"", filename);
+
+  SharedPtr<Material> default_material = CreateShared<Material>(ResourceManager::LoadShader("res/shaders/basic.glsl"));
+  default_material->SetUniform(glm::vec3{1.0}, "{}.{}", kUniformNameMaterial, kStructMemberNameAmbientColor);
+  default_material->SetUniform(glm::vec3{0.8}, "{}.{}", kUniformNameMaterial, kStructMemberNameDiffuseColor);
+  default_material->SetUniform(glm::vec3{0.5}, "{}.{}", kUniformNameMaterial, kStructMemberNameSpecularColor);
+  default_material->SetUniform(225.0f, "{}.{}", kUniformNameMaterial, kStructMemberNameSpecularExponent);
+  default_material->AddTexture(ResourceManager::LoadTexture("res/textures/blank.png"), "{}.{}", kUniformNameMaterial,
+                               kStructMemberNameDiffuseMap);
 
   std::vector<glm::vec3> positions;
   std::vector<glm::vec2> uvs;
@@ -85,8 +94,11 @@ SharedPtr<Mesh> vulture::ParseMeshWavefront(const std::string& filename) {
     return nullptr;
   }
 
-  static char material_filename[128];
+  static char name[128];
+
   bool material_specified = false;
+  MapMaterials materials;
+  SharedPtr<Material> cur_material{nullptr};
 
   std::string cur_line;
   while (std::getline(stream, cur_line)) {
@@ -107,22 +119,40 @@ SharedPtr<Mesh> vulture::ParseMeshWavefront(const std::string& filename) {
                                                                     &indices[3], &indices[4], &indices[5],
                                                                     &indices[6], &indices[7], &indices[8]);
 
-      faces.push_back(Face{{Vertex{indices[0] - 1, indices[1] - 1, indices[2] - 1},
-                            Vertex{indices[3] - 1, indices[4] - 1, indices[5] - 1},
-                            Vertex{indices[6] - 1, indices[7] - 1, indices[8] - 1}}});
+      faces.push_back(Face{cur_material, {Vertex{indices[0] - 1, indices[1] - 1, indices[2] - 1},
+                                          Vertex{indices[3] - 1, indices[4] - 1, indices[5] - 1},
+                                          Vertex{indices[6] - 1, indices[7] - 1, indices[8] - 1}}});
     }
-    else if (std::sscanf(cur_line.c_str(), "mtllib %s", material_filename) == 1) {
-      material_specified = true;
+    else if (std::sscanf(cur_line.c_str(), "usemtl %s", name) == 1) {
+      if (material_specified && materials.find(name) != materials.end()) {
+        cur_material = materials[name];
+      } else {
+        LOG_WARN(Renderer, "No material \"{}\" found!", name);
+        cur_material = default_material;
+      }
+    }
+    else if (std::sscanf(cur_line.c_str(), "mtllib %s", name) == 1) {
+      if (ParseMaterialsWavefront(name, materials)) {
+        material_specified = true;
+      }
     }
   }
 
   MapVertexToIndex vertexToOutIndex;
 
   std::vector<PackedVertex> out_vertices;
-  std::vector<uint32_t> out_indices;
+  std::vector<std::vector<uint32_t>> out_indices{1};
+  std::vector<SharedPtr<Material>> out_materials{faces[0].material};
+  cur_material = out_materials[0];
 
   for (uint32_t i = 0; i < faces.size(); ++i) {
     for (uint32_t j = 0; j < 3; ++j) {
+      if (cur_material != faces[i].material) {
+        out_materials.push_back(faces[i].material);
+        cur_material = faces[i].material;
+        out_indices.push_back({});
+      }
+
       PackedVertex packed;
       packed.position = positions[faces[i].vertices[j].index_position];
       packed.uv       = uvs      [faces[i].vertices[j].index_uv      ];
@@ -132,101 +162,95 @@ SharedPtr<Mesh> vulture::ParseMeshWavefront(const std::string& filename) {
       bool found = GetSimilarVertexIndex(packed, vertexToOutIndex, &index);
 
       if (found) {
-        out_indices.push_back(index);
+        out_indices[out_indices.size() - 1].push_back(index);
       } else {
         out_vertices.push_back(packed);
-        out_indices.push_back(out_vertices.size() - 1);
+        out_indices[out_indices.size() - 1].push_back(out_vertices.size() - 1);
         vertexToOutIndex[packed] = out_vertices.size() - 1;
       }
     }
   }
+
+  SharedPtr<Mesh> mesh = CreateShared<Mesh>();
 
   SharedPtr<VertexBuffer> vbo{VertexBuffer::Create(out_vertices.data(), out_vertices.size() * sizeof(out_vertices[0]))};
   vbo->SetLayout(VertexBufferLayout{{BufferDataType::kFloat3, kAttribNameMSPosition},
                                     {BufferDataType::kFloat2, kAttribNameUV},
                                     {BufferDataType::kFloat3, kAttribNameMSNormal}});
 
-  SharedPtr<IndexBuffer> ibo{IndexBuffer::Create(out_indices.data(), out_indices.size())};
+  for (uint32_t i = 0; i < out_indices.size(); ++i) {
+    SharedPtr<IndexBuffer> ibo{IndexBuffer::Create(out_indices[i].data(), out_indices[i].size())};
 
-  SharedPtr<VertexArray> vao{VertexArray::Create()};
-  vao->AddVertexBuffer(vbo);
-  vao->SetIndexBuffer(ibo);
+    SharedPtr<VertexArray> vao{VertexArray::Create()};
+    vao->AddVertexBuffer(vbo);
+    vao->SetIndexBuffer(ibo);
 
-  LOG_INFO(Renderer,
-           "Successfully loaded mesh from file \"{}\" (position={}, uvs={}, normals={}, faces={} | out_vertices={}, "
-           "out_indices={})",
-           filename, positions.size(), uvs.size(), normals.size(), faces.size(), out_vertices.size(),
-           out_indices.size());
-
-  SharedPtr<Material> material = nullptr;
-
-  if (!material_specified) {
-    LOG_WARN(Renderer, "Wavefront mesh file \"{}\" doesn't specify material info, using default material!", filename);
-
-    // material = CreateShared<Material>(Shader::Create("res/shaders/basic.glsl"));
-    material = CreateShared<Material>(ResourceManager::LoadShader("res/shaders/basic.glsl"));
-    material->SetUniform(glm::vec3{1.0}, "{}.{}", kUniformNameMaterial, kStructMemberNameAmbientColor);
-    material->SetUniform(glm::vec3{0.8}, "{}.{}", kUniformNameMaterial, kStructMemberNameDiffuseColor);
-    material->SetUniform(glm::vec3{0.5}, "{}.{}", kUniformNameMaterial, kStructMemberNameSpecularColor);
-    material->SetUniform(225.0f, "{}.{}", kUniformNameMaterial, kStructMemberNameSpecularExponent);
-    // material->AddTexture(Texture::Create("res/textures/blank.png"), "{}.{}", kUniformNameMaterial,
-    //                      kStructMemberNameDiffuseMap);
-    material->AddTexture(ResourceManager::LoadTexture("res/textures/blank.png"), "{}.{}", kUniformNameMaterial,
-                         kStructMemberNameDiffuseMap);
-  } else {
-    material = ParseMaterialWavefront(material_filename);
+    mesh->GetSubmeshes().emplace_back(vao, out_materials[i]);
   }
 
-  return CreateShared<Mesh>(vao, material);
+  LOG_INFO(Renderer,
+           "Successfully loaded mesh from file \"{}\" (submeshes={}, positions={}, uvs={}, normals={}, faces={}, "
+           "out_vertices={})",
+           filename, mesh->GetSubmeshes().size(), positions.size(), uvs.size(), normals.size(), faces.size(),
+           out_vertices.size());
+
+  return mesh;
 }
 
-SharedPtr<Material> vulture::ParseMaterialWavefront(const std::string& filename) {
-  LOG_INFO(Renderer, "Loading material from file \"{}\"", filename);
+bool vulture::ParseMaterialsWavefront(const std::string& filename, MapMaterials& materials) {
+  LOG_INFO(Renderer, "Loading materials from file \"{}\"", filename);
 
   std::ifstream stream(filename);
   if (stream.fail()) {
     LOG_ERROR(Renderer, "Failed to open file \"{}\"", filename);
-    return nullptr;
+    return false;
   }
 
-  // SharedPtr<Material> material{CreateShared<Material>(Shader::Create("res/shaders/basic.glsl"))};
-  SharedPtr<Material> material{CreateShared<Material>(ResourceManager::LoadShader("res/shaders/basic.glsl"))};
-
-  bool diffuse_map_found = false;
+  SharedPtr<Material> cur_material;
+  bool cur_diffuse_map_found = false;
+  uint32_t materials_count = 0;
 
   std::string cur_line;
   while (std::getline(stream, cur_line)) {
     glm::vec3 value3f{0};
     float value1f = 0;
-
     static char name[128];
 
-    if (std::sscanf(cur_line.c_str(), "Ka %f %f %f", &value3f[0], &value3f[1], &value3f[2]) == 3) {
-      material->SetUniform(value3f, "{}.{}", kUniformNameMaterial, kStructMemberNameAmbientColor);
+    if (std::sscanf(cur_line.c_str(), "newmtl %s", name) == 1) {
+      if (!cur_diffuse_map_found && materials_count > 0) {
+        cur_material->AddTexture(ResourceManager::LoadTexture("res/textures/blank.png"), "{}.{}", kUniformNameMaterial,
+                                 kStructMemberNameDiffuseMap);
+      }
+
+      cur_material = CreateShared<Material>(ResourceManager::LoadShader("res/shaders/basic.glsl"));
+      materials[name] = cur_material;
+      cur_diffuse_map_found = false;
+      ++materials_count;
+    }
+    else if (std::sscanf(cur_line.c_str(), "Ka %f %f %f", &value3f[0], &value3f[1], &value3f[2]) == 3) {
+      cur_material->SetUniform(value3f, "{}.{}", kUniformNameMaterial, kStructMemberNameAmbientColor);
     }
     else if (std::sscanf(cur_line.c_str(), "Kd %f %f %f", &value3f[0], &value3f[1], &value3f[2]) == 3) {
-      material->SetUniform(value3f, "{}.{}", kUniformNameMaterial, kStructMemberNameDiffuseColor);
+      cur_material->SetUniform(value3f, "{}.{}", kUniformNameMaterial, kStructMemberNameDiffuseColor);
     }
     else if (std::sscanf(cur_line.c_str(), "Ks %f %f %f", &value3f[0], &value3f[1], &value3f[2]) == 3) {
-      material->SetUniform(value3f, "{}.{}", kUniformNameMaterial, kStructMemberNameSpecularColor);
+      cur_material->SetUniform(value3f, "{}.{}", kUniformNameMaterial, kStructMemberNameSpecularColor);
     }
     else if (std::sscanf(cur_line.c_str(), "Ns %f", &value1f) == 1) {
-      material->SetUniform(value3f, "{}.{}", kUniformNameMaterial, kStructMemberNameSpecularExponent);
+      cur_material->SetUniform(value3f, "{}.{}", kUniformNameMaterial, kStructMemberNameSpecularExponent);
     }
     else if (std::sscanf(cur_line.c_str(), "map_Kd %s", name) == 1) {
-      material->AddTexture(Texture::Create(name), "{}.{}", kUniformNameMaterial, kStructMemberNameDiffuseMap);
-      diffuse_map_found = true;
+      cur_material->AddTexture(Texture::Create(name), "{}.{}", kUniformNameMaterial, kStructMemberNameDiffuseMap);
+      cur_diffuse_map_found = true;
     }
   }
 
-  if (!diffuse_map_found) {
-    // material->AddTexture(Texture::Create("res/textures/blank.png"), "{}.{}", kUniformNameMaterial,
-    //                      kStructMemberNameDiffuseMap);
-    material->AddTexture(ResourceManager::LoadTexture("res/textures/blank.png"), "{}.{}", kUniformNameMaterial,
-                         kStructMemberNameDiffuseMap);
+  if (!cur_diffuse_map_found && materials_count == 0) {
+    cur_material->AddTexture(ResourceManager::LoadTexture("res/textures/blank.png"), "{}.{}", kUniformNameMaterial,
+                             kStructMemberNameDiffuseMap);
   }
 
-  LOG_INFO(Renderer, "Successfully loaded material from file \"{}\"", filename);
+  LOG_INFO(Renderer, "Successfully loaded materials from file \"{}\"", filename);
 
-  return material;
+  return true;
 }

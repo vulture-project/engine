@@ -64,16 +64,16 @@ void Scene::Render() {
     light->runtime_node->transform = ComputeWorldSpaceTransform(entity);
   }
 
-  auto models = GetView<MeshComponent>(entities_);
-  for (auto [entity, model] : models) {
+  auto meshes = GetView<MeshComponent>(entities_);
+  for (auto [entity, mesh] : meshes) {
     // TODO: (tralf-strues) Add component create listeners to not check the existence of runtime nodes
-    if (!model->runtime_node) {
-      model->runtime_node = new ModelNode3D(model->mesh);
-      scene_.AddModel(model->runtime_node);
+    if (!mesh->runtime_node) {
+      mesh->runtime_node = new MeshNode3D(mesh->mesh);
+      scene_.AddMesh(mesh->runtime_node);
     }
 
     assert(entity.HasComponent<TransformComponent>());
-    model->runtime_node->transform = ComputeWorldSpaceTransform(entity);
+    mesh->runtime_node->transform = ComputeWorldSpaceTransform(entity);
   }
 
   auto cameras = GetView<CameraComponent>(entities_);

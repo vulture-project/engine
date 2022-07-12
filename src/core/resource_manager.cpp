@@ -38,7 +38,7 @@ std::unordered_map<std::string, WeakPtr<Texture>> ResourceManager::textures_{};
 SharedPtr<Shader> ResourceManager::LoadShader(const std::string& path) {
   LOG_INFO(ResourceManager, "Loading shader from {}", path);
   
-  if (auto it = shaders_.find(path); it != shaders_.end()) {
+  if (auto it = shaders_.find(path); it != shaders_.end() && !it->second.expired()) {
     LOG_INFO(ResourceManager, "Shader is already loaded");
     return SharedPtr<Shader>(it->second);
   }
@@ -52,7 +52,7 @@ SharedPtr<Shader> ResourceManager::LoadShader(const std::string& path) {
 
 SharedPtr<Mesh> ResourceManager::LoadMesh(const std::string& path) {
   LOG_INFO(ResourceManager, "Loading mesh from {}", path);
-  if (auto it = meshes_.find(path); it != meshes_.end()) {
+  if (auto it = meshes_.find(path); it != meshes_.end() && !it->second.expired()) {
     LOG_INFO(ResourceManager, "Mesh is already loaded");
     return SharedPtr<Mesh>(it->second);
   }
@@ -67,7 +67,7 @@ SharedPtr<Mesh> ResourceManager::LoadMesh(const std::string& path) {
 SharedPtr<Texture> ResourceManager::LoadTexture(const std::string& path) {
   LOG_INFO(ResourceManager, "Loading texture from {}", path);
 
-  if (auto it = textures_.find(path); it != textures_.end()) {
+  if (auto it = textures_.find(path); it != textures_.end() && !it->second.expired()) {
     LOG_INFO(ResourceManager, "Texture is already loaded");
     return SharedPtr<Texture>(it->second);
   }

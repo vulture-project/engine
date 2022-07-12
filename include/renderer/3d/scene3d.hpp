@@ -120,10 +120,10 @@ class LightSourceNode3D : public SceneNode3D {
   bool enabled_{true};
 };
 
-struct ModelNode3D : public SceneNode3D {
+struct MeshNode3D : public SceneNode3D {
   SharedPtr<Mesh> mesh;
 
-  ModelNode3D(SharedPtr<Mesh> mesh, const Transform& transform = Transform()) : SceneNode3D(transform), mesh(mesh) {}
+  MeshNode3D(SharedPtr<Mesh> mesh, const Transform& transform = Transform()) : SceneNode3D(transform), mesh(mesh) {}
 };
 
 //================================================================
@@ -145,16 +145,16 @@ class Scene3D {
   void RemoveLightSource(LightSourceNode3D* light_source);
   const std::list<LightSourceNode3D*>& GetLightSources() const;
 
-  void AddModel(ModelNode3D* model);
-  void RemoveModel(ModelNode3D* model);
-  const std::list<ModelNode3D*>& GetModels() const;
+  void AddMesh(MeshNode3D* mesh);
+  void RemoveMesh(MeshNode3D* mesh);
+  const std::list<MeshNode3D*>& GetMeshes() const;
 
  private:
   CameraNode3D* main_camera_{nullptr};
 
   std::list<CameraNode3D*> cameras_;
   std::list<LightSourceNode3D*> light_sources_;
-  std::list<ModelNode3D*> models_;
+  std::list<MeshNode3D*> meshes_;
 };
 
 }  // namespace vulture

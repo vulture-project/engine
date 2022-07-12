@@ -232,11 +232,11 @@ void SandboxApp::Run() {
   #define CREATE_2LIGHTS(NUM) \
     EntityHandle lamp_light_##NUM = scene_.CreateChildEntity(street_lamp##NUM); \
     lamp_light_##NUM.AddComponent<LightSourceComponent>(PointLightSpecs( \
-        LightColorSpecs(glm::vec3(0.01), glm::vec3(0.15, 0.15, 0), glm::vec3(0.01)), LightAttenuationSpecs(15))); \
+        LightColorSpecs(glm::vec3(0.05), glm::vec3(0.5, 0.5, 0), glm::vec3(0.1)), LightAttenuationSpecs(10))); \
     lamp_light_##NUM.AddComponent<TransformComponent>(glm::vec3(0, 8, 0)); \
     EntityHandle lamp_light_##NUM##_symm = scene_.CreateChildEntity(street_lamp##NUM##_symm); \
     lamp_light_##NUM##_symm.AddComponent<LightSourceComponent>(PointLightSpecs( \
-        LightColorSpecs(glm::vec3(0.01), glm::vec3(0.15, 0.15, 0), glm::vec3(0.01)), LightAttenuationSpecs(15))); \
+        LightColorSpecs(glm::vec3(0.05), glm::vec3(0.5, 0.5, 0), glm::vec3(0.1)), LightAttenuationSpecs(10))); \
     lamp_light_##NUM##_symm.AddComponent<TransformComponent>(glm::vec3(0, 8, 0));
 
   CREATE_2LIGHTS(0)
@@ -253,6 +253,10 @@ void SandboxApp::Run() {
   PlayerMovementScript* dog_movement = new PlayerMovementScript;
   dispatcher.GetSink<JumpEvent>().Connect<&PlayerMovementScript::OnJump>(*dog_movement);
   dog.AddComponent<ScriptComponent>(dog_movement);
+
+  EntityHandle guard = scene_.CreateEntity();
+  guard.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/Low_poly_guard.obj"));
+  guard.AddComponent<TransformComponent>(Transform(glm::vec3(5, 0, 0), glm::vec3(0), glm::vec3(3)));
 
   /*
   EntityHandle statue1 = scene_.CreateEntity();
@@ -288,7 +292,7 @@ void SandboxApp::Run() {
 
   dir_light = new EntityHandle(scene_.CreateEntity());
   dir_light->AddComponent<LightSourceComponent>(
-      DirectionalLightSpecs(LightColorSpecs(glm::vec3(0.01), glm::vec3(0.01), glm::vec3(0.01))));
+      DirectionalLightSpecs(LightColorSpecs(glm::vec3(0.01), glm::vec3(0.08), glm::vec3(0.01))));
   dir_light->AddComponent<TransformComponent>(Transform(glm::vec3(0), glm::vec3(-0.5, 0, 0)));
 
   spot_light = new EntityHandle(scene_.CreateChildEntity(dog));

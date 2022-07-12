@@ -38,8 +38,8 @@ Scene3D::~Scene3D() {
     delete light_source;
   }
 
-  for (auto model : models_) {
-    delete model;
+  for (auto mesh : meshes_) {
+    delete mesh;
   }
 }
 
@@ -54,6 +54,6 @@ void Scene3D::AddLightSource(LightSourceNode3D* light_source) { light_sources_.p
 void Scene3D::RemoveLightSource(LightSourceNode3D* light_source) { light_sources_.remove(light_source); }
 const std::list<LightSourceNode3D*>& Scene3D::GetLightSources() const { return light_sources_; }
 
-void Scene3D::AddModel(ModelNode3D* model) { models_.push_back(model); }
-void Scene3D::RemoveModel(ModelNode3D* model) { models_.remove(model); }
-const std::list<ModelNode3D*>& Scene3D::GetModels() const { return models_; }
+void Scene3D::AddMesh(MeshNode3D* mesh) { meshes_.push_back(mesh); }
+void Scene3D::RemoveMesh(MeshNode3D* mesh) { meshes_.remove(mesh); }
+const std::list<MeshNode3D*>& Scene3D::GetMeshes() const { return meshes_; }

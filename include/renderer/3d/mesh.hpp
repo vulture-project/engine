@@ -35,10 +35,10 @@
 
 namespace vulture {
 
-class Mesh {
+class Submesh {
  public:
-  Mesh() = default;
-  Mesh(SharedPtr<VertexArray> vertex_array, SharedPtr<Material> material)
+  Submesh() = default;
+  Submesh(SharedPtr<VertexArray> vertex_array, SharedPtr<Material> material)
       : vertex_array_(vertex_array), material_(material) {
     assert(material_->GetShader());
     vertex_array_->SetAttributeLocations(material_->GetShader()->GetAttributeLocations());
@@ -52,9 +52,24 @@ class Mesh {
   SharedPtr<Material> material_{nullptr};
 };
 
+class Mesh {
+ public:
+  Mesh() = default;
+
+  Mesh(SharedPtr<VertexArray> vertex_array, SharedPtr<Material> material) {
+    assert(material->GetShader());
+    submeshes_.emplace_back(vertex_array, material);
+  }
+
+  std::vector<Submesh>& GetSubmeshes() { return submeshes_; }
+
+ private:
+  std::vector<Submesh> submeshes_;
+};
+
 /**
  * @brief Create a skybox from 6 images.
- * 
+ *
  * The order of side images is the following:
  * 1) Right
  * 2) Left
@@ -62,9 +77,9 @@ class Mesh {
  * 4) Bottom
  * 5) Front
  * 6) Back
- * 
- * @param faces_filenames 
- * @return SharedPtr<Mesh> 
+ *
+ * @param faces_filenames
+ * @return SharedPtr<Mesh>
  */
 SharedPtr<Mesh> CreateSkyboxMesh(const std::array<std::string, 6>& faces_filenames);
 
