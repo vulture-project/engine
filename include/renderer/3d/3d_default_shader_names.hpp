@@ -42,6 +42,7 @@ constexpr uint32_t kMaxUniformNameLength = 128;
 
 constexpr const char* kAttribNameMSPosition = "in_ms_position";
 constexpr const char* kAttribNameMSNormal   = "in_ms_normal";
+constexpr const char* kAttribNameMSTangent  = "in_ms_tangent";
 constexpr const char* kAttribNameUV         = "in_uv";
 
 //! @}
@@ -88,9 +89,12 @@ constexpr const char* kStructMemberNameWSDirection          = "ws_direction";
 constexpr const char* kStructMemberNameAmbientColor         = "color_ambient";
 constexpr const char* kStructMemberNameDiffuseColor         = "color_diffuse";
 constexpr const char* kStructMemberNameSpecularColor        = "color_specular";
-constexpr const char* kStructMemberNameSpecularExponent     = "color_specular";
+constexpr const char* kStructMemberNameSpecularExponent     = "specular_exponent";
+
+constexpr const char* kStructMemberNameNormalStrength       = "normal_strength";
 
 constexpr const char* kStructMemberNameDiffuseMap           = "map_diffuse";
+constexpr const char* kStructMemberNameNormalMap            = "map_normal";
 
 constexpr const char* kStructMemberNameAttenuationLinear    = "attenuation_linear";
 constexpr const char* kStructMemberNameAttenuationQuadratic = "attenuation_quadratic";

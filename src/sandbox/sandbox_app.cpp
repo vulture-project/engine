@@ -113,28 +113,14 @@ class PlayerMovementScript : public IScript {
  public:
   constexpr static float kSpeed = 15;
 
-  void OnMouseMove(const MouseMoveEvent& event) {
-    static float prev_x = 0;
-    static float prev_y = 0;
-    
-    float dx = prev_x - event.x;
-    float dy = prev_y - event.y;
-
-    Transform* transform = &entity_->GetComponent<TransformComponent>()->transform;
-    transform->Rotate(0.001f * dx, kDefaultUpVector);
-
-    //transform->rotation.x += 0.001f * dy;
-
-    listener->SetOrientation(transform->CalculateMatrix() * glm::vec4(kDefaultForwardVector, 1),
-                             transform->CalculateMatrix() * glm::vec4(kDefaultUpVector, 1));
-
-    prev_x = event.x;
-    prev_y = event.y;
+  void SetSkybox(EntityHandle skybox) {
+    skybox_ = new EntityHandle(skybox);
   }
 
   virtual void OnAttach(EntityHandle entity, Dispatcher& dispatcher) override {
     entity_ = new EntityHandle(entity);
     dispatcher.GetSink<MouseMoveEvent>().Connect<&PlayerMovementScript::OnMouseMove>(*this);
+    dispatcher.GetSink<JumpEvent>().Connect<&PlayerMovementScript::OnJump>(*this);
   }
 
   virtual void OnUpdate(float timestep) override {
@@ -160,23 +146,42 @@ class PlayerMovementScript : public IScript {
     speed_ -= glm::vec3(0, 10, 0) * timestep;
     transform->translation += speed_ * timestep;
 
-    transform->translation.y = std::max(0.0f, transform->translation.y);
+    transform->translation.y = std::max(2.5f, transform->translation.y);
 
     listener->SetLocation(transform->translation);
+
+    skybox_->GetComponent<TransformComponent>()->transform.translation = transform->translation;
+  }
+
+  void OnMouseMove(const MouseMoveEvent& event) {
+    static float prev_x = 0;
+    static float prev_y = 0;
+    
+    float dx = prev_x - event.x;
+    float dy = prev_y - event.y;
+
+    Transform* transform = &entity_->GetComponent<TransformComponent>()->transform;
+    rotation_y += 0.001f * dx;
+    rotation_z += 0.001f * dy;
+    transform->rotation = glm::quat(glm::vec3(rotation_z, rotation_y, 0));
+
+    listener->SetOrientation(transform->CalculateMatrix() * glm::vec4(kDefaultForwardVector, 1),
+                             transform->CalculateMatrix() * glm::vec4(kDefaultUpVector, 1));
+
+    prev_x = event.x;
+    prev_y = event.y;
   }
 
   void OnJump(const JumpEvent&) {
     speed_ = glm::vec3(0, 4, 0);
   }
 
-  virtual ~PlayerMovementScript() override {
-    delete entity_;
-  }
-
 private:
-  glm::vec3 speed{0, 0, 0};
   EntityHandle* entity_{nullptr}; // FIXME:
+  EntityHandle* skybox_{nullptr};
   glm::vec3 speed_{0};
+  float rotation_y{0}; // Yaw
+  float rotation_z{0}; // Pitch
 };
 
 void SandboxApp::Run() {
@@ -186,9 +191,21 @@ void SandboxApp::Run() {
 
   float aspect_ratio = (float)frame_buffer_width / (float)frame_buffer_height;
 
+  EntityHandle guard = scene_.CreateEntity();
+  guard.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/Low_poly_guard.obj"));
+  guard.AddComponent<TransformComponent>(Transform(glm::vec3(5, 0, 0), glm::vec3(0), glm::vec3(3)));
+
+  EntityHandle nk_normals = scene_.CreateEntity();
+  nk_normals.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/nk_normals.obj"));
+  nk_normals.AddComponent<TransformComponent>();
+
   EntityHandle nk = scene_.CreateEntity();
   nk.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/nk.obj"));
-  nk.AddComponent<TransformComponent>();
+  nk.AddComponent<TransformComponent>(glm::vec3(26.336, 0, 0));
+
+  EntityHandle brick_cubes = scene_.CreateEntity();
+  brick_cubes.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/brick_cubes.obj"));
+  brick_cubes.AddComponent<TransformComponent>(Transform(glm::vec3(-5, 2, 0), glm::vec3(0), glm::vec3(2)));
 
   EntityHandle watch_tower = scene_.CreateEntity();
   // watch_tower.AddComponent<MeshComponent>(ResourcseManager::LoadMesh("res/meshes/wooden_watch_tower.obj"));
@@ -232,11 +249,11 @@ void SandboxApp::Run() {
   #define CREATE_2LIGHTS(NUM) \
     EntityHandle lamp_light_##NUM = scene_.CreateChildEntity(street_lamp##NUM); \
     lamp_light_##NUM.AddComponent<LightSourceComponent>(PointLightSpecs( \
-        LightColorSpecs(glm::vec3(0.05), glm::vec3(0.5, 0.5, 0), glm::vec3(0.1)), LightAttenuationSpecs(10))); \
+        LightColorSpecs(glm::vec3(0.005), glm::vec3(0.5, 0.5, 0.2), glm::vec3(0.05)), LightAttenuationSpecs(10))); \
     lamp_light_##NUM.AddComponent<TransformComponent>(glm::vec3(0, 8, 0)); \
     EntityHandle lamp_light_##NUM##_symm = scene_.CreateChildEntity(street_lamp##NUM##_symm); \
     lamp_light_##NUM##_symm.AddComponent<LightSourceComponent>(PointLightSpecs( \
-        LightColorSpecs(glm::vec3(0.05), glm::vec3(0.5, 0.5, 0), glm::vec3(0.1)), LightAttenuationSpecs(10))); \
+        LightColorSpecs(glm::vec3(0.005), glm::vec3(0.5, 0.5, 0.2), glm::vec3(0.05)), LightAttenuationSpecs(10))); \
     lamp_light_##NUM##_symm.AddComponent<TransformComponent>(glm::vec3(0, 8, 0));
 
   CREATE_2LIGHTS(0)
@@ -250,13 +267,9 @@ void SandboxApp::Run() {
   EntityHandle dog = scene_.CreateEntity();
   dog.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/dog.obj"));
   dog.AddComponent<TransformComponent>(Transform(glm::vec3(0, 0, 0), glm::vec3(0), glm::vec3(0.5, 0.4, 0.4)));
-  PlayerMovementScript* dog_movement = new PlayerMovementScript;
-  dispatcher.GetSink<JumpEvent>().Connect<&PlayerMovementScript::OnJump>(*dog_movement);
-  dog.AddComponent<ScriptComponent>(dog_movement);
-
-  EntityHandle guard = scene_.CreateEntity();
-  guard.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/Low_poly_guard.obj"));
-  guard.AddComponent<TransformComponent>(Transform(glm::vec3(5, 0, 0), glm::vec3(0), glm::vec3(3)));
+  // PlayerMovementScript* dog_movement = new PlayerMovementScript;
+  // dispatcher.GetSink<JumpEvent>().Connect<&PlayerMovementScript::OnJump>(*dog_movement);
+  // dog.AddComponent<ScriptComponent>(dog_movement);
 
   /*
   EntityHandle statue1 = scene_.CreateEntity();
@@ -277,28 +290,33 @@ void SandboxApp::Run() {
   // point_light.AddComponent<LightSourceComponent>(PointLightSpecs(
   //     LightColorSpecs(glm::vec3(0.1), glm::vec3(0.3, 0.3, 0), glm::vec3(0.01)), LightAttenuationSpecs(15)));
 
-  EntityHandle camera = scene_.CreateChildEntity(dog);
+  EntityHandle camera = scene_.CreateEntity();
   camera.AddComponent<CameraComponent>(PerspectiveCameraSpecs(aspect_ratio), true);
-  camera.AddComponent<TransformComponent>(Transform(glm::vec3{0, 7, 10}, glm::angleAxis(-0.3f, glm::vec3(1.0f, 0.0f, 0.0f))));
+  // camera.AddComponent<TransformComponent>(Transform(glm::vec3{0, 7, 10}, glm::angleAxis(-0.3f, glm::vec3(1.0f, 0.0f, 0.0f))));
+  camera.AddComponent<TransformComponent>(glm::vec3(0, 3, -3));
+  PlayerMovementScript* camera_movement = new PlayerMovementScript();
+  camera.AddComponent<ScriptComponent>(camera_movement);
 
-  EntityHandle skybox = scene_.CreateChildEntity(camera);
-  skybox.AddComponent<MeshComponent>(CreateSkyboxMesh({"res/textures/skybox_night_sky/skybox_night_sky_right.png",
-                                                       "res/textures/skybox_night_sky/skybox_night_sky_left.png",
-                                                       "res/textures/skybox_night_sky/skybox_night_sky_top.png",
-                                                       "res/textures/skybox_night_sky/skybox_night_sky_bottom.png",
-                                                       "res/textures/skybox_night_sky/skybox_night_sky_front.png",
-                                                       "res/textures/skybox_night_sky/skybox_night_sky_back.png"}));
+  EntityHandle skybox = scene_.CreateEntity();
+  skybox.AddComponent<MeshComponent>(CreateSkyboxMesh({"res/textures/skybox_morning_field/skybox_morning_field_right.jpeg",
+                                                       "res/textures/skybox_morning_field/skybox_morning_field_left.jpeg",
+                                                       "res/textures/skybox_morning_field/skybox_morning_field_top.jpeg",
+                                                       "res/textures/skybox_morning_field/skybox_morning_field_bottom.jpeg",
+                                                       "res/textures/skybox_morning_field/skybox_morning_field_front.jpeg",
+                                                       "res/textures/skybox_morning_field/skybox_morning_field_back.jpeg"}));
   skybox.AddComponent<TransformComponent>();
+  skybox.GetComponent<TransformComponent>()->transform.scale = glm::vec3(100);
+  camera_movement->SetSkybox(skybox);
 
   dir_light = new EntityHandle(scene_.CreateEntity());
   dir_light->AddComponent<LightSourceComponent>(
-      DirectionalLightSpecs(LightColorSpecs(glm::vec3(0.01), glm::vec3(0.08), glm::vec3(0.01))));
+      DirectionalLightSpecs(LightColorSpecs(glm::vec3(0), glm::vec3(0.9), glm::vec3(0.01))));
   dir_light->AddComponent<TransformComponent>(Transform(glm::vec3(0), glm::vec3(-0.5, 0, 0)));
 
-  spot_light = new EntityHandle(scene_.CreateChildEntity(dog));
+  spot_light = new EntityHandle(scene_.CreateChildEntity(camera));
   spot_light->AddComponent<LightSourceComponent>(SpotLightSpecs(
-      LightColorSpecs(glm::vec3(0.6, 0, 0), glm::vec3(0.6, 0, 0), glm::vec3(0)), LightAttenuationSpecs(100), cosf(0.2), cos(0.3)));
-  spot_light->AddComponent<TransformComponent>(glm::vec3(0, 3, -3));
+      LightColorSpecs(glm::vec3(0, 0, 0), glm::vec3(0.5, 0.5, 0.25), glm::vec3(0)), LightAttenuationSpecs(100), cosf(0.3), cos(0.5)));
+  spot_light->AddComponent<TransformComponent>(glm::vec3(0, 0, 0));
 
   Renderer3D::Init();
   Renderer3D::SetViewport(

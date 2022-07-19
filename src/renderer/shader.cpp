@@ -25,9 +25,14 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#include "renderer/shader.hpp"
+
+#include <fstream>
+#include <sstream>
+
+#include "core/logger.hpp"
 #include "platform/opengl/opengl_shader.hpp"
 #include "renderer/renderer_api.hpp"
-#include "renderer/shader.hpp"
 
 using namespace vulture;
 
@@ -40,9 +45,42 @@ SharedPtr<Shader> Shader::Create(const std::string& filename) {
   return nullptr;
 }
 
-SharedPtr<Shader> Shader::Create(const std::string& vertexShader, const std::string& fragmentShader) {
+// static SharedPtr<Shader> Create(const std::string& filename_vs, const std::string& filename_fs) {
+//   switch (RendererAPI::GetAPI()) {
+//     case RendererAPI::API::kOpenGL: {
+//       std::ifstream file_vs(filename_vs);
+//       if (file_vs.fail()) {
+//         LOG_WARN(Renderer, "Unable to locate file \"{}\"", filename_vs);
+//         return nullptr;
+//       }
+
+//       std::ifstream file_fs(filename_fs);
+//       if (file_fs.fail()) {
+//         LOG_WARN(Renderer, "Unable to locate file \"{}\"", filename_fs);
+//         return nullptr;
+//       }
+
+//       std::stringstream buffer;
+
+//       buffer << file_vs.rdbuf();
+//       std::string vertex_shader = buffer.str();
+
+//       buffer << file_fs.rdbuf();
+//       std::string fragment_shader = buffer.str();
+
+//       return CreateShared<OpenGLShader>(vertex_shader, fragment_shader);
+//     }
+//     default: {
+//       assert(!"Unsupported RendererAPI");
+//     }
+//   }
+
+//   return nullptr;
+// }
+
+SharedPtr<Shader> Shader::Create(const std::string& vertex_shader, const std::string& fragment_shader) {
   switch (RendererAPI::GetAPI()) {
-    case RendererAPI::API::kOpenGL: { return CreateShared<OpenGLShader>(vertexShader, fragmentShader); }
+    case RendererAPI::API::kOpenGL: { return CreateShared<OpenGLShader>(vertex_shader, fragment_shader); }
     default:                        { assert(!"Unsupported RendererAPI"); }
   }
 

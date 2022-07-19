@@ -63,7 +63,7 @@ static ShaderProgramSource ParseShader(const std::string& filename) {
 
   std::stringstream ss[static_cast<int32_t>(ShaderType::kTotal)];
   std::string cur_line;
-  int32_t cur_type;
+  int32_t cur_type{-1};
 
   while (std::getline(stream, cur_line)) {
     if (cur_line.find("#shader") != std::string::npos) {
@@ -72,12 +72,18 @@ static ShaderProgramSource ParseShader(const std::string& filename) {
           cur_type = i;
         }
       }
-    } else {
+    } else if (cur_type != -1) {
       ss[cur_type] << cur_line << '\n';
+    } else {
+      LOG_ERROR(Renderer, "No shader type specification found (like \"#shader vertex\") in {}!", filename);
+      return {nullptr, nullptr};
     }
   }
 
   LOG_INFO(Renderer, "Successfully parsed OpenGL shader source file \"{}\"", filename);
+
+  // printf("Vertex shader:\n%s\n",   ss[static_cast<int32_t>(ShaderType::kVertex)].str().c_str());
+  // printf("Fragment shader:\n%s\n", ss[static_cast<int32_t>(ShaderType::kFragment)].str().c_str());
 
   return {ss[static_cast<int32_t>(ShaderType::kVertex)].str(), ss[static_cast<int32_t>(ShaderType::kFragment)].str()};
 }

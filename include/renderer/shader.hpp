@@ -39,6 +39,7 @@ namespace vulture {
 class Shader {
  public:
   static SharedPtr<Shader> Create(const std::string& filename);
+  // static SharedPtr<Shader> Create(const std::string& filename_vs, const std::string& filename_fs);
   static SharedPtr<Shader> Create(const std::string& vertex_shader, const std::string& fragment_shader);
 
   virtual ~Shader() = default;
