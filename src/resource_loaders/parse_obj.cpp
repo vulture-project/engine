@@ -95,14 +95,16 @@ SharedPtr<Mesh> vulture::ParseMeshWavefront(const std::string& filename) {
 
   LOG_INFO(Renderer, "Loading mesh from file \"{}\"", filename);
 
-  SharedPtr<Material> default_material = CreateShared<Material>(ResourceManager::LoadShader("res/shaders/basic.glsl"));
+  SharedPtr<Material> default_material =
+      CreateShared<Material>(ResourceManager::LoadShader("res/shaders/basic_normal_mapped.glsl"));
   default_material->SetUniform(glm::vec3{1.0}, "{}.{}", kUniformNameMaterial, kStructMemberNameAmbientColor);
   default_material->SetUniform(glm::vec3{0.8}, "{}.{}", kUniformNameMaterial, kStructMemberNameDiffuseColor);
   default_material->SetUniform(glm::vec3{0.5}, "{}.{}", kUniformNameMaterial, kStructMemberNameSpecularColor);
   default_material->SetUniform(225.0f, "{}.{}", kUniformNameMaterial, kStructMemberNameSpecularExponent);
   default_material->SetUniform(1, "{}.{}", kUniformNameMaterial, kStructMemberNameNormalStrength);
-  default_material->AddTexture(ResourceManager::LoadTexture("res/textures/blank.png"),
-                               "{}.{}", kUniformNameMaterial, kStructMemberNameDiffuseMap);
+  default_material->SetUniform(0, "{}.{}", kUniformNameMaterial, kStructMemberNameUseNormalMap);
+  default_material->AddTexture(ResourceManager::LoadTexture("res/textures/blank.png"), "{}.{}", kUniformNameMaterial,
+                               kStructMemberNameDiffuseMap);
 
   std::vector<glm::vec3> positions;
   std::vector<glm::vec2> uvs;
@@ -309,10 +311,12 @@ bool vulture::ParseMaterialsWavefront(const std::string& filename, MapMaterials&
       material = CreateShared<Material>(ResourceManager::LoadShader("res/shaders/basic_normal_mapped.glsl"));
       material->AddTexture(ResourceManager::LoadTexture(*materials[i].map_normal), "{}.{}", kUniformNameMaterial,
                            kStructMemberNameNormalMap);
+      material->SetUniform(1, "{}.{}", kUniformNameMaterial, kStructMemberNameUseNormalMap);
       material->SetUniform(materials[i].normal_strength, "{}.{}", kUniformNameMaterial,
                            kStructMemberNameNormalStrength);
     } else {
-      material = CreateShared<Material>(ResourceManager::LoadShader("res/shaders/basic.glsl"));
+      material = CreateShared<Material>(ResourceManager::LoadShader("res/shaders/basic_normal_mapped.glsl"));
+      material->SetUniform(0, "{}.{}", kUniformNameMaterial, kStructMemberNameUseNormalMap);
     }
 
     if (materials[i].map_diffuse.has_value()) {

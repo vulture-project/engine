@@ -92,6 +92,7 @@ constexpr const char* kStructMemberNameSpecularColor        = "color_specular";
 constexpr const char* kStructMemberNameSpecularExponent     = "specular_exponent";
 
 constexpr const char* kStructMemberNameNormalStrength       = "normal_strength";
+constexpr const char* kStructMemberNameUseNormalMap         = "use_map_normal";
 
 constexpr const char* kStructMemberNameDiffuseMap           = "map_diffuse";
 constexpr const char* kStructMemberNameNormalMap            = "map_normal";

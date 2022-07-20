@@ -48,6 +48,8 @@ struct Material
     sampler2D map_diffuse;
     // sampler2D map_specular;
     sampler2D map_normal;
+
+    int use_map_normal;
 };
 
 struct DirectionalLight
@@ -137,6 +139,11 @@ void main()
 
 vec3 CalculateBumpNormal()
 {
+    if (u_material.use_map_normal == 0)
+    {
+        return ws_normal;
+    }
+
     // Gram-Schmidt proccess to make TBN orthonormal
     vec3 ws_bump_normal    = ws_normal;
     vec3 ws_bump_tangent   = ws_tangent;
