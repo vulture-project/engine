@@ -32,11 +32,11 @@
 #include "renderer/3d/renderer3d.hpp"
 #include "core/resource_manager.hpp"
 
-#include "audio/audio_device.hpp"
-#include "audio/audio_context.hpp"
-#include "audio/audio_source.hpp"
-#include "audio/audio_listener.hpp"
-#include "audio/buffer_manager.hpp"
+// #include "audio/audio_device.hpp"
+// #include "audio/audio_context.hpp"
+// #include "audio/audio_source.hpp"
+// #include "audio/audio_listener.hpp"
+// #include "audio/buffer_manager.hpp"
 
 using namespace vulture;
 
@@ -47,10 +47,10 @@ EntityHandle* dir_light{nullptr};
 
 vulture::Dispatcher dispatcher;
 
-AudioDevice* device;
-AudioContext* context;
-BufferManager* manager;
-AudioListener* listener;
+// AudioDevice* device;
+// AudioContext* context;
+// BufferManager* manager;
+// AudioListener* listener;
 
 SandboxApp::SandboxApp() : window_(1280, 960) {}
 
@@ -64,47 +64,47 @@ int SandboxApp::Init() {
 
   dispatcher.GetSink<KeyEvent>().Connect<&ProcessKeyEvent>();
 
-  device = new AudioDevice();
-  device->Open();
+  // device = new AudioDevice();
+  // device->Open();
 
-  context = new AudioContext(device);
-  context->MakeCurrent();
+  // context = new AudioContext(device);
+  // context->MakeCurrent();
 
-  listener = new AudioListener(context);
-  listener->MakeCurrent();
-  listener->SetVolume(1);
+  // listener = new AudioListener(context);
+  // listener->MakeCurrent();
+  // listener->SetVolume(1);
   
-  manager = new BufferManager();
-  manager->LoadAudioFile("res/sounds/woof.wav", "woof");
-  manager->LoadAudioFile("res/sounds/sci-fidrone.ogg", "noice");
+  // manager = new BufferManager();
+  // manager->LoadAudioFile("res/sounds/woof.wav", "woof");
+  // manager->LoadAudioFile("res/sounds/sci-fidrone.ogg", "noice");
 
-  context->CreateSource("woof_source");
-  context->CreateSource("noice_source");
+  // context->CreateSource("woof_source");
+  // context->CreateSource("noice_source");
 
-  vulture::AudioSource::Handle source_handle = context->GetSource("noice_source").value();
-  source_handle.SetBuf(manager->GetBuffer("noice").value());
-  source_handle.SetLocation({0, 0, 0});
-  source_handle.SetLooping(true);
+  // vulture::AudioSource::Handle source_handle = context->GetSource("noice_source").value();
+  // source_handle.SetBuf(manager->GetBuffer("noice").value());
+  // source_handle.SetLocation({0, 0, 0});
+  // source_handle.SetLooping(true);
   // source_handle.Play();
 
-  vulture::AudioSource::Handle source_handle2 = context->GetSource("woof_source").value();
-  source_handle2.SetBuf(manager->GetBuffer("woof").value());
+  // vulture::AudioSource::Handle source_handle2 = context->GetSource("woof_source").value();
+  // source_handle2.SetBuf(manager->GetBuffer("woof").value());
 
   return 0;
 }
 
 SandboxApp::~SandboxApp() {
   {
-    vulture::AudioSource::Handle source_handle = context->GetSource("noice_source").value();
-    source_handle.Stop();
+    // vulture::AudioSource::Handle source_handle = context->GetSource("noice_source").value();
+    // source_handle.Stop();
   }
 
-  delete listener;
-  delete context;
-  delete manager;
+  // delete listener;
+  // delete context;
+  // delete manager;
 
-  device->Close();
-  delete device;
+  // device->Close();
+  // delete device;
 }
 
 class JumpEvent {};
@@ -148,7 +148,7 @@ class PlayerMovementScript : public IScript {
 
     transform->translation.y = std::max(2.5f, transform->translation.y);
 
-    listener->SetLocation(transform->translation);
+    // listener->SetLocation(transform->translation);
 
     skybox_->GetComponent<TransformComponent>()->transform.translation = transform->translation;
   }
@@ -165,8 +165,8 @@ class PlayerMovementScript : public IScript {
     rotation_z += 0.001f * dy;
     transform->rotation = glm::quat(glm::vec3(rotation_z, rotation_y, 0));
 
-    listener->SetOrientation(transform->CalculateMatrix() * glm::vec4(kDefaultForwardVector, 1),
-                             transform->CalculateMatrix() * glm::vec4(kDefaultUpVector, 1));
+    // listener->SetOrientation(transform->CalculateMatrix() * glm::vec4(kDefaultForwardVector, 1),
+    //                          transform->CalculateMatrix() * glm::vec4(kDefaultUpVector, 1));
 
     prev_x = event.x;
     prev_y = event.y;
@@ -332,7 +332,8 @@ void SandboxApp::Run() {
   while (running) {
     float timestep = (0.0f + clock() - time_start) / CLOCKS_PER_SEC;
     time_start = clock();
-
+// andle = context->GetSource("noice_source").value();
+    // source_handle.Stop();
     InputEventManager::TriggerEvents();
 
     scene_.OnUpdate(timestep);
@@ -356,7 +357,7 @@ void ProcessKeyEvent(const vulture::KeyEvent& event) {
   }
 
   if (key == GLFW_KEY_E && action == GLFW_PRESS) {
-    context->GetSource("woof_source").value().Play();
+    // context->GetSource("woof_source").value().Play();
     //insert sound here
   }
 

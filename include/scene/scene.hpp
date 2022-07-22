@@ -30,6 +30,7 @@
 #include "event_system/event_system.hpp"
 #include "renderer/3d/scene3d.hpp"
 #include "scene/components.hpp"
+#include "rapidjson/reader.h"
 
 namespace vulture {
 

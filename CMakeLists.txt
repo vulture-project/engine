@@ -21,7 +21,8 @@ target_link_libraries(engine
     glm
     stb_image
     OpenAL
-    vorbisfile
+    # vorbisfile
+    rapidjson
   )
 
 target_link_options(OpenAL

@@ -13,3 +13,6 @@
 [submodule "third_party/vorbis"]
 	path = third_party/vorbis
 	url = https://github.com/xiph/vorbis.git
+[submodule "third_party/rapidjson"]
+	path = third_party/rapidjson
+	url = https://github.com/Tencent/rapidjson.git
