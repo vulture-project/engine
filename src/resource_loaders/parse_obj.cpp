@@ -44,7 +44,7 @@ struct PackedVertex {
   glm::vec3 position;
   glm::vec2 uv;
   glm::vec3 normal;
-  glm::vec3 tangent;
+  glm::vec4 tangent{0}; ///< tangent.w = +-1, it shows the handedness of TBN
 
   bool operator<(const PackedVertex& other) const {
     return memcmp((const void*)this, (const void*)&other, sizeof(PackedVertex)) > 0;
@@ -81,6 +81,14 @@ bool GetSimilarVertexIndex(const PackedVertex& packed, const MapVertexToIndex& m
   return found;
 }
 
+glm::vec3 SafeNormalize(const glm::vec3& vector) {
+  if (glm::length(vector) != 0.0) {
+    return glm::normalize(vector);
+  } else {
+    return glm::vec3(0.0);
+  }
+}
+
 SharedPtr<Mesh> vulture::ParseMeshWavefront(const std::string& filename) {
   struct Vertex {
     uint32_t index_position;
@@ -102,7 +110,7 @@ SharedPtr<Mesh> vulture::ParseMeshWavefront(const std::string& filename) {
   default_material->SetUniform(glm::vec3{0.5}, "{}.{}", kUniformNameMaterial, kStructMemberNameSpecularColor);
   default_material->SetUniform(225.0f, "{}.{}", kUniformNameMaterial, kStructMemberNameSpecularExponent);
   default_material->SetUniform(1, "{}.{}", kUniformNameMaterial, kStructMemberNameNormalStrength);
-  default_material->SetUniform(0, "{}.{}", kUniformNameMaterial, kStructMemberNameUseNormalMap);
+  default_material->SetUniform(false, "{}.{}", kUniformNameMaterial, kStructMemberNameUseNormalMap);
   default_material->AddTexture(ResourceManager::LoadTexture("res/textures/blank.png"), "{}.{}", kUniformNameMaterial,
                                kStructMemberNameDiffuseMap);
 
@@ -146,7 +154,7 @@ SharedPtr<Mesh> vulture::ParseMeshWavefront(const std::string& filename) {
                                           Vertex{indices[3] - 1, indices[4] - 1, indices[5] - 1},
                                           Vertex{indices[6] - 1, indices[7] - 1, indices[8] - 1}}});
     }
-    else if (std::sscanf(cur_line.c_str(), "usemtl %s", name) == 1) {
+    else if (std::sscanf(cur_line.c_str(), "usemtl %127s", name) == 1) {
       if (material_specified && materials.find(name) != materials.end()) {
         cur_material = materials[name];
       } else {
@@ -154,7 +162,7 @@ SharedPtr<Mesh> vulture::ParseMeshWavefront(const std::string& filename) {
         cur_material = default_material;
       }
     }
-    else if (std::sscanf(cur_line.c_str(), "mtllib %s", name) == 1) {
+    else if (std::sscanf(cur_line.c_str(), "mtllib %127s", name) == 1) {
       if (ParseMaterialsWavefront(name, materials)) {
         material_specified = true;
       }
@@ -195,6 +203,8 @@ SharedPtr<Mesh> vulture::ParseMeshWavefront(const std::string& filename) {
   }
 
   /* Calculating tangents */
+  std::vector<glm::vec3> out_bitangents{out_vertices.size()}; // Used just for correction, not loaded to a vbo!
+
   for (uint32_t submesh_idx = 0; submesh_idx < out_indices.size(); ++submesh_idx) {
     for (uint32_t i = 0; i < out_indices[submesh_idx].size(); i += 3) {
       PackedVertex* vertices[3] = {&out_vertices[out_indices[submesh_idx][i + 0]],
@@ -207,30 +217,74 @@ SharedPtr<Mesh> vulture::ParseMeshWavefront(const std::string& filename) {
       glm::vec2 uv_edge0 = vertices[1]->uv - vertices[0]->uv;
       glm::vec2 uv_edge1 = vertices[2]->uv - vertices[1]->uv;
 
-      float inverse_det = 1 / (uv_edge0.x * uv_edge1.y - uv_edge1.x * uv_edge0.y);
+      float det = (uv_edge0.x * uv_edge1.y - uv_edge1.x * uv_edge0.y);
+      float inverse_det = 0;
+
+      if (det == 0.0f) {
+        uv_edge0 = glm::vec2(0, 1);
+        uv_edge1 = glm::vec2(1, 0);
+        inverse_det = 1;
+      } else {
+        inverse_det = 1 / det;
+      }
 
       glm::vec3 tangent;
       tangent.x = inverse_det * (uv_edge1.y * ms_edge0.x - uv_edge0.y * ms_edge1.x);
       tangent.y = inverse_det * (uv_edge1.y * ms_edge0.y - uv_edge0.y * ms_edge1.y);
       tangent.z = inverse_det * (uv_edge1.y * ms_edge0.z - uv_edge0.y * ms_edge1.z);
 
-      // Averaging tangents between adjacent faces
-      vertices[0]->tangent += tangent;
-      vertices[1]->tangent += tangent;
-      vertices[2]->tangent += tangent;
+      glm::vec3 bitangent;
+      bitangent.x = inverse_det * (-uv_edge1.x * ms_edge0.x + uv_edge0.x * ms_edge1.x);
+      bitangent.y = inverse_det * (-uv_edge1.x * ms_edge0.y + uv_edge0.x * ms_edge1.y);
+      bitangent.z = inverse_det * (-uv_edge1.x * ms_edge0.z + uv_edge0.x * ms_edge1.z);
+
+      // Averaging tangents and bitangents between adjacent faces
+      vertices[0]->tangent += glm::vec4(tangent, 0);
+      vertices[1]->tangent += glm::vec4(tangent, 0);
+      vertices[2]->tangent += glm::vec4(tangent, 0);
+
+      out_bitangents[out_indices[submesh_idx][i + 0]] += bitangent;
+      out_bitangents[out_indices[submesh_idx][i + 1]] += bitangent;
+      out_bitangents[out_indices[submesh_idx][i + 2]] += bitangent;
     }
   }
 
-  for (uint32_t submesh_idx = 0; submesh_idx < out_indices.size(); ++submesh_idx) {
-    for (uint32_t i = 0; i < out_indices[submesh_idx].size(); i += 3) {
-      PackedVertex* vertices[3] = {&out_vertices[out_indices[submesh_idx][i + 0]],
-                                   &out_vertices[out_indices[submesh_idx][i + 1]],
-                                   &out_vertices[out_indices[submesh_idx][i + 2]]};
+  for (uint32_t i = 0; i < out_vertices.size(); ++i) {
+    glm::vec3 normal    = SafeNormalize(out_vertices[i].normal);
+    glm::vec3 tangent   = SafeNormalize(out_vertices[i].tangent);
+    glm::vec3 bitangent = SafeNormalize(out_bitangents[i]);
 
-      vertices[0]->tangent = glm::normalize(vertices[0]->tangent);
-      vertices[1]->tangent = glm::normalize(vertices[1]->tangent);
-      vertices[2]->tangent = glm::normalize(vertices[2]->tangent);
+    bool tangent_invalid = glm::isnan(tangent.x) || glm::isnan(tangent.y) ||
+                           glm::isnan(tangent.z) || glm::isinf(tangent.x) ||
+                           glm::isinf(tangent.y) || glm::isinf(tangent.z);
+
+    bool bitangent_invalid = glm::isnan(bitangent.x) || glm::isnan(bitangent.y) ||
+                             glm::isnan(bitangent.z) || glm::isinf(bitangent.x) ||
+                             glm::isinf(bitangent.y) || glm::isinf(bitangent.z);
+
+    if (tangent_invalid) {
+      tangent = glm::cross(normal, bitangent);
+    } else if (bitangent_invalid) {
+      bitangent = glm::cross(normal, glm::vec3(tangent));
     }
+
+    tangent   = SafeNormalize(tangent);
+    bitangent = SafeNormalize(bitangent);
+
+    float handedness =(glm::dot(glm::cross(normal, tangent), bitangent) < 0.0f) ? -1.0f : 1.0f;
+
+    // Gram-Schmidt proccess to make TBN orthonormal
+    tangent = SafeNormalize(tangent - glm::dot(normal, tangent) * normal);
+
+    out_vertices[i].normal  = normal;
+    out_vertices[i].tangent = glm::vec4(tangent, handedness);
+
+    assert(!glm::isnan(tangent.x));
+    assert(!glm::isnan(tangent.y));
+    assert(!glm::isnan(tangent.z));
+    assert(!glm::isinf(tangent.x));
+    assert(!glm::isinf(tangent.y));
+    assert(!glm::isinf(tangent.z));
   }
 
   /* Creating Mesh object */
@@ -240,7 +294,7 @@ SharedPtr<Mesh> vulture::ParseMeshWavefront(const std::string& filename) {
   vbo->SetLayout(VertexBufferLayout{{BufferDataType::kFloat3, kAttribNameMSPosition},
                                     {BufferDataType::kFloat2, kAttribNameUV},
                                     {BufferDataType::kFloat3, kAttribNameMSNormal},
-                                    {BufferDataType::kFloat3, kAttribNameMSTangent}});
+                                    {BufferDataType::kFloat4, kAttribNameMSTangent}});
 
   for (uint32_t submesh_idx = 0; submesh_idx < out_indices.size(); ++submesh_idx) {
     SharedPtr<IndexBuffer> ibo{IndexBuffer::Create(out_indices[submesh_idx].data(), out_indices[submesh_idx].size())};
@@ -279,7 +333,7 @@ bool vulture::ParseMaterialsWavefront(const std::string& filename, MapMaterials&
     float value1f = 0;
     static char name[128];
 
-    if (std::sscanf(cur_line.c_str(), "newmtl %s", name) == 1) {
+    if (std::sscanf(cur_line.c_str(), "newmtl %127s", name) == 1) {
       materials.push_back(WavefrontMaterial{});
       ++materials_count;
       materials[materials_count - 1].name = name;
@@ -296,27 +350,26 @@ bool vulture::ParseMaterialsWavefront(const std::string& filename, MapMaterials&
     else if (std::sscanf(cur_line.c_str(), "Ns %f", &value1f) == 1) {
       materials[materials_count - 1].specular_exponent = value1f;
     }
-    else if (std::sscanf(cur_line.c_str(), "map_Kd %s", name) == 1) {
+    else if (std::sscanf(cur_line.c_str(), "map_Kd %127s", name) == 1) {
       materials[materials_count - 1].map_diffuse = name;
     }
-    else if (std::sscanf(cur_line.c_str(), "map_Bump -bm %f %s", &value1f, name) == 2) {
+    else if (std::sscanf(cur_line.c_str(), "map_Bump -bm %f %127s", &value1f, name) == 2) {
       materials[materials_count - 1].map_normal = name;
       materials[materials_count - 1].normal_strength = value1f;
     }
   }
 
   for (uint32_t i = 0; i < materials_count; ++i) {
-    SharedPtr<Material> material{nullptr};
+    SharedPtr<Material> material =
+        CreateShared<Material>(ResourceManager::LoadShader("res/shaders/basic_normal_mapped.glsl"));
     if (materials[i].map_normal.has_value()) {
-      material = CreateShared<Material>(ResourceManager::LoadShader("res/shaders/basic_normal_mapped.glsl"));
-      material->AddTexture(ResourceManager::LoadTexture(*materials[i].map_normal), "{}.{}", kUniformNameMaterial,
+      material->AddTexture(ResourceManager::LoadTexture(materials[i].map_normal.value()), "{}.{}", kUniformNameMaterial,
                            kStructMemberNameNormalMap);
-      material->SetUniform(1, "{}.{}", kUniformNameMaterial, kStructMemberNameUseNormalMap);
+      material->SetUniform(true, "{}.{}", kUniformNameMaterial, kStructMemberNameUseNormalMap);
       material->SetUniform(materials[i].normal_strength, "{}.{}", kUniformNameMaterial,
                            kStructMemberNameNormalStrength);
     } else {
-      material = CreateShared<Material>(ResourceManager::LoadShader("res/shaders/basic_normal_mapped.glsl"));
-      material->SetUniform(0, "{}.{}", kUniformNameMaterial, kStructMemberNameUseNormalMap);
+      material->SetUniform(false, "{}.{}", kUniformNameMaterial, kStructMemberNameUseNormalMap);
     }
 
     if (materials[i].map_diffuse.has_value()) {

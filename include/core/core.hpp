@@ -35,10 +35,11 @@
 #include <vector>
 
 #include "platform/window.hpp"
+#include "core/logger.hpp"
 
-#define ASSERT(x)                                                                                                   \
-  if (!(x)) {                                                                                                       \
-    std::cout << "Assertion failed in " << __PRETTY_FUNCTION__ << " on line " << std::dec << __LINE__ << std::endl; \
+#define ASSERT(x)                         \
+  if (!(x)) {                             \
+    LOG_ERROR(Core, "Assertion failed!"); \
   }
 
 #define GL_CALL(x)     \

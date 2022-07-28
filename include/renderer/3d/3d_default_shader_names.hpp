@@ -55,6 +55,8 @@ constexpr const char* kAttribNameUV         = "in_uv";
 //! @addtogroup 3D_SHADER_DEFAULT_UNIFORM_NAMES
 //! @{
 
+constexpr const char* kUniformNameRenderMode             = "u_render_mode";
+
 constexpr const char* kUniformNameProjectionView         = "u_projection_view";
 constexpr const char* kUniformNameModel                  = "u_model";
 

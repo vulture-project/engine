@@ -33,23 +33,24 @@ using namespace vulture;
 
 void OpenGLRendererAPI::Init() {
   // TODO:
-  glEnable(GL_DEPTH_TEST);
-  glDepthFunc(GL_LEQUAL); // FIXME: only needed for some types of objects (e.g. skyboxes)
+  GL_CALL(glEnable(GL_DEPTH_TEST));
+  GL_CALL(glDepthFunc(GL_LEQUAL)); // FIXME: only needed for some types of objects (e.g. skyboxes)
 }
 
 void OpenGLRendererAPI::SetViewport(const Viewport& viewport) {
-  glViewport(viewport.x, viewport.y, viewport.width, viewport.height);
+  GL_CALL(glViewport(viewport.x, viewport.y, viewport.width, viewport.height));
   viewport_ = viewport;
 }
 
 Viewport OpenGLRendererAPI::GetViewport() const { return viewport_; }
 
 void OpenGLRendererAPI::Clear(const glm::vec4& color) {
-  glClearColor(color.r, color.g, color.b, color.a);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  GL_CALL(glClearColor(color.r, color.g, color.b, color.a));
+  GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 }
 
 void OpenGLRendererAPI::Draw(const VertexArray& vertexArray) {
   vertexArray.Bind();
-  glDrawElements(GL_TRIANGLES, vertexArray.GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+  GL_CALL(glDrawElements(GL_TRIANGLES, vertexArray.GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr));
+  vertexArray.Unbind();
 }

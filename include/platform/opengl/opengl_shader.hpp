@@ -49,6 +49,7 @@ class OpenGLShader : public Shader {
   virtual void LoadUniformFloat3(const glm::vec3& value, const std::string& name) override;
   virtual void LoadUniformFloat4(const glm::vec4& value, const std::string& name) override;
   virtual void LoadUniformMat4(const glm::mat4& value, const std::string& name) override;
+  virtual void LoadUniformBool(bool value, const std::string& name) override;
 
  private:
   void SetAttributeLocations();

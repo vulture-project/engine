@@ -74,6 +74,7 @@ class Material {
     else if constexpr (std::is_same<T, glm::vec3>()) { uniforms_float3_[name] = value; }
     else if constexpr (std::is_same<T, glm::vec4>()) { uniforms_float4_[name] = value; }
     else if constexpr (std::is_same<T, glm::mat4>()) { uniforms_mat4_  [name] = value; }
+    else if constexpr (std::is_same<T, bool>())      { uniforms_bool_  [name] = value; }
     else {
       static_assert(std::is_same<T, std::false_type>(), "Unsupported uniform data type in Material::SetUniform()");
     }
@@ -91,6 +92,7 @@ class Material {
   std::map<std::string, glm::vec3> uniforms_float3_;
   std::map<std::string, glm::vec4> uniforms_float4_;
   std::map<std::string, glm::mat4> uniforms_mat4_;
+  std::map<std::string, bool>      uniforms_bool_;
 };
 
 }  // namespace vulture

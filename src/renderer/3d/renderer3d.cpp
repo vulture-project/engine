@@ -41,7 +41,7 @@ void Renderer3D::Init() {
 
 void Renderer3D::SetViewport(const Viewport& viewport) { rendererAPI_->SetViewport(viewport); }
 
-void Renderer3D::RenderScene(Scene3D* scene) {
+void Renderer3D::RenderScene(Scene3D* scene, DebugRenderMode render_mode) {
   assert(scene);
 
   rendererAPI_->Clear(glm::vec4{0, 0, 0, 0});
@@ -59,6 +59,9 @@ void Renderer3D::RenderScene(Scene3D* scene) {
       SetUpCamera(scene, shader);
       SetUpLights(scene, shader);
 
+      /* Setting up render mode */
+      shader->LoadUniformInt(static_cast<int>(render_mode), kUniformNameRenderMode);
+
       /* Setting up transformation matrices */
       shader->LoadUniformMat4(scene->GetMainCamera()->CalculateProjectionViewMatrix(), kUniformNameProjectionView);
       shader->LoadUniformMat4(mesh->transform.CalculateMatrix(), kUniformNameModel);
@@ -68,6 +71,8 @@ void Renderer3D::RenderScene(Scene3D* scene) {
 
       /* Drawing */
       rendererAPI_->Draw(*submesh.GetVertexArray());
+
+      shader->Unbind();
     }
   }
 }

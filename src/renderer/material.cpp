@@ -58,6 +58,10 @@ void Material::LoadUniformsToShader() {
     shader_->LoadUniformMat4(uniform_mat4.second, uniform_mat4.first);
   }
 
+  for (const auto& uniform_bool : uniforms_bool_) {
+    shader_->LoadUniformBool(uniform_bool.second, uniform_bool.first);
+  }
+
   uint32_t texture_slot = 0;
   for (const auto& [name, texture] : textures_) {
     texture->Bind(texture_slot);
@@ -65,6 +69,7 @@ void Material::LoadUniformsToShader() {
     ++texture_slot;
   }
 
+  texture_slot = 0;
   for (const auto& [name, cube_map] : cube_maps_) {
     cube_map->Bind(texture_slot);
     shader_->LoadUniformInt(texture_slot, name);

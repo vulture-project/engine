@@ -25,11 +25,12 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include "core/logger.hpp"
 #include "platform/opengl/opengl_texture.hpp"
 
 #include <glad/glad.h>
 #include <stb_image/stb_image.h>
+
+#include "core/logger.hpp"
 
 using namespace vulture;
 
@@ -46,25 +47,52 @@ OpenGLTexture::OpenGLTexture(const std::string& filename) {
     return;
   }
 
-  glGenTextures(1, &id_);
-  glBindTexture(GL_TEXTURE_2D, id_);
+  LOG_DEBUG(Renderer, "Loaded image (width = {}, height = {}, channels = {})", width, height, channels);
 
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  GLenum internal_format = 0;
+  GLenum data_format = 0;
 
-  GLenum format = channels == 3 ? GL_RGB : GL_RGBA;
+  switch (channels) {
+    case 4: {
+      internal_format = GL_RGBA8;
+      data_format = GL_RGBA;
+      break;
+    }
 
-  glTexImage2D(GL_TEXTURE_2D, /*level=*/0, format, width, height, /*border=*/0, format, GL_UNSIGNED_BYTE, data);
-  glGenerateMipmap(GL_TEXTURE_2D);
+    case 3: {
+      internal_format = GL_RGB8;
+      data_format = GL_RGB;
+      break;
+    }
+
+    default: {
+      LOG_ERROR(Renderer, "Invalid number of image channels, {}", channels);
+    }
+  }
+
+  width_ = width;
+  height_ = height;
+
+  GL_CALL(glGenTextures(1, &id_));
+  GL_CALL(glBindTexture(GL_TEXTURE_2D, id_));
+
+  GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT));
+  GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));
+  GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
+  GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+
+  GL_CALL(glTexImage2D(GL_TEXTURE_2D, /*level=*/0, internal_format, width, height, /*border=*/0, data_format,
+                       GL_UNSIGNED_BYTE, data));
+
+  GL_CALL(glGenerateMipmap(GL_TEXTURE_2D));
 
   stbi_image_free(data);
 
   LOG_INFO(Renderer, "Successfully loaded OpenGL texture \"{}\" (id={})", filename, id_);
 }
 
-OpenGLTexture::~OpenGLTexture() { glDeleteTextures(1, &id_); }
+OpenGLTexture::~OpenGLTexture() { /*GL_CALL(glDeleteTextures(1, &id_));*/
+}
 
 uint32_t OpenGLTexture::GetWidth() const { return width_; }
 uint32_t OpenGLTexture::GetHeight() const { return height_; }
@@ -72,6 +100,6 @@ uint32_t OpenGLTexture::GetID() const { return id_; }
 
 void OpenGLTexture::Bind(uint32_t slot) const {
   // glBindTextureUnit(slot, id_); NOTE: for OpenGL version 4.5 and later!
-  glActiveTexture(GL_TEXTURE0 + slot);
-  glBindTexture(GL_TEXTURE_2D, id_);
+  GL_CALL(glActiveTexture(GL_TEXTURE0 + slot));
+  GL_CALL(glBindTexture(GL_TEXTURE_2D, id_));
 }

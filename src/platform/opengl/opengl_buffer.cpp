@@ -54,49 +54,49 @@ GLenum GetOpenGLType(BufferDataType type) {
 }
 
 OpenGLVertexBuffer::OpenGLVertexBuffer(const void* data, uint32_t size) {
-  glGenBuffers(1, &id_);
-  glBindBuffer(GL_ARRAY_BUFFER, id_);
-  glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
+  GL_CALL(glGenBuffers(1, &id_));
+  GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, id_));
+  GL_CALL(glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW));
 }
 
-OpenGLVertexBuffer::~OpenGLVertexBuffer() { glDeleteBuffers(1, &id_); }
+OpenGLVertexBuffer::~OpenGLVertexBuffer() { GL_CALL(glDeleteBuffers(1, &id_)); }
 
-void OpenGLVertexBuffer::Bind() const { glBindBuffer(GL_ARRAY_BUFFER, id_); }
+void OpenGLVertexBuffer::Bind() const { GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, id_)); }
 
-void OpenGLVertexBuffer::Unbind() const { glBindBuffer(GL_ARRAY_BUFFER, 0); }
+void OpenGLVertexBuffer::Unbind() const { GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0)); }
 
 const VertexBufferLayout& OpenGLVertexBuffer::GetLayout() const { return layout_; }
 
 void OpenGLVertexBuffer::SetLayout(const VertexBufferLayout& layout) { layout_ = layout; }
 
 OpenGLIndexBuffer::OpenGLIndexBuffer(const uint32_t* indices, uint32_t count) : count_(count) {
-  glGenBuffers(1, &id_);
+  GL_CALL(glGenBuffers(1, &id_));
 
   /*
    * GL_ELEMENT_ARRAY_BUFFER is invalid when no VAO is bound.
    */
-  glBindBuffer(GL_ARRAY_BUFFER, id_);
-  glBufferData(GL_ARRAY_BUFFER, count * sizeof(uint32_t), indices, GL_STATIC_DRAW);
+  GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, id_));
+  GL_CALL(glBufferData(GL_ARRAY_BUFFER, count * sizeof(uint32_t), indices, GL_STATIC_DRAW));
 }
 
-OpenGLIndexBuffer::~OpenGLIndexBuffer() { glDeleteBuffers(1, &id_); }
+OpenGLIndexBuffer::~OpenGLIndexBuffer() { GL_CALL(glDeleteBuffers(1, &id_)); }
 
-void OpenGLIndexBuffer::Bind() const { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id_); }
+void OpenGLIndexBuffer::Bind() const { GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id_)); }
 
-void OpenGLIndexBuffer::Unbind() const { glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); }
+void OpenGLIndexBuffer::Unbind() const { GL_CALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)); }
 
 uint32_t OpenGLIndexBuffer::GetCount() const { return count_; }
 
-OpenGLVertexArray::OpenGLVertexArray() { glGenVertexArrays(1, &id_); }
+OpenGLVertexArray::OpenGLVertexArray() { GL_CALL(glGenVertexArrays(1, &id_)); }
 
-OpenGLVertexArray::~OpenGLVertexArray() { glDeleteVertexArrays(1, &id_); }
+OpenGLVertexArray::~OpenGLVertexArray() { GL_CALL(glDeleteVertexArrays(1, &id_)); }
 
-void OpenGLVertexArray::Bind() const { glBindVertexArray(id_); }
+void OpenGLVertexArray::Bind() const { GL_CALL(glBindVertexArray(id_)); }
 
-void OpenGLVertexArray::Unbind() const { glBindVertexArray(0); }
+void OpenGLVertexArray::Unbind() const { GL_CALL(glBindVertexArray(0)); }
 
 void OpenGLVertexArray::SetAttributeLocations(const AttributeLocationMap& locations) {
-  glBindVertexArray(id_);
+  GL_CALL(glBindVertexArray(id_));
 
   for (const auto& vertex_buffer : vertex_buffers_) {
     const VertexBufferLayout& layout = vertex_buffer->GetLayout();
@@ -106,28 +106,35 @@ void OpenGLVertexArray::SetAttributeLocations(const AttributeLocationMap& locati
       const BufferDataTypeSpec data_type_spec = BufferDataTypeSpec::Get(attribute.type);
 
       auto location_it = locations.find(attribute.name);
+
+      // TODO: Mat3 and Mat4 should be treated otherwise!
       if (location_it != locations.end()) {
-        glEnableVertexAttribArray(location_it->second);
-        glVertexAttribPointer(location_it->second, data_type_spec.components_count, GetOpenGLType(attribute.type),
-                              attribute.normalize, layout.stride(), reinterpret_cast<const void*>(attribute.offset));
+        GL_CALL(glEnableVertexAttribArray(location_it->second));
+        GL_CALL(glVertexAttribPointer(location_it->second, data_type_spec.components_count,
+                                      GetOpenGLType(attribute.type), attribute.normalize, layout.stride(),
+                                      reinterpret_cast<const void*>(attribute.offset)));
       } else {
         LOG_WARN(Renderer, "Vertex buffer attribute \"{}\" doesn't have a corresponding attribute location!",
                  attribute.name);
       }
     }
+
+    vertex_buffer->Unbind();
   }
 }
 
 void OpenGLVertexArray::AddVertexBuffer(SharedPtr<VertexBuffer> vertex_buffer) {
-  glBindVertexArray(id_);
+  Bind();
   vertex_buffer->Bind();
   vertex_buffers_.push_back(vertex_buffer);
+  Unbind();
 }
 
 void OpenGLVertexArray::SetIndexBuffer(SharedPtr<IndexBuffer> index_buffer) {
-  glBindVertexArray(id_);
+  Bind();
   index_buffer->Bind();
   index_buffer_ = index_buffer;
+  Unbind();
 }
 
 const std::vector<SharedPtr<VertexBuffer>>& OpenGLVertexArray::GetVertexBuffers() const { return vertex_buffers_; }

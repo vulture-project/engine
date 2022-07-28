@@ -37,4 +37,6 @@ SharedPtr<CubeMap> CubeMap::Create(const std::array<std::string, 6>& faces_filen
     case RendererAPI::API::kOpenGL: { return CreateShared<OpenGLCubeMap>(faces_filenames); }
     default:                        { assert(!"Unsupported RendererAPI"); }
   }
+
+  return nullptr;
 }

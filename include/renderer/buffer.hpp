@@ -113,12 +113,11 @@ struct VertexBufferAttributeSpec {
  * Suppose each vertex contains position, color and normal with the following
  * layout
  * -------------------------------------------|------------------------------------------|------
- * | pos0       | color0         | normal0    | pos1       | color1         |
- * normal1    | ... |
+ * | pos0       | color0         | normal0    | pos1       | color1         | normal1    | ... |
  * -------------------------------------------|------------------------------------------|------
- * |_________________________________________|
- * |________________________________________| |_____ vertex0 (stride=40) vertex1
- * (stride=40) Attributes:
+ *  |________________________________________| |________________________________________| |____
+ *   vertex0 (stride=40)                        vertex1 (stride=40)
+ * Attributes:
  *     {
  *         name: "pos",
  *         type: Float3,

@@ -28,6 +28,7 @@
 #pragma once
 
 #include "event_system/event_system.hpp"
+#include "renderer/3d/renderer3d.hpp"
 #include "renderer/3d/scene3d.hpp"
 #include "scene/components.hpp"
 
@@ -48,8 +49,10 @@ class Scene {
 
   /**
    * @brief Render the scene.
+   * 
+   * @param render_mode 
    */
-  void Render();
+  void Render(Renderer3D::DebugRenderMode render_mode = Renderer3D::DebugRenderMode::kDefault);
 
   /**
    * @brief Create a parentless entity.

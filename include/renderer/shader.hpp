@@ -108,6 +108,11 @@ class Shader {
    * @attention Uniform loading functions bind Shader!
    */
   virtual void LoadUniformMat4(const glm::mat4& value, const std::string& name) = 0;
+
+  /**
+   * @attention Uniform loading functions bind Shader!
+   */
+  virtual void LoadUniformBool(bool value, const std::string& name) = 0;
 };
 
 }  // namespace vulture

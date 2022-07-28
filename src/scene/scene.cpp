@@ -28,7 +28,6 @@
 #include "scene/scene.hpp"
 
 #include "core/logger.hpp"
-#include "renderer/3d/renderer3d.hpp"
 
 using namespace vulture;
 
@@ -50,7 +49,7 @@ void Scene::OnUpdate(float timestep) {
   }
 }
 
-void Scene::Render() {
+void Scene::Render(Renderer3D::DebugRenderMode render_mode) {
   /* Scene3D sync */
   auto lights = GetView<LightSourceComponent>(entities_);
   for (auto [entity, light] : lights) {
@@ -99,7 +98,7 @@ void Scene::Render() {
   }
 
   /* Rendering */
-  Renderer3D::RenderScene(&scene_);
+  Renderer3D::RenderScene(&scene_, render_mode);
 }
 
 EntityHandle Scene::CreateEntity() {

@@ -36,4 +36,6 @@ SharedPtr<Texture> Texture::Create(const std::string &filename)
     case RendererAPI::API::kOpenGL: { return CreateShared<OpenGLTexture>(filename); }
     default:                        { assert(!"Unsupported RendererAPI"); }
   }
+
+  return nullptr;
 }

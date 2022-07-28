@@ -45,6 +45,8 @@ bool running = true;
 EntityHandle* spot_light{nullptr}; // FIXME: (tralf-strues)
 EntityHandle* dir_light{nullptr};
 
+Renderer3D::DebugRenderMode render_mode{Renderer3D::DebugRenderMode::kDefault};
+
 vulture::Dispatcher dispatcher;
 
 AudioDevice* device;
@@ -195,6 +197,18 @@ void SandboxApp::Run() {
   guard.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/Low_poly_guard.obj"));
   guard.AddComponent<TransformComponent>(Transform(glm::vec3(5, 0, 0), glm::vec3(0), glm::vec3(3)));
 
+  EntityHandle sponza = scene_.CreateEntity();
+  // sponza.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/sponza.obj"));
+  sponza.AddComponent<TransformComponent>();
+  sponza.GetComponent<TransformComponent>()->transform.translation = glm::vec3(-50, 0, 0);
+  sponza.GetComponent<TransformComponent>()->transform.scale = glm::vec3(0.025);
+  sponza.GetComponent<TransformComponent>()->transform.Rotate(M_PI_2, kDefaultUpVector);
+
+  EntityHandle sponza_light = scene_.CreateEntity();
+  sponza_light.AddComponent<TransformComponent>(glm::vec3(-51.5, 3, 0));
+  sponza_light.AddComponent<LightSourceComponent>(PointLightSpecs(
+        LightColorSpecs(glm::vec3(0.02), glm::vec3(0.9, 0.7, 1.0), glm::vec3(0.1)), LightAttenuationSpecs(15))); 
+
   EntityHandle nk_normals = scene_.CreateEntity();
   nk_normals.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/nk_normals.obj"));
   nk_normals.AddComponent<TransformComponent>();
@@ -208,8 +222,8 @@ void SandboxApp::Run() {
   brick_cubes.AddComponent<TransformComponent>(Transform(glm::vec3(-5, 2, 0), glm::vec3(0), glm::vec3(2)));
 
   EntityHandle watch_tower = scene_.CreateEntity();
-  // watch_tower.AddComponent<MeshComponent>(ResourcseManager::LoadMesh("res/meshes/wooden_watch_tower.obj"));
-  watch_tower.AddComponent<TransformComponent>();
+  // watch_tower.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/wooden_watch_tower.obj"));
+  watch_tower.AddComponent<TransformComponent>(glm::vec3(30, 0, 0));
 
   double bench_x_coord = 11.4;
   #define CREATE_2BENCHES(NUM) \
@@ -315,7 +329,7 @@ void SandboxApp::Run() {
 
   spot_light = new EntityHandle(scene_.CreateChildEntity(camera));
   spot_light->AddComponent<LightSourceComponent>(SpotLightSpecs(
-      LightColorSpecs(glm::vec3(0, 0, 0), glm::vec3(0.5, 0.5, 0.25), glm::vec3(0)), LightAttenuationSpecs(100), cosf(0.3), cos(0.5)));
+      LightColorSpecs(glm::vec3(0, 0, 0), glm::vec3(0.5, 0.5, 0.25), glm::vec3(0.3)), LightAttenuationSpecs(100), cosf(0.3), cos(0.5)));
   spot_light->AddComponent<TransformComponent>(glm::vec3(0, 0, 0));
 
   Renderer3D::Init();
@@ -336,7 +350,7 @@ void SandboxApp::Run() {
     InputEventManager::TriggerEvents();
 
     scene_.OnUpdate(timestep);
-    scene_.Render();
+    scene_.Render(render_mode);
 
     glfwSwapBuffers(window_.GetNativeWindow());
     window_.SetFPSToTitle(1 / timestep);
@@ -368,5 +382,13 @@ void ProcessKeyEvent(const vulture::KeyEvent& event) {
   if (key == GLFW_KEY_G && action == GLFW_PRESS) {
     dir_light->GetComponent<LightSourceComponent>()->runtime_node->SetEnabled(
         !dir_light->GetComponent<LightSourceComponent>()->runtime_node->IsEnabled());
+  }
+
+  if (action == kPress && key >= (int32_t)Keys::k0Key && key <= (int32_t)Keys::k4Key) {
+    render_mode = (Renderer3D::DebugRenderMode)(key - (int32_t)Keys::k0Key);
+  }
+
+  if (key == GLFW_KEY_R && action == GLFW_PRESS) {
+    render_mode = (Renderer3D::DebugRenderMode)(((uint32_t)(render_mode) + 1) % (uint32_t)Renderer3D::DebugRenderMode::kTotal);
   }
 }

@@ -94,21 +94,21 @@ static uint32_t CompileShader(uint32_t type, const std::string& source) {
   uint32_t id = glCreateShader(type);
   const char* c_source = source.c_str();
 
-  glShaderSource(id, /*count=*/1, &c_source, /*length=*/nullptr);
-  glCompileShader(id);
+  GL_CALL(glShaderSource(id, /*count=*/1, &c_source, /*length=*/nullptr));
+  GL_CALL(glCompileShader(id));
 
   int32_t result = 0;
-  glGetShaderiv(id, GL_COMPILE_STATUS, &result);
+  GL_CALL(glGetShaderiv(id, GL_COMPILE_STATUS, &result));
   if (result == GL_FALSE) {
     int32_t length = 0;
-    glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
+    GL_CALL(glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length));
 
     char* message = (char*)alloca(length * sizeof(char));
-    glGetShaderInfoLog(id, length, &length, message);
+    GL_CALL(glGetShaderInfoLog(id, length, &length, message));
 
     LOG_ERROR(Renderer, "Failed to compile OpenGL shader (type={}), OpenGL message:\n{}", type, message);
 
-    glDeleteShader(id);
+    GL_CALL(glDeleteShader(id));
     return 0;
   }
 
@@ -122,13 +122,13 @@ static uint32_t CreateShader(const std::string& vertex_shader, const std::string
   uint32_t fs = CompileShader(GL_FRAGMENT_SHADER, fragment_shader);
 
   uint32_t program = glCreateProgram();
-  glAttachShader(program, vs);
-  glAttachShader(program, fs);
-  glLinkProgram(program);
-  glValidateProgram(program);
+  GL_CALL(glAttachShader(program, vs));
+  GL_CALL(glAttachShader(program, fs));
+  GL_CALL(glLinkProgram(program));
+  GL_CALL(glValidateProgram(program));
 
-  glDeleteShader(vs);
-  glDeleteShader(fs);
+  GL_CALL(glDeleteShader(vs));
+  GL_CALL(glDeleteShader(fs));
 
   return program;
 }
@@ -145,11 +145,11 @@ OpenGLShader::OpenGLShader(const std::string& vertex_shader, const std::string& 
   SetAttributeLocations();
 }
 
-OpenGLShader::~OpenGLShader() { glDeleteProgram(id_); }
+OpenGLShader::~OpenGLShader() { GL_CALL(glDeleteProgram(id_)); }
 
-void OpenGLShader::Bind() const { glUseProgram(id_); }
+void OpenGLShader::Bind() const { GL_CALL(glUseProgram(id_)); }
 
-void OpenGLShader::Unbind() const { glUseProgram(0); }
+void OpenGLShader::Unbind() const { GL_CALL(glUseProgram(0)); }
 
 const AttributeLocationMap& OpenGLShader::GetAttributeLocations() const { return attribute_locations_; }
 
@@ -160,32 +160,36 @@ static void CheckUniformLoadSuccess(GLint uniform_location, const std::string& u
 }
 
 void OpenGLShader::LoadUniformInt(int value, const std::string& name) {
-  glUniform1i(GetUniformLocation(name), value);
+  GL_CALL(glUniform1i(GetUniformLocation(name), value));
 }
 
 void OpenGLShader::LoadUniformFloat(float value, const std::string& name) {
-  glUniform1f(GetUniformLocation(name), value);
+  GL_CALL(glUniform1f(GetUniformLocation(name), value));
 }
 
 void OpenGLShader::LoadUniformFloat2(const glm::vec2& value, const std::string& name) {
-  glUniform2f(GetUniformLocation(name), value.x, value.y);
+  GL_CALL(glUniform2f(GetUniformLocation(name), value.x, value.y));
 }
 
 void OpenGLShader::LoadUniformFloat3(const glm::vec3& value, const std::string& name) {
-  glUniform3f(GetUniformLocation(name), value.x, value.y, value.z);
+  GL_CALL(glUniform3f(GetUniformLocation(name), value.x, value.y, value.z));
 }
 
 void OpenGLShader::LoadUniformFloat4(const glm::vec4& value, const std::string& name) {
-  glUniform4f(GetUniformLocation(name), value.x, value.y, value.z, value.w);
+  GL_CALL(glUniform4f(GetUniformLocation(name), value.x, value.y, value.z, value.w));
 }
 
 void OpenGLShader::LoadUniformMat4(const glm::mat4& value, const std::string& name) {
-  glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, glm::value_ptr(value));
+  GL_CALL(glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, glm::value_ptr(value)));
+}
+
+void OpenGLShader::LoadUniformBool(bool value, const std::string& name) {
+  GL_CALL(glUniform1i(GetUniformLocation(name), value));
 }
 
 void OpenGLShader::SetAttributeLocations() {
   int32_t attribs_count = 0;
-  glGetProgramiv(id_, GL_ACTIVE_ATTRIBUTES, &attribs_count);
+  GL_CALL(glGetProgramiv(id_, GL_ACTIVE_ATTRIBUTES, &attribs_count));
 
   const uint32_t kAttribNameMaxLength = 128;
   char attrib_name[kAttribNameMaxLength];
@@ -195,8 +199,8 @@ void OpenGLShader::SetAttributeLocations() {
   GLenum attrib_type;
 
   for (int32_t i = 0; i < attribs_count; i++) {
-    glGetActiveAttrib(id_, static_cast<uint32_t>(i), kAttribNameMaxLength, &attrib_name_length, &attrib_size,
-                      &attrib_type, attrib_name);
+    GL_CALL(glGetActiveAttrib(id_, static_cast<uint32_t>(i), kAttribNameMaxLength, &attrib_name_length, &attrib_size,
+                              &attrib_type, attrib_name));
     assert(attrib_name_length != 0);
 
     int32_t location = glGetAttribLocation(id_, attrib_name);

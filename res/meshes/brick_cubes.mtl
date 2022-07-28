@@ -3,25 +3,25 @@
 
 newmtl Bricks
 Ns 225.000000
-Ka 1.000000 1.000000 1.000000
+Ka 0.000000 0.000000 0.000000
 Kd 0.800000 0.800000 0.800000
 Ks 0.500000 0.500000 0.500000
 Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd /Users/tralf/blenderkit_data/materials/bricks_e8f85678-e4e0-4aca-a177-b98ef181f0ba/textures/Bricks059_2K_Color.jpg
-map_Ns /Users/tralf/blenderkit_data/materials/bricks_e8f85678-e4e0-4aca-a177-b98ef181f0ba/textures/Bricks059_2K_Roughness.jpg
+map_Kd res/textures/Bricks059_2K_Color.jpg
+map_Ns res/textures/Bricks059_2K_Roughness.jpg
 
 newmtl Bricks.001
 Ns 225.000000
-Ka 1.000000 1.000000 1.000000
+Ka 0.000000 0.000000 0.000000
 Kd 0.800000 0.800000 0.800000
 Ks 0.500000 0.500000 0.500000
 Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd /Users/tralf/blenderkit_data/materials/bricks_e8f85678-e4e0-4aca-a177-b98ef181f0ba/textures/Bricks059_2K_Color.jpg
-map_Bump -bm 1.0 /Users/tralf/blenderkit_data/materials/bricks_e8f85678-e4e0-4aca-a177-b98ef181f0ba/textures/Bricks059_2K_Normal.jpg
-map_Ns /Users/tralf/blenderkit_data/materials/bricks_e8f85678-e4e0-4aca-a177-b98ef181f0ba/textures/Bricks059_2K_Roughness.jpg
+map_Kd res/textures/Bricks059_2K_Color.jpg
+map_Bump -bm 1.0 res/textures/Bricks059_2K_Normal.jpg
+map_Ns res/textures/Bricks059_2K_Roughness.jpg

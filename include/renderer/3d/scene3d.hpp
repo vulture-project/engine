@@ -75,8 +75,8 @@ struct CameraNode3D : public SceneNode3D {
   }
 };
 
-constexpr uint32_t kMaxPointLightSources = 10;
-constexpr uint32_t kMaxSpotLightSources = 2;
+constexpr uint32_t kMaxPointLightSources = 15;
+constexpr uint32_t kMaxSpotLightSources  = 2;
 
 /**
  * @brief Represents on of the three types of light sources: Directional, Point and Spot lights.

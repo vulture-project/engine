@@ -36,9 +36,20 @@ namespace vulture {
 
 class Renderer3D {
  public:
+  enum class DebugRenderMode {
+    kDefault   = 0,
+    kNormals   = 1,
+    kNormalMap = 2,
+    kTangents  = 3,
+    kDepth     = 4,
+
+    kTotal
+  };
+
+ public:
   static void Init();
   static void SetViewport(const Viewport& viewport);
-  static void RenderScene(Scene3D* scene);
+  static void RenderScene(Scene3D* scene, DebugRenderMode render_mode = DebugRenderMode::kDefault);
 
  private:
   static void SetUpCamera(Scene3D* scene, Shader* shader);
