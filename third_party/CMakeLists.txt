@@ -1,7 +1,0 @@
-add_subdirectory(fmt)
-add_subdirectory(glad)
-add_subdirectory(glfw)
-add_subdirectory(glm)
-add_subdirectory(stb_image)
-add_subdirectory(openal-soft)
-add_subdirectory(vorbis)
