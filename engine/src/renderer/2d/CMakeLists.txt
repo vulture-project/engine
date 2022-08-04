@@ -1,0 +1,7 @@
+set(RENDERER_2D_INCLUDE_DIR ${RENDERER_INCLUDE_DIR}/2d)
+set(RENDERER_2D_SOURCE_DIR ${RENDERER_SOURCE_DIR}/2d)
+
+target_sources(vulture-engine
+  PUBLIC
+  PRIVATE
+  )
