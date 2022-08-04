@@ -41,6 +41,19 @@ void Scene::OnStart(Dispatcher& dispatcher) {
   }
 }
 
+void Scene::OnViewportResize(uint32_t width, uint32_t height) {
+  assert(width > 0);
+  assert(height > 0);
+
+  float aspect_ratio = static_cast<float>(width) / static_cast<float>(height);
+
+  for (auto [entity, camera] : GetView<CameraComponent>(entities_)) {
+    if (!camera->fixed_aspect_ratio) {
+      camera->specs.aspect_ratio = aspect_ratio;
+    }
+  }
+}
+
 void Scene::OnUpdate(float timestep) {
   /* Script update */
   auto scripts = GetView<ScriptComponent>(entities_);
@@ -86,6 +99,7 @@ void Scene::Render(Renderer3D::DebugRenderMode render_mode) {
 
     assert(entity.HasComponent<TransformComponent>());
     camera->runtime_node->transform = ComputeWorldSpaceTransform(entity);
+    camera->runtime_node->specs     = camera->specs;
 
     if (camera->is_main) {
       if (!main_camera_found) {

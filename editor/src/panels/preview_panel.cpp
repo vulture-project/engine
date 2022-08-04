@@ -50,14 +50,17 @@ void PreviewPanel::OnRender() {
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{0, 0});
 
   if (ImGui::Begin("Preview")) {
-    ImVec2 panel_size = ImGui::GetContentRegionAvail();
+    ImVec2 panel_size{};
+
+    // Framebuffer scale for retina support
+    panel_size.x = ImGui::GetContentRegionAvail().x * ImGui::GetIO().DisplayFramebufferScale.x;
+    panel_size.y = ImGui::GetContentRegionAvail().y * ImGui::GetIO().DisplayFramebufferScale.y;
 
     OnResize(static_cast<uint32_t>(panel_size.x), static_cast<uint32_t>(panel_size.y));
 
     uint64_t texture_id = framebuffer_->GetColorAttachmentId();
     FramebufferSpec framebuffer_spec = framebuffer_->GetFramebufferSpec();
-    ImGui::Image(reinterpret_cast<void*>(texture_id), ImVec2(framebuffer_spec.width, framebuffer_spec.height),
-                 ImVec2{0, 1}, ImVec2{1, 0});
+    ImGui::Image(reinterpret_cast<void*>(texture_id), ImGui::GetContentRegionAvail(), ImVec2{0, 1}, ImVec2{1, 0});
 
     ImGui::End();
   }
@@ -66,13 +69,13 @@ void PreviewPanel::OnRender() {
 }
 
 void PreviewPanel::OnResize(uint32_t width, uint32_t height) {
+  resized_ = false;
+
   FramebufferSpec spec = framebuffer_->GetFramebufferSpec();
-  if (width > 0 && height > 0 && spec.width != width && spec.height != height) {
+  if (width > 0 && height > 0 && (spec.width != width || spec.height != height)) {
     framebuffer_->Resize(width, height);
     resized_ = true;
   }
-
-  resized_ = false;
 }
 
 Framebuffer& PreviewPanel::GetFramebuffer() { assert(framebuffer_); return *framebuffer_; }

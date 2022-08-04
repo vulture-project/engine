@@ -40,6 +40,8 @@ class Scene {
 
   void OnStart(Dispatcher& dispatcher);
 
+  void OnViewportResize(uint32_t width, uint32_t height);
+
   /**
    * @brief Simulate the game world.
    *

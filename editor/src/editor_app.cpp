@@ -60,9 +60,34 @@ int EditorApp::Init() {
 }
 
 void EditorApp::Run() {
-  EntityHandle nk_normals = scene_.CreateEntity();
-  nk_normals.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/nk_normals.obj"));
-  nk_normals.AddComponent<TransformComponent>();
+  EntityHandle camera = scene_.CreateEntity();
+  camera.AddComponent<CameraComponent>(PerspectiveCameraSpecs(1280 / 960), true);
+  camera.AddComponent<TransformComponent>(glm::vec3(0, 3, 15));
+
+  EntityHandle sponza = scene_.CreateEntity();
+  sponza.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/sponza.obj"));
+  sponza.AddComponent<TransformComponent>();
+  sponza.GetComponent<TransformComponent>()->transform.scale = glm::vec3(0.025);
+  sponza.GetComponent<TransformComponent>()->transform.Rotate(M_PI_2, kDefaultUpVector);
+
+  EntityHandle sponza_light = scene_.CreateEntity();
+  sponza_light.AddComponent<TransformComponent>(glm::vec3(0, 3, 0));
+  sponza_light.AddComponent<LightSourceComponent>(PointLightSpecs(
+        LightColorSpecs(glm::vec3(0.02), glm::vec3(0.9, 0.7, 1.0), glm::vec3(0.1)), LightAttenuationSpecs(15))); 
+
+  EntityHandle skybox = scene_.CreateChildEntity(camera);
+  skybox.AddComponent<TransformComponent>();
+  skybox.AddComponent<MeshComponent>(CreateSkyboxMesh({"res/textures/skybox_morning_field/skybox_morning_field_right.jpeg",
+                                                       "res/textures/skybox_morning_field/skybox_morning_field_left.jpeg",
+                                                       "res/textures/skybox_morning_field/skybox_morning_field_top.jpeg",
+                                                       "res/textures/skybox_morning_field/skybox_morning_field_bottom.jpeg",
+                                                       "res/textures/skybox_morning_field/skybox_morning_field_front.jpeg",
+                                                       "res/textures/skybox_morning_field/skybox_morning_field_back.jpeg"}));
+
+  EntityHandle dir_light = scene_.CreateEntity();
+  dir_light.AddComponent<LightSourceComponent>(
+      DirectionalLightSpecs(LightColorSpecs(glm::vec3(0), glm::vec3(0.9), glm::vec3(0.01))));
+  dir_light.AddComponent<TransformComponent>(Transform(glm::vec3(0), glm::vec3(-0.5, 0, 0)));
 
   scene_.OnStart(event_dispatcher_);
 
@@ -74,9 +99,17 @@ void EditorApp::Run() {
 
     InputEventManager::TriggerEvents();
 
+    uint32_t framebuffer_width  = preview_panel_.GetFramebuffer().GetFramebufferSpec().width;
+    uint32_t framebuffer_height = preview_panel_.GetFramebuffer().GetFramebufferSpec().height;
+
+    if (preview_panel_.Resized()) {
+      scene_.OnViewportResize(framebuffer_width, framebuffer_height);
+    }
+
     scene_.OnUpdate(timestep);
 
     preview_panel_.GetFramebuffer().Bind();
+    Renderer3D::SetViewport(Viewport{0, 0, framebuffer_width, framebuffer_height});
     scene_.Render();
     preview_panel_.GetFramebuffer().Unbind();
 
@@ -90,25 +123,6 @@ void EditorApp::Run() {
 
 void EditorApp::OnGuiRender() {
   preview_panel_.OnRender();
-
-  {
-    static float f = 0.0f;
-    static int counter = 0;
-
-    ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-
-    ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-
-    ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-
-    if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-        counter++;
-    ImGui::SameLine();
-    ImGui::Text("counter = %d", counter);
-
-    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-    ImGui::End();
-  }
 }
 
 //================================================================

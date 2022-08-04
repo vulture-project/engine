@@ -58,6 +58,7 @@ struct TransformComponent {
 struct CameraComponent {
   PerspectiveCameraSpecs specs;
   bool is_main{false};
+  bool fixed_aspect_ratio{false};
 
   CameraNode3D* runtime_node{nullptr};
 
