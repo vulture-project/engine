@@ -144,6 +144,9 @@ void EditorApp::OnInitImGui() {
   imgui_io_->ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // Enable Docking
   // imgui_io_->ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;   // Enable Multi-Viewport / Platform Windows
 
+  imgui_io_->FontDefault =
+      imgui_io_->Fonts->AddFontFromFileTTF("res/fonts/Source_Sans_Pro/SourceSansPro-Regular.ttf", 18.0f);
+
   ImGui::StyleColorsLight();
 
   ImGuiStyle& style = ImGui::GetStyle();
