@@ -60,6 +60,10 @@ void EntityRegistry::DestroyAllEntities() {
   }
 }
 
+EntityStorage& EntityRegistry::GetEntities() {
+  return entities_;
+}
+
 EntityRegistry::~EntityRegistry() {
   DestroyAllEntities();
 }

@@ -58,17 +58,20 @@ class Scene {
 
   /**
    * @brief Create a parentless entity.
-   *
-   * @return EntityHandle
+   * 
+   * @param name 
+   * @return EntityHandle 
    */
-  EntityHandle CreateEntity();
+  EntityHandle CreateEntity(const std::string& name = "Untitled entity");
 
   /**
    * @brief Create a child entity from parent.
-   *
-   * @return EntityHandle
+   * 
+   * @param parent 
+   * @param name 
+   * @return EntityHandle 
    */
-  EntityHandle CreateChildEntity(EntityHandle parent);
+  EntityHandle CreateChildEntity(EntityHandle parent, const std::string& name = "Untitled entity");
 
   glm::mat4 ComputeWorldSpaceMatrix(EntityHandle entity);
   Transform ComputeWorldSpaceTransform(EntityHandle entity);

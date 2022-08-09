@@ -36,6 +36,13 @@
 
 namespace vulture {
 
+struct NameComponent {
+  std::string name{"Unnamed entity"};
+
+  NameComponent() = default;
+  NameComponent(const std::string& name) : name(name) {}
+};
+
 struct HierarchyComponent {
   std::optional<EntityHandle> parent{std::nullopt};
   std::vector<EntityHandle> children;

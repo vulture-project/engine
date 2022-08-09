@@ -60,22 +60,22 @@ int EditorApp::Init() {
 }
 
 void EditorApp::Run() {
-  EntityHandle camera = scene_.CreateEntity();
+  EntityHandle camera = scene_.CreateEntity("Editor camera");
   camera.AddComponent<CameraComponent>(PerspectiveCameraSpecs(1280 / 960), true);
   camera.AddComponent<TransformComponent>(glm::vec3(0, 3, 15));
 
-  EntityHandle sponza = scene_.CreateEntity();
+  EntityHandle sponza = scene_.CreateEntity("Sponza");
   sponza.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/sponza.obj"));
   sponza.AddComponent<TransformComponent>();
   sponza.GetComponent<TransformComponent>()->transform.scale = glm::vec3(0.025);
   sponza.GetComponent<TransformComponent>()->transform.Rotate(M_PI_2, kDefaultUpVector);
 
-  EntityHandle sponza_light = scene_.CreateEntity();
+  EntityHandle sponza_light = scene_.CreateEntity("Sponza point light");
   sponza_light.AddComponent<TransformComponent>(glm::vec3(0, 3, 0));
   sponza_light.AddComponent<LightSourceComponent>(PointLightSpecs(
         LightColorSpecs(glm::vec3(0.02), glm::vec3(0.9, 0.7, 1.0), glm::vec3(0.1)), LightAttenuationSpecs(15))); 
 
-  EntityHandle skybox = scene_.CreateChildEntity(camera);
+  EntityHandle skybox = scene_.CreateChildEntity(camera, "Skybox");
   skybox.AddComponent<TransformComponent>();
   skybox.AddComponent<MeshComponent>(CreateSkyboxMesh({"res/textures/skybox_morning_field/skybox_morning_field_right.jpeg",
                                                        "res/textures/skybox_morning_field/skybox_morning_field_left.jpeg",
@@ -84,7 +84,7 @@ void EditorApp::Run() {
                                                        "res/textures/skybox_morning_field/skybox_morning_field_front.jpeg",
                                                        "res/textures/skybox_morning_field/skybox_morning_field_back.jpeg"}));
 
-  EntityHandle dir_light = scene_.CreateEntity();
+  EntityHandle dir_light = scene_.CreateEntity("Directional light");
   dir_light.AddComponent<LightSourceComponent>(
       DirectionalLightSpecs(LightColorSpecs(glm::vec3(0), glm::vec3(0.9), glm::vec3(0.01))));
   dir_light.AddComponent<TransformComponent>(Transform(glm::vec3(0), glm::vec3(-0.5, 0, 0)));
@@ -123,6 +123,7 @@ void EditorApp::Run() {
 
 void EditorApp::OnGuiRender() {
   preview_panel_.OnRender();
+  entities_panel_.OnRender(scene_);
 }
 
 //================================================================

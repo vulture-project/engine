@@ -115,15 +115,17 @@ void Scene::Render(Renderer3D::DebugRenderMode render_mode) {
   Renderer3D::RenderScene(&scene_, render_mode);
 }
 
-EntityHandle Scene::CreateEntity() {
+EntityHandle Scene::CreateEntity(const std::string& name) {
   EntityHandle entity = vulture::CreateEntity(entities_);
   entity.AddComponent<HierarchyComponent>();
+  entity.AddComponent<NameComponent>(name);
   return entity;
 }
 
-EntityHandle Scene::CreateChildEntity(EntityHandle parent) {
+EntityHandle Scene::CreateChildEntity(EntityHandle parent, const std::string& name) {
   EntityHandle entity = vulture::CreateEntity(entities_);
   entity.AddComponent<HierarchyComponent>(parent);
+  entity.AddComponent<NameComponent>(name);
 
   if (!parent.HasComponent<HierarchyComponent>()) {
     parent.AddComponent<HierarchyComponent>();
