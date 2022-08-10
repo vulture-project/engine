@@ -22,6 +22,7 @@ target_link_libraries(engine
     stb_image
     OpenAL
     vorbisfile
+    rapidjson
   )
 
 target_link_options(OpenAL
