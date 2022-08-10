@@ -30,6 +30,7 @@
 #include "app/app.hpp"
 #include "event_system/event_system.hpp"
 #include "panels/entities_panel.hpp"
+#include "panels/inspector_panel.hpp"
 #include "panels/preview_panel.hpp"
 #include "platform/event.hpp"
 #include "platform/window.hpp"
@@ -66,10 +67,12 @@ class EditorApp : public Application {
 
   /* Scene */
   Scene scene_;
+  EntityId selected_entity_{kInvalidEntityId};
 
   /* Panels */
   PreviewPanel preview_panel_;
   EntitiesPanel entities_panel_;
+  InspectorPanel inspector_panel_;
 };
 
 }  // namespace vulture

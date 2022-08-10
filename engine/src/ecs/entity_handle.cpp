@@ -37,6 +37,8 @@ EntityHandle& EntityHandle::operator=(const EntityHandle& other) {
   return *this;
 }
 
+bool EntityHandle::Invalid() const { return id_ == kInvalidEntityId; }
+
 void EntityHandle::Destroy() { registry_.DestroyEntity(id_); }
 
 }  // namespace vulture

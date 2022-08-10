@@ -89,6 +89,10 @@ void EditorApp::Run() {
       DirectionalLightSpecs(LightColorSpecs(glm::vec3(0), glm::vec3(0.9), glm::vec3(0.01))));
   dir_light.AddComponent<TransformComponent>(Transform(glm::vec3(0), glm::vec3(-0.5, 0, 0)));
 
+  EntityHandle street_lamp = scene_.CreateEntity("Street lamp");
+  street_lamp.AddComponent<TransformComponent>();
+  street_lamp.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/street_lamp.obj"));
+
   scene_.OnStart(event_dispatcher_);
 
   running_ = true;
@@ -123,7 +127,11 @@ void EditorApp::Run() {
 
 void EditorApp::OnGuiRender() {
   preview_panel_.OnRender();
+
   entities_panel_.OnRender(scene_);
+  selected_entity_ = entities_panel_.GetSelectedEntity();
+
+  inspector_panel_.OnRender({selected_entity_, scene_.GetEntityRegistry()});
 }
 
 //================================================================

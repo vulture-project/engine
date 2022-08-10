@@ -106,10 +106,9 @@ class LightSourceNode3D : public SceneNode3D {
 
   const LightSourceSpecs& GetLightSpecs() const { return specs_; }
 
+  void SetLightSpecs(const LightSourceSpecs& specs) { specs_ = specs; }
   void SetLightSpecs(const DirectionalLightSpecs& specs) { specs_.directional = specs; }
-
   void SetLightSpecs(const PointLightSpecs& specs) { specs_.point = specs; }
-
   void SetLightSpecs(const SpotLightSpecs& specs) { specs_.spot = specs; }
 
   void SetEnabled(bool enabled) { enabled_ = enabled; }

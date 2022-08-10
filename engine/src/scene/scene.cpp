@@ -74,6 +74,7 @@ void Scene::Render(Renderer3D::DebugRenderMode render_mode) {
 
     assert(entity.HasComponent<TransformComponent>());
     light->runtime_node->transform = ComputeWorldSpaceTransform(entity);
+    light->runtime_node->SetLightSpecs(light->specs);
   }
 
   auto meshes = GetView<MeshComponent>(entities_);
@@ -109,6 +110,11 @@ void Scene::Render(Renderer3D::DebugRenderMode render_mode) {
         LOG_WARN(Scene, "Second main camera entity detected! Using the first main camera detected.");
       }
     }
+  }
+
+  if (!main_camera_found) {
+    scene_.SetMainCamera(nullptr);
+    LOG_WARN(Scene, "No main camera entity detected!");
   }
 
   /* Rendering */

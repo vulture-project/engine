@@ -38,6 +38,8 @@ class EntityHandle {
 
   EntityHandle& operator=(const EntityHandle& other);
 
+  bool Invalid() const;
+
   void Destroy();
 
   template <typename ComponentT, typename... Args>
