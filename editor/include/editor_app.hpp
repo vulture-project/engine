@@ -54,6 +54,7 @@ class EditorApp : public Application {
   void OnQuit(const QuitEvent&);
 
   void OnInitImGui();
+  void OnUpdateImGuiStyle();
   void OnFrameStartImGui();
   void OnFrameFinishImGui();
   void OnCloseImGui();
