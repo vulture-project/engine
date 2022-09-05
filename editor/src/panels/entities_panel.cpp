@@ -64,8 +64,10 @@ void EntitiesPanel::OnRender(Scene& scene) {
     if (new_selected_entity != kInvalidEntityId) {
       selected_entity_ = new_selected_entity;
     }
-    ImGui::End();
+
   }
+
+  ImGui::End();
 }
 
 void EntitiesPanel::SetSelectedEntity(EntityId entity_id) {

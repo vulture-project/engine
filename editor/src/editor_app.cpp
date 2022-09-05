@@ -114,7 +114,7 @@ void EditorApp::Run() {
 
     preview_panel_.GetFramebuffer().Bind();
     Renderer3D::SetViewport(Viewport{0, 0, framebuffer_width, framebuffer_height});
-    scene_.Render();
+    scene_.Render(renderer_info_panel_.GetRenderMode());
     preview_panel_.GetFramebuffer().Unbind();
 
     OnFrameStartImGui();
@@ -132,6 +132,8 @@ void EditorApp::OnGuiRender() {
   selected_entity_ = entities_panel_.GetSelectedEntity();
 
   inspector_panel_.OnRender({selected_entity_, scene_.GetEntityRegistry()});
+
+  renderer_info_panel_.OnRender();
 }
 
 //================================================================

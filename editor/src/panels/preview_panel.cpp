@@ -61,9 +61,9 @@ void PreviewPanel::OnRender() {
     uint64_t texture_id = framebuffer_->GetColorAttachmentId();
     FramebufferSpec framebuffer_spec = framebuffer_->GetFramebufferSpec();
     ImGui::Image(reinterpret_cast<void*>(texture_id), ImGui::GetContentRegionAvail(), ImVec2{0, 1}, ImVec2{1, 0});
-
-    ImGui::End();
   }
+
+  ImGui::End();
 
   ImGui::PopStyleVar();
 }

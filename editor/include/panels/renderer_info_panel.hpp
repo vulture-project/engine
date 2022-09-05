@@ -1,21 +1,21 @@
 /**
  * @author Nikita Mochalov (github.com/tralf-strues)
- * @file renderer3d.hpp
- * @date 2022-04-27
- *
+ * @file renderer_info_panel.hpp
+ * @date 2022-09-05
+ * 
  * The MIT License (MIT)
- * Copyright (c) vulture-project
- *
+ * Copyright (c) 2022 Nikita Mochalov
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
  * the rights to use, copy, modify, merge, publish, distribute, sublicense,
  * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,52 +27,19 @@
 
 #pragma once
 
-#include "core/core.hpp"
-#include "renderer/renderer_api.hpp"
-#include "renderer/shader.hpp"
-#include "renderer/3d/scene3d.hpp"
+#include "renderer/3d/renderer3d.hpp"
 
 namespace vulture {
 
-class Renderer3D {
+class RendererInfoPanel {
  public:
-  enum class DebugRenderMode {
-    kDefault   = 0,
-    kNormals   = 1,
-    kNormalMap = 2,
-    kTangents  = 3,
-    kDepth     = 4,
+  void OnRender();
 
-    kTotal
-  };
-
-  struct Info {
-    DebugRenderMode render_mode{DebugRenderMode::kDefault};
-    Viewport viewport{};
-    float frame_time_ms{0};
-    float fps{0};
-
-    uint32_t draw_calls{0};
-    uint32_t materials{0}; // Fixme: (tralf-strues) not supported for now, always 0
-
-    uint32_t meshes{0};
-    uint32_t cameras{0};
-    uint32_t light_sources{0};
-  };
-
- public:
-  static void Init();
-  static void SetViewport(const Viewport& viewport);
-  static void RenderScene(Scene3D* scene, DebugRenderMode render_mode = DebugRenderMode::kDefault);
-  static Info GetInfo();
+  void SetRenderMode(Renderer3D::DebugRenderMode render_mode);
+  Renderer3D::DebugRenderMode GetRenderMode() const;
 
  private:
-  static void SetUpCamera(Scene3D* scene, Shader* shader);
-  static void SetUpLights(Scene3D* scene, Shader* shader);
-
- private:
-  static ScopePtr<RendererAPI> rendererAPI_;
-  static Info info_;
+  Renderer3D::DebugRenderMode render_mode_{Renderer3D::DebugRenderMode::kDefault};
 };
 
 }  // namespace vulture

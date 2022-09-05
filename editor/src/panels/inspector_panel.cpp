@@ -52,9 +52,9 @@ void InspectorPanel::OnRender(EntityHandle entity) {
     if (entity.HasComponent<LightSourceComponent>()) {
       RenderLightSourceComponent(*entity.GetComponent<LightSourceComponent>());
     }
-
-    ImGui::End();
   }
+
+  ImGui::End();
 }
 
 void InspectorPanel::RenderTransformComponent(TransformComponent& transform_component) {

@@ -6,9 +6,11 @@ target_sources(vulture-editor
     ${PANELS_INCLUDE_DIR}/entities_panel.hpp
     ${PANELS_INCLUDE_DIR}/inspector_panel.hpp
     ${PANELS_INCLUDE_DIR}/preview_panel.hpp
+    ${PANELS_INCLUDE_DIR}/renderer_info_panel.hpp
 
   PRIVATE
     ${PANELS_SOURCE_DIR}/entities_panel.cpp
     ${PANELS_SOURCE_DIR}/inspector_panel.cpp
     ${PANELS_SOURCE_DIR}/preview_panel.cpp
+    ${PANELS_SOURCE_DIR}/renderer_info_panel.cpp
   )

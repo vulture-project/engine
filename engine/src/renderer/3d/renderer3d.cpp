@@ -33,6 +33,7 @@
 using namespace vulture;
 
 ScopePtr<RendererAPI> Renderer3D::rendererAPI_;
+Renderer3D::Info Renderer3D::info_;
 
 void Renderer3D::Init() {
   rendererAPI_ = RendererAPI::Create();
@@ -43,6 +44,18 @@ void Renderer3D::SetViewport(const Viewport& viewport) { rendererAPI_->SetViewpo
 
 void Renderer3D::RenderScene(Scene3D* scene, DebugRenderMode render_mode) {
   assert(scene);
+
+  info_.render_mode    = render_mode;
+  info_.viewport       = rendererAPI_->GetViewport();
+  info_.frame_time_ms  = 0.0f;
+  info_.fps            = 0.0f;
+  info_.draw_calls     = 0;
+  info_.materials      = 0;
+  info_.meshes         = scene->GetMeshes().size();
+  info_.cameras        = scene->GetCameras().size();
+  info_.light_sources  = scene->GetLightSources().size();
+
+  clock_t time_start = clock();
 
   rendererAPI_->Clear(glm::vec4{0, 0, 0, 1});
 
@@ -71,10 +84,15 @@ void Renderer3D::RenderScene(Scene3D* scene, DebugRenderMode render_mode) {
 
       /* Drawing */
       rendererAPI_->Draw(*submesh.GetVertexArray());
+      ++info_.draw_calls;
 
       shader->Unbind();
     }
   }
+
+  info_.frame_time_ms  = static_cast<float>(clock() - time_start) / CLOCKS_PER_SEC; // in seconds
+  info_.fps            = 1 / info_.frame_time_ms;
+  info_.frame_time_ms *= 1000.f; // convert to milliseconds
 }
 
 static void LoadTranslation(Shader* shader, const std::string& name, const Transform& transform) {
@@ -171,4 +189,8 @@ void Renderer3D::SetUpLights(Scene3D* scene, Shader* shader) {
   shader->LoadUniformInt(idx_directional, kUniformNameDirectionalLightsCount);
   shader->LoadUniformInt(idx_point, kUniformNamePointLightsCount);
   shader->LoadUniformInt(idx_spot, kUniformNameSpotLightsCount);
+}
+
+Renderer3D::Info Renderer3D::GetInfo() {
+  return info_;
 }
