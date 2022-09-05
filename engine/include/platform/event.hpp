@@ -36,8 +36,8 @@
 namespace vulture {
 
 enum Action {
-  kPress,
   kRelease,
+  kPress,
   kHold
 };
 
@@ -153,6 +153,8 @@ class InputEventManager {
   static void SetWindowAndDispatcher(Window* window, Dispatcher* dispatcher);
 
   static void TriggerEvents();
+
+  static void GetCursorPosition(float* x, float* y);
 
  private:
   static void KeyCallback        (GLFWwindow* window, int key, int scancode, int action, int mods);

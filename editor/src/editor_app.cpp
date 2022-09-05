@@ -26,13 +26,15 @@
  */
 
 #include "editor_app.hpp"
-#include "renderer/3d/renderer3d.hpp"
-#include "core/resource_manager.hpp"
 
+#include <glad/glad.h>
+
+#include "camera_movement.hpp"
+#include "core/resource_manager.hpp"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-#include <glad/glad.h>
+#include "renderer/3d/renderer3d.hpp"
 
 using namespace vulture;
 
@@ -63,6 +65,7 @@ void EditorApp::Run() {
   EntityHandle camera = scene_.CreateEntity("Editor camera");
   camera.AddComponent<CameraComponent>(PerspectiveCameraSpecs(1280 / 960), true);
   camera.AddComponent<TransformComponent>(glm::vec3(0, 3, 15));
+  camera.AddComponent<ScriptComponent>(new CameraMovementScript());
 
   EntityHandle sponza = scene_.CreateEntity("Sponza");
   sponza.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/sponza.obj"));

@@ -95,6 +95,18 @@ void InputEventManager::TriggerEvents() {
   glfwPollEvents();
 }
 
+void InputEventManager::GetCursorPosition(float* x, float* y) {
+  assert(x);
+  assert(y);
+
+  double xpos = 0.0f;
+  double ypos = 0.0f;
+  glfwGetCursorPos(window_->GetNativeWindow(), &xpos, &ypos);
+
+  *x = xpos;
+  *y = ypos;
+}
+
 void InputEventManager::SetWindowAndDispatcher(Window* window, Dispatcher* dispatcher) {
   assert(window);
   assert(dispatcher);
