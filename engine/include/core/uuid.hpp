@@ -1,10 +1,10 @@
 /**
- * @author Viktor Baranov (github.com/baranov-V-V)
- * @file generator.hpp
- * @date 2022-05-10
+ * @author Nikita Mochalov (github.com/tralf-strues)
+ * @file uuid.hpp
+ * @date 2022-09-07
  *
  * The MIT License (MIT)
- * Copyright (c) vulture-project
+ * Copyright (c) 2022 Nikita Mochalov
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -27,26 +27,13 @@
 
 #pragma once
 
+#include <stdint.h>
+
 namespace vulture {
 
-template <typename Id>
-class IdGenerator {
- public:
-  Id Next();
+using UUID64 = uint64_t;
+using UUID = UUID64;
 
- private:
-  Id current_{1};
-};
-
-template <typename Id>
-class StaticIdGenerator {
- public:
-  static Id Next();
- 
- private:
-  static Id current_;
-};
+UUID GenerateUUID();
 
 }  // namespace vulture
-
-#include "ecs/generator.ipp"

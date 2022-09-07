@@ -1,21 +1,21 @@
 /**
- * @author Viktor Baranov (github.com/baranov-V-V)
- * @file generator.ipp
- * @date 2022-05-10
- *
+ * @author Nikita Mochalov (github.com/tralf-strues)
+ * @file uuid.cpp
+ * @date 2022-09-07
+ * 
  * The MIT License (MIT)
- * Copyright (c) vulture-project
- *
+ * Copyright (c) 2022 Nikita Mochalov
+ * 
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
  * the rights to use, copy, modify, merge, publish, distribute, sublicense,
  * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,19 +25,13 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-namespace vulture {
+#include "core/uuid.hpp"
+#include <random>
 
-template <typename Id>
-Id IdGenerator<Id>::Next() {
-  return current_++;
+vulture::UUID vulture::GenerateUUID() {
+  static std::random_device random_device;
+  static std::mt19937_64 random_engine{random_device()};
+  static std::uniform_int_distribution<uint64_t> uniform_distribution;
+
+  return uniform_distribution(random_engine);
 }
-
-template <typename Id>
-Id StaticIdGenerator<Id>::Next() {
-  return current_++;
-}
-
-template <typename Id>
-Id StaticIdGenerator<Id>::current_{1};
-
-} // namespace vulture

@@ -107,6 +107,10 @@ void InputEventManager::GetCursorPosition(float* x, float* y) {
   *y = ypos;
 }
 
+void InputEventManager::SetCursorEnabled(bool enabled) {
+  glfwSetInputMode(window_->GetNativeWindow(), GLFW_CURSOR, enabled ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
+}
+
 void InputEventManager::SetWindowAndDispatcher(Window* window, Dispatcher* dispatcher) {
   assert(window);
   assert(dispatcher);

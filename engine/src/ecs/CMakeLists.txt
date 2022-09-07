@@ -6,7 +6,6 @@ target_sources(vulture-engine
     ${ECS_INCLUDE_DIR}/api.hpp
     ${ECS_INCLUDE_DIR}/component_holder.hpp
     ${ECS_INCLUDE_DIR}/entity_handle.hpp
-    ${ECS_INCLUDE_DIR}/generator.hpp
     ${ECS_INCLUDE_DIR}/registry.hpp
     ${ECS_INCLUDE_DIR}/view.hpp
   PRIVATE

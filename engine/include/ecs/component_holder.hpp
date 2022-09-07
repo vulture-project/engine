@@ -27,15 +27,14 @@
 
 #pragma once
 
-#include "ecs/generator.hpp"
-
 #include <cstdint>
 #include <utility>
 
+#include "core/uuid.hpp"
+
 namespace vulture {
 
-using ComponentTypeId = uint64_t;
-using ComponentTypeIdGenerator = StaticIdGenerator<ComponentTypeId>;
+using ComponentTypeId = UUID;
 
 class IComponentHolder {
  public:

@@ -155,6 +155,7 @@ class InputEventManager {
   static void TriggerEvents();
 
   static void GetCursorPosition(float* x, float* y);
+  static void SetCursorEnabled(bool enabled);
 
  private:
   static void KeyCallback        (GLFWwindow* window, int key, int scancode, int action, int mods);

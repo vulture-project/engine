@@ -50,6 +50,6 @@ ComponentTypeId ComponentHolder<ComponentT>::GetTypeId() {
 }
 
 template <typename ComponentT>
-ComponentTypeId ComponentHolder<ComponentT>::type_id_{ComponentTypeIdGenerator::Next()};
+ComponentTypeId ComponentHolder<ComponentT>::type_id_{GenerateUUID()};
 
 }  // namespace vulture

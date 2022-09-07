@@ -32,7 +32,7 @@
 namespace vulture {
 
 EntityId EntityRegistry::CreateEntity() {
-  EntityId id = entity_id_generator_.Next();
+  EntityId id = GenerateUUID();
   entities_.emplace(id, ComponentMap{});
   return id;
 }

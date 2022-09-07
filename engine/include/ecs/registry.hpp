@@ -27,20 +27,17 @@
 
 #pragma once
 
-#include "ecs/component_holder.hpp"
-#include "ecs/generator.hpp"
-
 #include <cassert>
 #include <cstdint>
 #include <unordered_map>
+
+#include "ecs/component_holder.hpp"
 
 namespace vulture {
 
 using EntityId = uint64_t;
 
 constexpr EntityId kInvalidEntityId = 0;
-
-using EntityIdGenerator = IdGenerator<EntityId>;
 
 using EntityMap = std::unordered_map<EntityId, IComponentHolder*>;
 using ComponentMap = std::unordered_map<ComponentTypeId, IComponentHolder*>;
@@ -77,7 +74,6 @@ class EntityRegistry {
  private:
   EntityStorage entities_;
   ComponentStorage components_;
-  EntityIdGenerator entity_id_generator_;
 };
 
 }  // namespace vulture
