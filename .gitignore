@@ -2,12 +2,14 @@
 *.DS_Store
 
 # build directory
-build/
+build_editor/
+build_sandbox/
 
 # Visual Studio Code directory
 .vscode/
 
 # binary
-engine
+vulture-editor
+vulture-sandbox
 
 log/

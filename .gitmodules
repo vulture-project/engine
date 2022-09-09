@@ -1,18 +1,15 @@
-[submodule "third_party/glm"]
-	path = third_party/glm
+[submodule "engine/third_party/glm"]
+	path = engine/third_party/glm
 	url = https://github.com/g-truc/glm.git
-[submodule "third_party/glfw"]
-	path = third_party/glfw
+[submodule "engine/third_party/glfw"]
+	path = engine/third_party/glfw
 	url = https://github.com/glfw/glfw.git
-[submodule "third_party/fmt"]
-	path = third_party/fmt
+[submodule "engine/third_party/fmt"]
+	path = engine/third_party/fmt
 	url = https://github.com/fmtlib/fmt.git
-[submodule "third_party/openal-soft"]
-	path = third_party/openal-soft
+[submodule "engine/third_party/openal-soft"]
+	path = engine/third_party/openal-soft
 	url = https://github.com/kcat/openal-soft.git
-[submodule "third_party/vorbis"]
-	path = third_party/vorbis
+[submodule "engine/third_party/vorbis"]
+	path = engine/third_party/vorbis
 	url = https://github.com/xiph/vorbis.git
-[submodule "third_party/rapidjson"]
-	path = third_party/rapidjson
-	url = https://github.com/Tencent/rapidjson.git
