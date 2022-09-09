@@ -30,6 +30,7 @@
 #include <initializer_list>
 #include <map>
 #include <optional>
+#include <string>
 #include <utility>
 
 #include "audio/audio_buffer.hpp"

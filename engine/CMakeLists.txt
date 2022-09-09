@@ -26,6 +26,7 @@ target_link_libraries(vulture-engine
     OpenAL
     stb_image
     vorbisfile
+    rapidjson
   )
 
 target_link_options(OpenAL
