@@ -23,12 +23,5 @@ target_link_libraries(vulture-engine
     glad
     glfw
     glm
-    OpenAL
     stb_image
-    vorbisfile
-  )
-
-target_link_options(OpenAL
-  PUBLIC
-  "LINKER:-lpthread"
   )

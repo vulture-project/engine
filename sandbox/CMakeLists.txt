@@ -22,7 +22,7 @@ target_link_libraries(vulture-sandbox
     glad
     glfw
     glm
-    OpenAL
+    # OpenAL
     stb_image
-    vorbisfile
+    # vorbisfile
   )
