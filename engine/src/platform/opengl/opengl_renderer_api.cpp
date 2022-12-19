@@ -35,10 +35,6 @@ void OpenGLRendererAPI::Init() {
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
     LOG_ERROR(Renderer, "Failed to initialize GLAD");
   }
-
-  // TODO:
-  GL_CALL(glEnable(GL_DEPTH_TEST));
-  GL_CALL(glDepthFunc(GL_LEQUAL)); // FIXME: only needed for some types of objects (e.g. skyboxes)
 }
 
 void OpenGLRendererAPI::SetViewport(const Viewport& viewport) {

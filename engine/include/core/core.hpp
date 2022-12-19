@@ -37,15 +37,15 @@
 #include "platform/window.hpp"
 #include "core/logger.hpp"
 
-#define ASSERT(x)                         \
-  if (!(x)) {                             \
-    LOG_ERROR(Core, "Assertion failed!"); \
+#define ASSERT(x, message)    \
+  if (!(x)) {                 \
+    LOG_ERROR(Core, message); \
   }
 
 #define GL_CALL(x)     \
   OpenglClearErrors(); \
   x;                   \
-  ASSERT(OpenglLogCall());
+  ASSERT(OpenglLogCall(), "OpenGL Error!");
 
 namespace vulture {
 

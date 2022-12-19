@@ -36,7 +36,103 @@
 
 namespace vulture {
 
+/* Rasterization Info */
+enum class CullMode : uint32_t {
+  kNone,
+  kFrontOnly,
+  kBackOnly,
+  kFrontAndBack
+};
+
+/* Depth testing */
+enum class CompareOperation {
+  kNever,
+  kLess,
+  kEqual,
+  kLessOrEqual,
+  kGreater,
+  kNotEqual,
+  kGreaterOrEqual,
+  kAlways
+};
+
+/* Color attachment blending */
+/**
+ * @brief Specifies blending factor.
+ * 
+ * Let
+ * 1. R_src, G_src, B_src, A_src - source color components
+ * 2. R_dst, G_dst, B_dst, A_dst - destination color components
+ * 
+ * Then factors are defined as follows:
+ *
+ * Factor            | RGB blend factors                 | Alpha blend factor             |
+ * -----------------:|:---------------------------------:|:------------------------------:|
+ * kZero             | (0, 0, 0)                         | 0                              |
+ * kOne              | (1, 1, 1)                         | 1                              |
+ * kSrcColor         | (R_src, G_src, B_src)             | A_src                          |
+ * kOneMinusSrcColor | (1 - R_src, 1 - G_src, 1 - B_src) | 1 - A_src                      |
+ * kDstColor         | (R_dst, G_dst, B_dst)             | A_dst                          |
+ * kOneMinusDstColor | (1 - R_dst, 1 - G_dst, 1 - B_dst) | 1 - A_dst                      |
+ * kSrcAlpha         | (A_src, A_src, A_src)             | A_src                          |
+ * kOneMinusSrcAlpha | (1 - A_src, 1 - A_src, 1 - A_src) | 1 - A_src                      |
+ * kDstAlpha         | (A_dst, A_dst, A_dst)             | A_dst                          |
+ * kOneMinusDstAlpha | (1 - A_dst, 1 - A_dst, 1 - A_dst) | 1 - A_dst                      |
+ */
+enum class ColorBlendFactor {
+  kZero,
+  kOne,
+  
+  kSrcColor,
+  kOneMinusSrcColor,
+  kDstColor,
+  kOneMinusDstColor,
+  
+  kSrcAlpha,
+  kOneMinusSrcAlpha,
+  kDstAlpha,
+  kOneMinusDstAlpha
+};
+
+/**
+ * @brief Specifies blending operation.
+ * 
+ * Let
+ * 1. R_src, G_src, B_src, A_src - source color components
+ * 2. R_dst, G_dst, B_dst, A_dst - destination color components
+ * 3. SF_r, SF_g, SF_b, SF_a - source blend factor components
+ * 4. DF_r, DF_g, DF_b, DF_a - destination blend factor components
+ * 
+ * Then operations are defined as follows:
+ * 
+ * Operation        | Final R/G/B                    | Final A                        |
+ * ----------------:|:------------------------------:|:------------------------------:|
+ * kAdd             | R_src * SF_r + R_dst * DF_r    | A_src * SF_a + A_dst * DF_a    |
+ * kSubtract        | R_src * SF_r - R_dst * DF_r    | A_src * SF_a - A_dst * DF_a    |
+ * kReverseSubtract | R_dst * DF_r - R_src * SF_r    | A_dst * DF_a - A_src * SF_a    |
+ * kMin             | min(R_src, R_dst)              | min(A_src, A_dst)              |
+ * kMax             | max(R_src, R_dst)              | max(A_src, A_dst)              |
+ */
+enum class ColorBlendOperation {
+  kAdd,
+  kSubtract,
+  kReverseSubtract,
+  kMin,
+  kMax
+};
+
 class Shader {
+ public:
+  CullMode cull_mode_{CullMode::kBackOnly};
+
+  bool enable_depth_test_{true};
+  CompareOperation depth_compare_op_{CompareOperation::kLess};
+
+  bool enable_blending_{true};
+  ColorBlendOperation blend_op_{ColorBlendOperation::kAdd};
+  ColorBlendFactor src_blend_factor_{ColorBlendFactor::kSrcAlpha};
+  ColorBlendFactor dst_blend_factor_{ColorBlendFactor::kOneMinusSrcAlpha};
+
  public:
   static SharedPtr<Shader> Create(const std::string& filename);
   // static SharedPtr<Shader> Create(const std::string& filename_vs, const std::string& filename_fs);
@@ -46,6 +142,8 @@ class Shader {
 
   virtual void Bind() const = 0;
   virtual void Unbind() const = 0;
+
+  virtual void SetUpPipeline() const = 0;
 
   virtual const AttributeLocationMap& GetAttributeLocations() const = 0;
 

@@ -58,6 +58,8 @@ constexpr const char* kAttribNameUV         = "in_uv";
 constexpr const char* kUniformNameRenderMode             = "u_render_mode";
 
 constexpr const char* kUniformNameProjectionView         = "u_projection_view";
+constexpr const char* kUniformNameProjection             = "u_projection";
+constexpr const char* kUniformNameView                   = "u_view";
 constexpr const char* kUniformNameModel                  = "u_model";
 
 constexpr const char* kUniformNameWSCamera               = "u_ws_camera";

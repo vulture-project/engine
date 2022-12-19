@@ -11,7 +11,8 @@ out vec2 uv;
 out vec3 ws_normal;
 out vec4 ws_tangent;
 
-uniform mat4 u_projection_view;
+uniform mat4 u_projection;
+uniform mat4 u_view;
 uniform mat4 u_model;
 
 void main()
@@ -23,7 +24,7 @@ void main()
     ws_normal          = normalize(normal_matrix * in_ms_normal);
     ws_tangent         = vec4(normalize(normal_matrix * in_ms_tangent.xyz), in_ms_tangent.w);
 
-    gl_Position = u_projection_view * vec4(ws_position, 1.0);
+    gl_Position = u_projection * u_view * vec4(ws_position, 1.0);
 }
 
 #shader fragment

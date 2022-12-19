@@ -68,6 +68,7 @@ void Renderer3D::RenderScene(Scene3D* scene, DebugRenderMode render_mode) {
     for (auto& submesh : mesh->mesh->GetSubmeshes()) {
       auto shader = submesh.GetMaterial()->GetShader();
       shader->Bind();
+      shader->SetUpPipeline();
 
       SetUpCamera(scene, shader);
       SetUpLights(scene, shader);
@@ -76,7 +77,8 @@ void Renderer3D::RenderScene(Scene3D* scene, DebugRenderMode render_mode) {
       shader->LoadUniformInt(static_cast<int>(render_mode), kUniformNameRenderMode);
 
       /* Setting up transformation matrices */
-      shader->LoadUniformMat4(scene->GetMainCamera()->CalculateProjectionViewMatrix(), kUniformNameProjectionView);
+      shader->LoadUniformMat4(scene->GetMainCamera()->CalculateProjectionMatrix(), kUniformNameProjection);
+      shader->LoadUniformMat4(scene->GetMainCamera()->CalculateViewMatrix(), kUniformNameView);
       shader->LoadUniformMat4(mesh->transform.CalculateMatrix(), kUniformNameModel);
 
       /* Setting up material info */

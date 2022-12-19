@@ -133,6 +133,62 @@ static uint32_t CreateShader(const std::string& vertex_shader, const std::string
   return program;
 }
 
+GLenum GetGLCullMode(CullMode cull_mode) {
+  switch (cull_mode) {
+    case CullMode::kFrontOnly:    { return GL_FRONT; }
+    case CullMode::kBackOnly:     { return GL_BACK; }
+    case CullMode::kFrontAndBack: { return GL_FRONT_AND_BACK; }
+
+    default: { ASSERT(false, "Invalid CullMode!"); }
+  };
+}
+
+GLenum GetGLDepthFunc(CompareOperation compare_op) {
+  switch (compare_op) {
+    case CompareOperation::kNever:          { return GL_NEVER; }
+    case CompareOperation::kLess:           { return GL_LESS; }
+    case CompareOperation::kEqual:          { return GL_EQUAL; }
+    case CompareOperation::kLessOrEqual:    { return GL_LEQUAL; }
+    case CompareOperation::kGreater:        { return GL_GREATER; }
+    case CompareOperation::kNotEqual:       { return GL_NOTEQUAL; }
+    case CompareOperation::kGreaterOrEqual: { return GL_GEQUAL; }
+    case CompareOperation::kAlways:         { return GL_ALWAYS; }
+
+    default: { ASSERT(false, "Invalid CompareOperation!"); }
+  };
+}
+
+GLenum GetGLBlendEquation(ColorBlendOperation blend_operation) {
+  switch (blend_operation) {
+    case ColorBlendOperation::kAdd:             { return GL_FUNC_ADD; }
+    case ColorBlendOperation::kSubtract:        { return GL_FUNC_SUBTRACT; }
+    case ColorBlendOperation::kReverseSubtract: { return GL_FUNC_REVERSE_SUBTRACT; }
+    case ColorBlendOperation::kMin:             { return GL_MIN; }
+    case ColorBlendOperation::kMax:             { return GL_MAX; }
+
+    default: { ASSERT(false, "Invalid ColorBlendOperation!"); }
+  };
+}
+
+GLenum GetGLBlendFactor(ColorBlendFactor blend_factor) {
+  switch (blend_factor) {
+    case ColorBlendFactor::kZero:              { return GL_ZERO; }
+    case ColorBlendFactor::kOne:               { return GL_ONE; }
+
+    case ColorBlendFactor::kSrcColor:          { return GL_SRC_COLOR; }
+    case ColorBlendFactor::kOneMinusSrcColor:  { return GL_ONE_MINUS_SRC_COLOR; }
+    case ColorBlendFactor::kDstColor:          { return GL_DST_COLOR; }
+    case ColorBlendFactor::kOneMinusDstColor:  { return GL_ONE_MINUS_DST_COLOR; }
+    
+    case ColorBlendFactor::kSrcAlpha:          { return GL_SRC_ALPHA; }
+    case ColorBlendFactor::kOneMinusSrcAlpha:  { return GL_ONE_MINUS_SRC_ALPHA; }
+    case ColorBlendFactor::kDstAlpha:          { return GL_DST_ALPHA; }
+    case ColorBlendFactor::kOneMinusDstAlpha:  { return GL_ONE_MINUS_DST_ALPHA; }
+
+    default: { ASSERT(false, "Invalid ColorBlendFactor!"); }
+  };
+}
+
 OpenGLShader::OpenGLShader(const std::string& filename) {
   ShaderProgramSource src = ParseShader(filename);
 
@@ -150,6 +206,34 @@ OpenGLShader::~OpenGLShader() { GL_CALL(glDeleteProgram(id_)); }
 void OpenGLShader::Bind() const { GL_CALL(glUseProgram(id_)); }
 
 void OpenGLShader::Unbind() const { GL_CALL(glUseProgram(0)); }
+
+void OpenGLShader::SetUpPipeline() const {
+  /* Face culling */
+  if (cull_mode_ == CullMode::kNone) {
+    glDisable(GL_CULL_FACE);
+  } else {
+    glEnable(GL_CULL_FACE);
+    glCullFace(GetGLCullMode(cull_mode_));
+  }
+
+  /* Depth testing */
+  if (!enable_depth_test_) {
+    glDisable(GL_DEPTH_TEST);
+  } else {
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GetGLDepthFunc(depth_compare_op_));
+  }
+
+  /* Color blending */
+  if (!enable_blending_) {
+    glDisable(GL_BLEND);
+  } else {
+    glEnable(GL_BLEND);
+
+    glBlendEquation(GetGLBlendEquation(blend_op_));
+    glBlendFunc(GetGLBlendFactor(src_blend_factor_), GetGLBlendFactor(dst_blend_factor_));
+  }
+}
 
 const AttributeLocationMap& OpenGLShader::GetAttributeLocations() const { return attribute_locations_; }
 

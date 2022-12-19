@@ -41,6 +41,8 @@ class OpenGLShader : public Shader {
   virtual void Bind() const override;
   virtual void Unbind() const override;
 
+  virtual void SetUpPipeline() const override;
+
   virtual const AttributeLocationMap& GetAttributeLocations() const override;
 
   virtual void LoadUniformInt(int value, const std::string& name) override;

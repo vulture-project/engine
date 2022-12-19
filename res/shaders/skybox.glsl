@@ -5,15 +5,18 @@ layout(location = 0) in vec3 in_ms_position;
 
 out vec3 texture_coordinates;
 
-uniform mat4 u_projection_view;
+uniform mat4 u_projection;
+uniform mat4 u_view;
 uniform mat4 u_model;
+
+uniform vec3 u_ws_camera;
 
 void main()
 {
     texture_coordinates = in_ms_position;
 
     // Passing w as z so that the resulting z-coordinate (and consequently depth value) in NDC is always 1.0
-    gl_Position = (u_projection_view * u_model * vec4(in_ms_position, 1.0)).xyww;
+    gl_Position = (u_projection * u_view * vec4(in_ms_position + u_ws_camera, 1.0)).xyww;
 }
 
 #shader fragment

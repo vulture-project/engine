@@ -73,7 +73,11 @@ SharedPtr<Mesh> vulture::CreateSkyboxMesh(const std::array<std::string, 6>& face
   vao->SetIndexBuffer(ibo);
 
   // SharedPtr<Material> material = CreateShared<Material>(Shader::Create("res/shaders/skybox.glsl"));
-  SharedPtr<Material> material = CreateShared<Material>(ResourceManager::LoadShader("res/shaders/skybox.glsl"));
+  SharedPtr<Shader> shader  = ResourceManager::LoadShader("res/shaders/skybox.glsl");
+  shader->cull_mode_        = CullMode::kNone;
+  shader->depth_compare_op_ = CompareOperation::kLessOrEqual;
+
+  SharedPtr<Material> material = CreateShared<Material>(shader);
   material->AddCubeMap(CubeMap::Create(faces_filenames), "u_skybox");
 
   return CreateShared<Mesh>(vao, material);
