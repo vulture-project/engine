@@ -71,7 +71,7 @@ class EditorApp : public Application {
 
   /* Scene */
   Scene scene_;
-  EntityId selected_entity_{kInvalidEntityId};
+  fennecs::EntityHandle selected_entity_{fennecs::EntityHandle::Null()};
 
   /* Panels */
   PreviewPanel preview_panel_;

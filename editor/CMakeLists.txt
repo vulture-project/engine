@@ -23,9 +23,9 @@ target_link_libraries(vulture-editor
     glad
     glfw
     glm
-    OpenAL
+    # OpenAL
     stb_image
-    vorbisfile
+    # vorbisfile
 
     imgui
   )

@@ -31,14 +31,19 @@
 
 using namespace vulture;
 
-void CameraMovementScript::OnAttach(EntityHandle entity, Dispatcher& dispatcher) {
-  entity_ = new EntityHandle(entity);
+void CameraMovementScript::OnAttach(fennecs::EntityHandle entity, Dispatcher& dispatcher) {
+  // entity_ = new EntityHandle(entity);
+  
+  entity_ = entity;
+  
   dispatcher.GetSink<MouseMoveEvent>().Connect<&CameraMovementScript::OnMouseMove>(*this);
   dispatcher.GetSink<MouseButtonEvent>().Connect<&CameraMovementScript::OnMouseButton>(*this);
 }
 
 void CameraMovementScript::OnUpdate(float timestep) {
-  Transform* transform = &entity_->GetComponent<TransformComponent>()->transform;
+  // Transform* transform = &entity_->GetComponent<TransformComponent>()->transform;
+
+  Transform* transform = &entity_.Get<TransformComponent>().transform;
 
   glm::vec3 forward = transform->CalculateRotationMatrix() * glm::vec4(kDefaultForwardVector, 1);
   glm::vec3 right = transform->CalculateRotationMatrix() * glm::vec4(kDefaultRightVector, 1);
@@ -68,7 +73,10 @@ void CameraMovementScript::OnMouseMove(const MouseMoveEvent& event) {
   float dx = mouse_prev_x_ - event.x;
   float dy = mouse_prev_y_ - event.y;
 
-  Transform* transform = &entity_->GetComponent<TransformComponent>()->transform;
+  // Transform* transform = &entity_->GetComponent<TransformComponent>()->transform;
+
+  Transform* transform = &entity_.Get<TransformComponent>().transform;
+
   rotation_y_ += 0.001f * dx;
   rotation_z_ += 0.001f * dy;
   transform->rotation = glm::quat(glm::vec3(rotation_z_, rotation_y_, 0));

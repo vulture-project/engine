@@ -33,7 +33,7 @@ namespace vulture {
 
 class InspectorPanel {
  public:
-  void OnRender(EntityHandle entity);
+  void OnRender(fennecs::EntityHandle entity);
 
  private:
 

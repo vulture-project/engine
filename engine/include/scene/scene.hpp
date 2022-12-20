@@ -32,11 +32,13 @@
 #include "renderer/3d/scene3d.hpp"
 #include "scene/components.hpp"
 
+#include "fennecs/entity/world.hpp"
+
 namespace vulture {
 
 class Scene {
  public:
-  EntityRegistry& GetEntityRegistry();
+  fennecs::EntityWorld& GetEntityWorld();
 
   void OnStart(Dispatcher& dispatcher);
 
@@ -63,7 +65,7 @@ class Scene {
    * @param name 
    * @return EntityHandle 
    */
-  EntityHandle CreateEntity(const std::string& name = "Untitled entity");
+  fennecs::EntityHandle CreateEntity(const std::string& name = "Untitled entity");
 
   /**
    * @brief Create a child entity from parent.
@@ -72,13 +74,13 @@ class Scene {
    * @param name 
    * @return EntityHandle 
    */
-  EntityHandle CreateChildEntity(EntityHandle parent, const std::string& name = "Untitled entity");
+  fennecs::EntityHandle CreateChildEntity(fennecs::EntityHandle& parent, const std::string& name = "Untitled entity");
 
-  glm::mat4 ComputeWorldSpaceMatrix(EntityHandle entity);
-  Transform ComputeWorldSpaceTransform(EntityHandle entity);
+  glm::mat4 ComputeWorldSpaceMatrix(fennecs::EntityHandle entity);
+  Transform ComputeWorldSpaceTransform(fennecs::EntityHandle entity);
 
  private:
-  EntityRegistry entities_;
+  fennecs::EntityWorld world_;
   Scene3D scene_;
 };
 

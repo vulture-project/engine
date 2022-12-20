@@ -37,7 +37,7 @@ class CameraMovementScript : public IScript {
  public:
   constexpr static float kSpeed = 15;
 
-  virtual void OnAttach(EntityHandle entity, Dispatcher& dispatcher) override;
+  virtual void OnAttach(fennecs::EntityHandle entity, Dispatcher& dispatcher) override;
   virtual void OnUpdate(float timestep) override;
 
  private:
@@ -45,7 +45,7 @@ class CameraMovementScript : public IScript {
   void OnMouseButton(const MouseButtonEvent& event);
 
  private:
-  EntityHandle* entity_{nullptr};  // FIXME:
+  fennecs::EntityHandle entity_{fennecs::EntityHandle::Null()};  // FIXME: Fix you =)
   float rotation_y_{0};            // Yaw
   float rotation_z_{0};            // Pitch
 
