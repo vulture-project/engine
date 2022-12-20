@@ -76,7 +76,7 @@ void EditorApp::Run() {
   EntityHandle sponza_light = scene_.CreateEntity("Sponza point light");
   sponza_light.AddComponent<TransformComponent>(glm::vec3(0, 3, 0));
   sponza_light.AddComponent<LightSourceComponent>(PointLightSpecs(
-        LightColorSpecs(glm::vec3(0.02), glm::vec3(0.9, 0.7, 1.0), glm::vec3(0.1)), LightAttenuationSpecs(15))); 
+        LightColorSpecs(glm::vec3(0.02), glm::vec3(0.957, 0.613, 0.086), glm::vec3(0.1)), LightAttenuationSpecs(0.006, 0.004))); 
 
   EntityHandle skybox = scene_.CreateChildEntity(camera, "Skybox");
   skybox.AddComponent<TransformComponent>();
@@ -134,6 +134,11 @@ void EditorApp::OnGuiRender() {
 
   entities_panel_.OnRender(scene_);
   selected_entity_ = entities_panel_.GetSelectedEntity();
+
+  auto meshes = GetView<MeshComponent>(scene_.GetEntityRegistry());
+  for (auto [entity, mesh] : meshes) {
+    mesh->outlined = (entity.GetId() == selected_entity_);
+  }
 
   inspector_panel_.OnRender({selected_entity_, scene_.GetEntityRegistry()});
 

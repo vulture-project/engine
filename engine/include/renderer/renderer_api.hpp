@@ -55,7 +55,7 @@ class RendererAPI {
   virtual void SetViewport(const Viewport& viewport) = 0;
   virtual Viewport GetViewport() const = 0;
 
-  virtual void Clear(const glm::vec4& color) = 0;
+  virtual void Clear(const glm::vec4& color, bool clear_depth = true) = 0;
   virtual void Draw(const VertexArray& vertex_array) = 0;
 
  private:

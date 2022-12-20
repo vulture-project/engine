@@ -86,6 +86,7 @@ void Scene::Render(Renderer3D* renderer, Framebuffer* framebuffer, Renderer3D::D
     }
 
     assert(entity.HasComponent<TransformComponent>());
+    mesh->runtime_node->outlined = mesh->outlined;
     mesh->runtime_node->transform = ComputeWorldSpaceTransform(entity);
   }
 

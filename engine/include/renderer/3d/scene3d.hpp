@@ -121,6 +121,7 @@ class LightSourceNode3D : public SceneNode3D {
 
 struct MeshNode3D : public SceneNode3D {
   SharedPtr<Mesh> mesh;
+  bool            outlined{false};
 
   MeshNode3D(SharedPtr<Mesh> mesh, const Transform& transform = Transform()) : SceneNode3D(transform), mesh(mesh) {}
 };

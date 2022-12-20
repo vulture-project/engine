@@ -54,6 +54,8 @@ class EntityHandle {
   template <typename ComponentT>
   bool HasComponent();
 
+  EntityId GetId() const { return id_; }
+
  private:
   EntityId id_{kInvalidEntityId};
   EntityRegistry& registry_;

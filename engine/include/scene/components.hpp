@@ -75,6 +75,7 @@ struct CameraComponent {
 
 struct MeshComponent {
   SharedPtr<Mesh> mesh{nullptr};
+  bool outlined{false};
 
   MeshNode3D* runtime_node{nullptr};
 

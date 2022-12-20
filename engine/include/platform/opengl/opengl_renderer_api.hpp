@@ -35,7 +35,7 @@ class OpenGLRendererAPI : public RendererAPI {
   void SetViewport(const Viewport& viewport) override;
   Viewport GetViewport() const override;
 
-  void Clear(const glm::vec4& color) override;
+  void Clear(const glm::vec4& color, bool clear_depth) override;
   void Draw(const VertexArray& vertex_array) override;
 
  private:

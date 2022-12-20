@@ -40,6 +40,7 @@
 #define ASSERT(x, message)    \
   if (!(x)) {                 \
     LOG_ERROR(Core, message); \
+    assert(false); \
   }
 
 #define GL_CALL(x)     \

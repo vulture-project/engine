@@ -44,9 +44,14 @@ void OpenGLRendererAPI::SetViewport(const Viewport& viewport) {
 
 Viewport OpenGLRendererAPI::GetViewport() const { return viewport_; }
 
-void OpenGLRendererAPI::Clear(const glm::vec4& color) {
+void OpenGLRendererAPI::Clear(const glm::vec4& color, bool clear_depth) {
   GL_CALL(glClearColor(color.r, color.g, color.b, color.a));
-  GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+
+  if (clear_depth) {
+    GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+  } else {
+    GL_CALL(glClear(GL_COLOR_BUFFER_BIT));
+  }
 }
 
 void OpenGLRendererAPI::Draw(const VertexArray& vertexArray) {

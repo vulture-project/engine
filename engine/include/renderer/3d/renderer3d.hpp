@@ -73,6 +73,7 @@ class Renderer3D {
   RendererAPI* GetRendererAPI();
 
  private:
+  void CreateShaders();
   void CreateFramebuffers(uint32_t width, uint32_t height);
 
   void SetUpCamera(Scene3D* scene, Shader* shader);
@@ -82,6 +83,11 @@ class Renderer3D {
   void DeferredLightingPass(Scene3D* scene, Framebuffer* framebuffer, DebugRenderMode render_mode);
 
   void ForwardPass(Scene3D* scene, Framebuffer* framebuffer, DebugRenderMode render_mode);
+
+  void OutlineMaskPass(Scene3D* scene);
+  void OutlineSeedsInitPass();
+  uint32_t OutlineJFAPasses();
+  void OutlineCombinePass(Framebuffer* framebuffer, uint32_t jfa_fb_idx);
 
   void FullscreenDraw();
 
@@ -94,6 +100,13 @@ class Renderer3D {
 
   SharedPtr<Shader>      deferred_lighting_shader_;
   Framebuffer*           gbuffer_;
+
+  SharedPtr<Shader>      outline_mask_pass_shader_;
+  SharedPtr<Shader>      outline_seeds_init_shader_;
+  SharedPtr<Shader>      outline_jfa_pass_shader_;
+  SharedPtr<Shader>      outline_combining_shader_;
+  Framebuffer*           outline_mask_fb_;
+  Framebuffer*           jfa_fbs_[2];
 };
 
 }  // namespace vulture
