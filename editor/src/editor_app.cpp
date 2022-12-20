@@ -62,39 +62,44 @@ int EditorApp::Init() {
 }
 
 void EditorApp::Run() {
-  EntityHandle camera = scene_.CreateEntity("Editor camera");
-  camera.AddComponent<CameraComponent>(PerspectiveCameraSpecs(1280 / 960), true);
-  camera.AddComponent<TransformComponent>(glm::vec3(0, 3, 15));
-  camera.AddComponent<ScriptComponent>(new CameraMovementScript());
+  // camera.AddComponent<CameraComponent>(PerspectiveCameraSpecs(1280 / 960), true);
+  // camera.AddComponent<TransformComponent>(glm::vec3(0, 3, 15));
+  // camera.AddComponent<ScriptComponent>(new CameraMovementScript());
 
-  EntityHandle sponza = scene_.CreateEntity("Sponza");
-  sponza.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/sponza.obj"));
-  sponza.AddComponent<TransformComponent>();
-  sponza.GetComponent<TransformComponent>()->transform.scale = glm::vec3(0.025);
-  sponza.GetComponent<TransformComponent>()->transform.Rotate(M_PI_2, kDefaultUpVector);
+  fennecs::EntityHandle camera = scene_.CreateEntity("Editor camera");
+  camera = scene_.GetEntityWorld().Attach<CameraComponent>(camera, PerspectiveCameraSpecs(1280 / 960), true);
+  camera = scene_.GetEntityWorld().Attach<TransformComponent>(camera, glm::vec3(0, 3, 15));
+  camera = scene_.GetEntityWorld().Attach<ScriptComponent>(camera, new CameraMovementScript());
 
-  EntityHandle sponza_light = scene_.CreateEntity("Sponza point light");
-  sponza_light.AddComponent<TransformComponent>(glm::vec3(0, 3, 0));
-  sponza_light.AddComponent<LightSourceComponent>(PointLightSpecs(
+  fennecs::EntityHandle sponza = scene_.CreateEntity("Sponza");
+  sponza = scene_.GetEntityWorld().Attach<MeshComponent>(sponza, ResourceManager::LoadMesh("res/meshes/sponza.obj"));
+  sponza = scene_.GetEntityWorld().Attach<TransformComponent>(sponza);
+  sponza.Get<TransformComponent>().transform.scale = glm::vec3(0.025);
+  sponza.Get<TransformComponent>().transform.Rotate(M_PI_2, kDefaultUpVector);
+
+  fennecs::EntityHandle sponza_light = scene_.CreateEntity("Sponza point light");
+  sponza_light = scene_.GetEntityWorld().Attach<TransformComponent>(sponza_light, glm::vec3(0, 3, 0));
+  sponza_light = scene_.GetEntityWorld().Attach<LightSourceComponent>(sponza_light, PointLightSpecs(
         LightColorSpecs(glm::vec3(0.02), glm::vec3(0.9, 0.7, 1.0), glm::vec3(0.1)), LightAttenuationSpecs(15))); 
 
-  EntityHandle skybox = scene_.CreateChildEntity(camera, "Skybox");
-  skybox.AddComponent<TransformComponent>();
-  skybox.AddComponent<MeshComponent>(CreateSkyboxMesh({"res/textures/skybox_morning_field/skybox_morning_field_right.jpeg",
-                                                       "res/textures/skybox_morning_field/skybox_morning_field_left.jpeg",
-                                                       "res/textures/skybox_morning_field/skybox_morning_field_top.jpeg",
-                                                       "res/textures/skybox_morning_field/skybox_morning_field_bottom.jpeg",
-                                                       "res/textures/skybox_morning_field/skybox_morning_field_front.jpeg",
-                                                       "res/textures/skybox_morning_field/skybox_morning_field_back.jpeg"}));
+  fennecs::EntityHandle skybox = scene_.CreateChildEntity(camera, "Skybox");
+  skybox = scene_.GetEntityWorld().Attach<TransformComponent>(skybox);
+  skybox = scene_.GetEntityWorld().Attach<MeshComponent>(skybox,
+    CreateSkyboxMesh({"res/textures/skybox_morning_field/skybox_morning_field_right.jpeg",
+    "res/textures/skybox_morning_field/skybox_morning_field_left.jpeg",
+    "res/textures/skybox_morning_field/skybox_morning_field_top.jpeg",
+    "res/textures/skybox_morning_field/skybox_morning_field_bottom.jpeg",
+    "res/textures/skybox_morning_field/skybox_morning_field_front.jpeg",
+    "res/textures/skybox_morning_field/skybox_morning_field_back.jpeg"}));
 
-  EntityHandle dir_light = scene_.CreateEntity("Directional light");
-  dir_light.AddComponent<LightSourceComponent>(
+  fennecs::EntityHandle dir_light = scene_.CreateEntity("Directional light");
+  dir_light = scene_.GetEntityWorld().Attach<LightSourceComponent>(dir_light,
       DirectionalLightSpecs(LightColorSpecs(glm::vec3(0), glm::vec3(0.9), glm::vec3(0.01))));
-  dir_light.AddComponent<TransformComponent>(Transform(glm::vec3(0), glm::vec3(-0.5, 0, 0)));
+  dir_light = scene_.GetEntityWorld().Attach<TransformComponent>(dir_light, Transform(glm::vec3(0), glm::vec3(-0.5, 0, 0)));
 
-  EntityHandle street_lamp = scene_.CreateEntity("Street lamp");
-  street_lamp.AddComponent<TransformComponent>();
-  street_lamp.AddComponent<MeshComponent>(ResourceManager::LoadMesh("res/meshes/street_lamp.obj"));
+  fennecs::EntityHandle street_lamp = scene_.CreateEntity("Street lamp");
+  street_lamp = scene_.GetEntityWorld().Attach<TransformComponent>(street_lamp);
+  street_lamp = scene_.GetEntityWorld().Attach<MeshComponent>(street_lamp, ResourceManager::LoadMesh("res/meshes/street_lamp.obj"));
 
   scene_.OnStart(event_dispatcher_);
 
@@ -134,7 +139,7 @@ void EditorApp::OnGuiRender() {
   entities_panel_.OnRender(scene_);
   selected_entity_ = entities_panel_.GetSelectedEntity();
 
-  inspector_panel_.OnRender({selected_entity_, scene_.GetEntityRegistry()});
+  inspector_panel_.OnRender(selected_entity_);
 
   renderer_info_panel_.OnRender();
 }

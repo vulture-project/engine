@@ -36,44 +36,38 @@ void EntitiesPanel::OnRender(Scene& scene) {
     const ImGuiTreeNodeFlags base_flags =
         ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
 
-    EntityId new_selected_entity{kInvalidEntityId};
+    fennecs::EntityHandle selected_entity{fennecs::EntityHandle::Null()};
 
-    for (auto [entity_id, component_storage] : scene.GetEntityRegistry().GetEntities()) {
-      const bool is_selected = (entity_id == selected_entity_);
+    size_t index{};
 
+    fennecs::EntityStream stream = scene.GetEntityWorld().Query<NameComponent>();
+    for (fennecs::EntityHandle entity = stream.Next(); !entity.IsNull(); entity = stream.Next()) {
       ImGuiTreeNodeFlags node_flags = base_flags;
-      if (is_selected) {
+      if (entity.IsEqual(selected_entity_)) {
         node_flags |= ImGuiTreeNodeFlags_Selected;
       }
 
       node_flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
 
-      EntityHandle handle{entity_id, scene.GetEntityRegistry()};
-      if (!handle.HasComponent<NameComponent>()) {
-        ImGui::TreeNodeEx((void*)(intptr_t)entity_id, node_flags, "Entity %llu", entity_id);
-      } else {
-        ImGui::TreeNodeEx((void*)(intptr_t)entity_id, node_flags, "%s",
-                          handle.GetComponent<NameComponent>()->name.c_str());
-      }
+      ImGui::TreeNodeEx((void*)(intptr_t)index++, node_flags, "%s", entity.Get<NameComponent>().name.c_str());
 
       if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
-        new_selected_entity = entity_id;
+        selected_entity = entity; 
       }
     }
 
-    if (new_selected_entity != kInvalidEntityId) {
-      selected_entity_ = new_selected_entity;
+    if (!selected_entity.IsNull()) {
+      selected_entity_ = selected_entity;
     }
-
   }
 
   ImGui::End();
 }
 
-void EntitiesPanel::SetSelectedEntity(EntityId entity_id) {
-  selected_entity_ = entity_id;
+void EntitiesPanel::SetSelectedEntity(fennecs::EntityHandle entity) {
+  selected_entity_ = entity;
 }
 
-EntityId EntitiesPanel::GetSelectedEntity() const {
+fennecs::EntityHandle EntitiesPanel::GetSelectedEntity() const {
   return selected_entity_;
 }
