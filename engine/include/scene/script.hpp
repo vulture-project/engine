@@ -27,7 +27,7 @@
 
 #pragma once
 
-#include "ecs/api.hpp"
+#include "fennecs/entity/handle.hpp"
 
 namespace vulture {
 
@@ -35,7 +35,7 @@ class IScript {
  public:
   virtual ~IScript() = default;
 
-  virtual void OnAttach(EntityHandle entity, Dispatcher& dispatcher) = 0;
+  virtual void OnAttach(fennecs::EntityHandle entity, Dispatcher& dispatcher) = 0;
   virtual void OnUpdate(float timestep) = 0;
 };
 

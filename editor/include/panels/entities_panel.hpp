@@ -33,15 +33,13 @@ namespace vulture {
 
 class EntitiesPanel {
  public:
-  // void OnInit();
-  // void OnClose();
   void OnRender(Scene& scene);
 
-  void SetSelectedEntity(EntityId entity_id);
-  EntityId GetSelectedEntity() const;
+  void SetSelectedEntity(fennecs::EntityHandle);
+  fennecs::EntityHandle GetSelectedEntity() const;
 
  private:
-  EntityId selected_entity_{kInvalidEntityId};
+  fennecs::EntityHandle selected_entity_{fennecs::EntityHandle::Null()};
 };
 
 }  // namespace vulture

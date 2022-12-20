@@ -35,22 +35,25 @@ const ImGuiTreeNodeFlags kComponentNodeBaseFlags =
     ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth |
     ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_FramePadding;
 
-void InspectorPanel::OnRender(EntityHandle entity) {
+void InspectorPanel::OnRender(fennecs::EntityHandle entity) {
   if (ImGui::Begin("Inspector")) {
-    if (entity.HasComponent<TransformComponent>()) {
-      RenderTransformComponent(*entity.GetComponent<TransformComponent>());
-    }
 
-    if (entity.HasComponent<CameraComponent>()) {
-      RenderCameraComponent(*entity.GetComponent<CameraComponent>());
-    }
+    if (!entity.IsNull()) {
+      if (entity.Has<TransformComponent>()) {
+        RenderTransformComponent(entity.Get<TransformComponent>());
+      }
 
-    if (entity.HasComponent<MeshComponent>()) {
-      RenderMeshComponent(*entity.GetComponent<MeshComponent>());
-    }
+      if (entity.Has<CameraComponent>()) {
+        RenderCameraComponent(entity.Get<CameraComponent>());
+      }
 
-    if (entity.HasComponent<LightSourceComponent>()) {
-      RenderLightSourceComponent(*entity.GetComponent<LightSourceComponent>());
+      if (entity.Has<MeshComponent>()) {
+        RenderMeshComponent(entity.Get<MeshComponent>());
+      }
+
+      if (entity.Has<LightSourceComponent>()) {
+        RenderLightSourceComponent(entity.Get<LightSourceComponent>());
+      }
     }
   }
 

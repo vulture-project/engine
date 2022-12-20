@@ -44,11 +44,11 @@ struct NameComponent {
 };
 
 struct HierarchyComponent {
-  std::optional<EntityHandle> parent{std::nullopt};
-  std::vector<EntityHandle> children;
+  std::optional<fennecs::EntityHandle> parent{std::nullopt};
+  std::vector<fennecs::EntityHandle> children;
 
   HierarchyComponent() = default;
-  HierarchyComponent(EntityHandle parent) : parent(parent) {}
+  HierarchyComponent(fennecs::EntityHandle parent) : parent(parent) {}
 };
 
 struct TransformComponent {
