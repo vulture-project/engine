@@ -48,7 +48,7 @@ EditorApp::~EditorApp()
 
 int EditorApp::Init() {
   InputEventManager::SetWindowAndDispatcher(&window_, &event_dispatcher_);
-  Renderer3D::Init();
+  renderer_.Init();
 
   // OnResize(window_.GetFramebufferWidth(), window_.GetFramebufferHeight());
   OnInitImGui();
@@ -89,7 +89,7 @@ void EditorApp::Run() {
 
   EntityHandle dir_light = scene_.CreateEntity("Directional light");
   dir_light.AddComponent<LightSourceComponent>(
-      DirectionalLightSpecs(LightColorSpecs(glm::vec3(0), glm::vec3(0.9), glm::vec3(0.01))));
+      DirectionalLightSpecs(LightColorSpecs(glm::vec3(0.5), glm::vec3(0.9), glm::vec3(0.01))));
   dir_light.AddComponent<TransformComponent>(Transform(glm::vec3(0), glm::vec3(-0.5, 0, 0)));
 
   EntityHandle street_lamp = scene_.CreateEntity("Street lamp");
@@ -111,14 +111,15 @@ void EditorApp::Run() {
 
     if (preview_panel_.Resized()) {
       scene_.OnViewportResize(framebuffer_width, framebuffer_height);
+      renderer_.OnFramebufferResize(framebuffer_width, framebuffer_height);
     }
 
     scene_.OnUpdate(timestep);
 
-    preview_panel_.GetFramebuffer().Bind();
-    Renderer3D::SetViewport(Viewport{0, 0, framebuffer_width, framebuffer_height});
-    scene_.Render(renderer_info_panel_.GetRenderMode());
-    preview_panel_.GetFramebuffer().Unbind();
+    // preview_panel_.GetFramebuffer().Bind();
+    // renderer_.GetRendererAPI()->Clear({1, 0, 0, 1});
+    scene_.Render(&renderer_, &preview_panel_.GetFramebuffer(), renderer_info_panel_.GetRenderMode());
+    // preview_panel_.GetFramebuffer().Unbind();
 
     OnFrameStartImGui();
     OnGuiRender();
@@ -136,7 +137,7 @@ void EditorApp::OnGuiRender() {
 
   inspector_panel_.OnRender({selected_entity_, scene_.GetEntityRegistry()});
 
-  renderer_info_panel_.OnRender();
+  renderer_info_panel_.OnRender(&renderer_);
 }
 
 //================================================================

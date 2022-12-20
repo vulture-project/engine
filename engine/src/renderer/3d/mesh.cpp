@@ -62,6 +62,19 @@ static constexpr const uint32_t kSkyboxIndices[] = {
   0, 5, 1
 };
 
+const float kQuadVertices[] = {
+  // positions   // uvs
+  -1.0f,  1.0f,  0.0f, 1.0f, // top-left
+  -1.0f, -1.0f,  0.0f, 0.0f, // bottom-left
+   1.0f, -1.0f,  1.0f, 0.0f, // bottom-right
+   1.0f,  1.0f,  1.0f, 1.0f  // top-right
+};
+
+const uint32_t kQuadIndices[] = {
+  0, 1, 3,
+  3, 1, 2
+};
+
 SharedPtr<Mesh> vulture::CreateSkyboxMesh(const std::array<std::string, 6>& faces_filenames) {
   SharedPtr<VertexBuffer> vbo{VertexBuffer::Create(kSkyboxVertices, sizeof(kSkyboxVertices))};
   vbo->SetLayout(VertexBufferLayout{{BufferDataType::kFloat3, kAttribNameMSPosition}});
@@ -74,6 +87,7 @@ SharedPtr<Mesh> vulture::CreateSkyboxMesh(const std::array<std::string, 6>& face
 
   // SharedPtr<Material> material = CreateShared<Material>(Shader::Create("res/shaders/skybox.glsl"));
   SharedPtr<Shader> shader  = ResourceManager::LoadShader("res/shaders/skybox.glsl");
+  shader->geometry_pass_    = GeometryPass::kForward;
   shader->cull_mode_        = CullMode::kNone;
   shader->depth_compare_op_ = CompareOperation::kLessOrEqual;
 
@@ -81,4 +95,23 @@ SharedPtr<Mesh> vulture::CreateSkyboxMesh(const std::array<std::string, 6>& face
   material->AddCubeMap(CubeMap::Create(faces_filenames), "u_skybox");
 
   return CreateShared<Mesh>(vao, material);
+}
+
+SharedPtr<VertexArray> vulture::CreateQuad() {
+  SharedPtr<VertexBuffer> vbo{VertexBuffer::Create(kQuadVertices, sizeof(kQuadVertices))};
+  vbo->SetLayout(VertexBufferLayout{{BufferDataType::kFloat2, kAttribNameMSPosition},
+                                    {BufferDataType::kFloat2, kAttribNameUV}});
+
+  SharedPtr<IndexBuffer> ibo{IndexBuffer::Create(kQuadIndices, sizeof(kQuadIndices) / sizeof(kQuadIndices[0]))};
+
+  SharedPtr<VertexArray> vao{VertexArray::Create()};
+  vao->AddVertexBuffer(vbo);
+  vao->SetIndexBuffer(ibo);
+
+  AttributeLocationMap location_map;
+  location_map[kAttribNameMSPosition] = 0;
+  location_map[kAttribNameUV] = 1;
+  vao->SetAttributeLocations(location_map);
+
+  return vao;
 }

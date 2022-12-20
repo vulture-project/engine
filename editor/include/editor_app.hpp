@@ -67,6 +67,8 @@ class EditorApp : public Application {
 
   ImGuiIO* imgui_io_{nullptr};
 
+  Renderer3D renderer_;
+
   /* Scene */
   Scene scene_;
   EntityId selected_entity_{kInvalidEntityId};

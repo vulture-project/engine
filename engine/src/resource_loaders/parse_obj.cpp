@@ -360,8 +360,11 @@ bool vulture::ParseMaterialsWavefront(const std::string& filename, MapMaterials&
   }
 
   for (uint32_t i = 0; i < materials_count; ++i) {
-    SharedPtr<Material> material =
-        CreateShared<Material>(ResourceManager::LoadShader("res/shaders/basic_normal_mapped.glsl"));
+    SharedPtr<Shader> shader = ResourceManager::LoadShader("res/shaders/deferred_geometry.glsl");
+    SharedPtr<Material> material = CreateShared<Material>(shader);
+
+    shader->enable_blending_ = false;
+
     if (materials[i].map_normal.has_value()) {
       material->AddTexture(ResourceManager::LoadTexture(materials[i].map_normal.value()), "{}.{}", kUniformNameMaterial,
                            kStructMemberNameNormalMap);
@@ -382,7 +385,7 @@ bool vulture::ParseMaterialsWavefront(const std::string& filename, MapMaterials&
 
     material->SetUniform(materials[i].color_ambient, "{}.{}", kUniformNameMaterial, kStructMemberNameAmbientColor);
     material->SetUniform(materials[i].color_diffuse, "{}.{}", kUniformNameMaterial, kStructMemberNameDiffuseColor);
-    material->SetUniform(materials[i].color_specular, "{}.{}", kUniformNameMaterial, kStructMemberNameSpecularColor);
+    material->SetUniform(materials[i].color_specular.r, "{}.{}", kUniformNameMaterial, "specular");
     material->SetUniform(materials[i].specular_exponent, "{}.{}", kUniformNameMaterial,
                          kStructMemberNameSpecularExponent);
 

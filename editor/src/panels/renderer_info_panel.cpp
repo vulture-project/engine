@@ -30,8 +30,8 @@
 
 using namespace vulture;
 
-void RendererInfoPanel::OnRender() {
-  Renderer3D::Info info = Renderer3D::GetInfo();
+void RendererInfoPanel::OnRender(Renderer3D* renderer) {
+  Renderer3D::Info info = renderer->GetInfo();
 
   if (ImGui::Begin("Renderer Info")) {
     const char* modes[] = {"Default", "Normals", "Normal maps", "Tangents", "Depth"};

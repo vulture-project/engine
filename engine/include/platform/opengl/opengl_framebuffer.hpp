@@ -41,6 +41,10 @@ class OpenGLFramebuffer : public Framebuffer {
   virtual void Unbind() const override;
 
   virtual uint32_t GetColorAttachmentId(uint32_t idx) override;
+  virtual void BindColorAttachmentAsTexture(uint32_t idx, uint32_t slot) override;
+
+  virtual void BlitDepthAttachment(Framebuffer* target) override;
+
   virtual FramebufferSpec GetFramebufferSpec() const override;
 
   virtual void Resize(uint32_t width, uint32_t height) override;
@@ -48,6 +52,8 @@ class OpenGLFramebuffer : public Framebuffer {
  private:
   void DeleteAttachments();
   void ReinitializeAttachments();
+
+  uint32_t GetColorAttachmentOpenGLHandle(uint32_t idx);
 
  private:
   uint32_t id_{0};

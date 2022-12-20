@@ -38,6 +38,7 @@ enum class FramebufferAttachmentFormat {
 
   // Color attachments
   kRGBA8,
+  kRGBA32F,
 
   // Depth and stencil attachments
   kDepth24Stencil8,
@@ -72,6 +73,10 @@ class Framebuffer {
   virtual void Unbind() const = 0;
 
   virtual uint32_t GetColorAttachmentId(uint32_t idx = 0) = 0;
+  virtual void BindColorAttachmentAsTexture(uint32_t idx, uint32_t slot) = 0;
+
+  virtual void BlitDepthAttachment(Framebuffer* target) = 0;
+
   virtual FramebufferSpec GetFramebufferSpec() const = 0;
 
   virtual void Resize(uint32_t width, uint32_t height) = 0;

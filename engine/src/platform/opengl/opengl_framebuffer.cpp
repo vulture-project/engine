@@ -34,6 +34,7 @@ using namespace vulture;
 GLenum ConvertToOpenGLInternalFormat(FramebufferAttachmentFormat format) {
   switch (format) {
     case FramebufferAttachmentFormat::kRGBA8:           { return GL_RGBA8; }
+    case FramebufferAttachmentFormat::kRGBA32F:         { return GL_RGBA16F; }
     case FramebufferAttachmentFormat::kDepth24Stencil8: { return GL_DEPTH24_STENCIL8; }
     default:                                            { assert(!"Invalid framebuffer attachment format"); }
   }
@@ -44,6 +45,7 @@ GLenum ConvertToOpenGLInternalFormat(FramebufferAttachmentFormat format) {
 GLenum ConvertToOpenGLFormat(FramebufferAttachmentFormat format) {
   switch (format) {
     case FramebufferAttachmentFormat::kRGBA8:           { return GL_RGBA; }
+    case FramebufferAttachmentFormat::kRGBA32F:         { return GL_RGBA; }
     case FramebufferAttachmentFormat::kDepth24Stencil8: { return GL_DEPTH_STENCIL; }
     default:                                            { assert(!"Invalid framebuffer attachment format"); }
   }
@@ -54,6 +56,7 @@ GLenum ConvertToOpenGLFormat(FramebufferAttachmentFormat format) {
 GLenum ConvertToOpenGLType(FramebufferAttachmentFormat format) {
   switch (format) {
     case FramebufferAttachmentFormat::kRGBA8:           { return GL_UNSIGNED_BYTE; }
+    case FramebufferAttachmentFormat::kRGBA32F:         { return GL_FLOAT; }
     case FramebufferAttachmentFormat::kDepth24Stencil8: { return GL_UNSIGNED_INT_24_8; }
     default:                                            { assert(!"Invalid framebuffer attachment format"); }
   }
@@ -61,12 +64,12 @@ GLenum ConvertToOpenGLType(FramebufferAttachmentFormat format) {
   return 0;
 }
 
-bool IsColorAttachment(FramebufferAttachmentFormat format) {
-  return format == FramebufferAttachmentFormat::kRGBA8;
-}
-
 bool IsDepthAttachment(FramebufferAttachmentFormat format) {
   return format == FramebufferAttachmentFormat::kDepth24Stencil8;
+}
+
+bool IsColorAttachment(FramebufferAttachmentFormat format) {
+  return !IsDepthAttachment(format);
 }
 
 OpenGLFramebuffer::OpenGLFramebuffer(const FramebufferSpec& spec) : specification_(spec) {
@@ -89,20 +92,27 @@ void OpenGLFramebuffer::Unbind() const {
 }
 
 uint32_t OpenGLFramebuffer::GetColorAttachmentId(uint32_t idx) {
-  uint32_t color_attachments = 0;
-  uint32_t i = 0;
-  for (; i < attachments_id_.size() && color_attachments < idx; ++i) {
-    if (IsColorAttachment(specification_.attachments[i].format)) {
-      ++color_attachments;
-    }
-  }
+  return GetColorAttachmentOpenGLHandle(idx);
+}
 
-  if (color_attachments != idx) {
-    LOG_ERROR(Renderer, "Invalid color attachment idx = {}, there are {} color attachments", idx, color_attachments);
-    return 0;
-  }
+void OpenGLFramebuffer::BindColorAttachmentAsTexture(uint32_t idx, uint32_t slot) {
+  uint32_t id = GetColorAttachmentOpenGLHandle(idx);
 
-  return attachments_id_[i];
+  GL_CALL(glActiveTexture(GL_TEXTURE0 + slot));
+  GL_CALL(glBindTexture(GL_TEXTURE_2D, id));
+}
+
+void OpenGLFramebuffer::BlitDepthAttachment(Framebuffer* target) {
+  OpenGLFramebuffer* opengl_target = dynamic_cast<OpenGLFramebuffer*>(target);
+
+  GL_CALL(glBindFramebuffer(GL_READ_FRAMEBUFFER, id_));
+  GL_CALL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, opengl_target->id_));
+
+  GL_CALL(glBlitFramebuffer(0, 0, specification_.width, specification_.height, 0, 0, specification_.width,
+                            specification_.height, GL_DEPTH_BUFFER_BIT, GL_NEAREST));
+
+  GL_CALL(glBindFramebuffer(GL_READ_FRAMEBUFFER, 0));
+  GL_CALL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));
 }
 
 FramebufferSpec OpenGLFramebuffer::GetFramebufferSpec() const {
@@ -186,5 +196,30 @@ void OpenGLFramebuffer::ReinitializeAttachments() {
     attachments_id_.push_back(id);
   }
 
+  std::vector<GLenum> draw_buffers;
+  draw_buffers.resize(color_attachments);
+  for (uint32_t i = 0; i < color_attachments; ++i) {
+    draw_buffers[i] = GL_COLOR_ATTACHMENT0 + i;
+  }
+
+  GL_CALL(glDrawBuffers(draw_buffers.size(), draw_buffers.data()));
+
   Unbind();
+}
+
+uint32_t OpenGLFramebuffer::GetColorAttachmentOpenGLHandle(uint32_t idx) {
+  uint32_t color_attachments = 0;
+  uint32_t i = 0;
+  for (; i < attachments_id_.size() && color_attachments < idx; ++i) {
+    if (IsColorAttachment(specification_.attachments[i].format)) {
+      ++color_attachments;
+    }
+  }
+
+  if (color_attachments != idx) {
+    LOG_ERROR(Renderer, "Invalid color attachment idx = {}, there are {} color attachments", idx, color_attachments);
+    return 0;
+  }
+
+  return attachments_id_[i];
 }

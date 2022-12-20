@@ -121,11 +121,20 @@ enum class ColorBlendOperation {
   kMax
 };
 
+enum class GeometryPass {
+  kNonGeometry,
+  kDeferred,
+  kForward
+};
+
 class Shader {
  public:
+  GeometryPass geometry_pass_{GeometryPass::kDeferred};
+
   CullMode cull_mode_{CullMode::kBackOnly};
 
   bool enable_depth_test_{true};
+  bool enable_depth_write_{true};
   CompareOperation depth_compare_op_{CompareOperation::kLess};
 
   bool enable_blending_{true};

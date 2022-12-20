@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE)
 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -DGLFW_INCLUDE_NONE -g -O2 -fsanitize=address")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -DGLFW_INCLUDE_NONE -g -O0 -fsanitize=address")
 
 set(ENGINE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(ENGINE_INCLUDE_DIR ${ENGINE_DIR}/include)

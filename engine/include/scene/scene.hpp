@@ -52,9 +52,10 @@ class Scene {
   /**
    * @brief Render the scene.
    * 
+   * @param renderer 
    * @param render_mode 
    */
-  void Render(Renderer3D::DebugRenderMode render_mode = Renderer3D::DebugRenderMode::kDefault);
+  void Render(Renderer3D* renderer, Framebuffer* framebuffer, Renderer3D::DebugRenderMode render_mode = Renderer3D::DebugRenderMode::kDefault);
 
   /**
    * @brief Create a parentless entity.

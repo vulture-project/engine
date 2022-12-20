@@ -62,7 +62,7 @@ void Scene::OnUpdate(float timestep) {
   }
 }
 
-void Scene::Render(Renderer3D::DebugRenderMode render_mode) {
+void Scene::Render(Renderer3D* renderer, Framebuffer* framebuffer, Renderer3D::DebugRenderMode render_mode) {
   /* Scene3D sync */
   auto lights = GetView<LightSourceComponent>(entities_);
   for (auto [entity, light] : lights) {
@@ -118,7 +118,7 @@ void Scene::Render(Renderer3D::DebugRenderMode render_mode) {
   }
 
   /* Rendering */
-  Renderer3D::RenderScene(&scene_, render_mode);
+  renderer->RenderScene(&scene_, framebuffer, render_mode);
 }
 
 EntityHandle Scene::CreateEntity(const std::string& name) {

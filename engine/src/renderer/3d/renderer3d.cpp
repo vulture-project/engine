@@ -32,41 +32,138 @@
 
 using namespace vulture;
 
-ScopePtr<RendererAPI> Renderer3D::rendererAPI_;
-Renderer3D::Info Renderer3D::info_;
+Renderer3D::~Renderer3D() {
+  delete gbuffer_;
+}
 
 void Renderer3D::Init() {
   rendererAPI_ = RendererAPI::Create();
   rendererAPI_->Init();
+
+  screen_quad_ = CreateQuad();
+
+  deferred_lighting_shader_ = Shader::Create("res/shaders/deferred_lighting.glsl");
+  deferred_lighting_shader_->cull_mode_          = CullMode::kNone;
+  deferred_lighting_shader_->enable_depth_test_  = false;
+  deferred_lighting_shader_->enable_depth_write_ = false;
+  deferred_lighting_shader_->enable_blending_    = false;
+
+  CreateFramebuffers(1, 1);
 }
 
 void Renderer3D::SetViewport(const Viewport& viewport) { rendererAPI_->SetViewport(viewport); }
 
-void Renderer3D::RenderScene(Scene3D* scene, DebugRenderMode render_mode) {
+void Renderer3D::OnFramebufferResize(uint32_t width, uint32_t height) {
+  gbuffer_->Resize(width, height);
+}
+
+void Renderer3D::RenderScene(Scene3D* scene, Framebuffer* framebuffer, DebugRenderMode render_mode) {
   assert(scene);
 
-  info_.render_mode    = render_mode;
-  info_.viewport       = rendererAPI_->GetViewport();
-  info_.frame_time_ms  = 0.0f;
-  info_.fps            = 0.0f;
-  info_.draw_calls     = 0;
-  info_.materials      = 0;
-  info_.meshes         = scene->GetMeshes().size();
-  info_.cameras        = scene->GetCameras().size();
-  info_.light_sources  = scene->GetLightSources().size();
+  info_.render_mode   = render_mode;
+  info_.viewport      = rendererAPI_->GetViewport();
+  info_.frame_time_ms = 0.0f;
+  info_.fps           = 0.0f;
+  info_.draw_calls    = 0;
+  info_.materials     = 0;
+  info_.meshes        = scene->GetMeshes().size();
+  info_.cameras       = scene->GetCameras().size();
+  info_.light_sources = scene->GetLightSources().size();
 
   clock_t time_start = clock();
-
-  rendererAPI_->Clear(glm::vec4{0, 0, 0, 1});
 
   if (scene->GetMainCamera() == nullptr) {
     LOG_WARN(Renderer, "No main camera specified for the scene!");
     return;
   }
 
+  DeferredGeometryPass(scene);
+  DeferredLightingPass(scene, framebuffer, render_mode);
+  
+  gbuffer_->BlitDepthAttachment(framebuffer);
+  ForwardPass(scene, framebuffer, render_mode);
+
+  info_.frame_time_ms  = static_cast<float>(clock() - time_start) / CLOCKS_PER_SEC; // in seconds
+  info_.fps            = 1 / info_.frame_time_ms;
+  info_.frame_time_ms *= 1000.f; // convert to milliseconds
+}
+
+void Renderer3D::DeferredGeometryPass(Scene3D* scene) {
+  gbuffer_->Bind();
+  rendererAPI_->SetViewport(Viewport{0, 0, gbuffer_->GetFramebufferSpec().width, gbuffer_->GetFramebufferSpec().height});
+
+  rendererAPI_->Clear({0, 0, 0, 1});
+
   for (const auto& mesh : scene->GetMeshes()) {
     for (auto& submesh : mesh->mesh->GetSubmeshes()) {
       auto shader = submesh.GetMaterial()->GetShader();
+      if (shader->geometry_pass_ != GeometryPass::kDeferred) {
+        continue;
+      }
+
+      shader->Bind();
+      shader->SetUpPipeline();
+
+      SetUpCamera(scene, shader);
+
+      /* Setting up transformation matrices */
+      shader->LoadUniformMat4(scene->GetMainCamera()->CalculateProjectionMatrix(), kUniformNameProjection);
+      shader->LoadUniformMat4(scene->GetMainCamera()->CalculateViewMatrix(), kUniformNameView);
+      shader->LoadUniformMat4(mesh->transform.CalculateMatrix(), kUniformNameModel);
+
+      /* Setting up material info */
+      submesh.GetMaterial()->LoadUniformsToShader();
+
+      /* Drawing */
+      rendererAPI_->Draw(*submesh.GetVertexArray());
+      ++info_.draw_calls;
+
+      shader->Unbind();
+    }
+  }
+
+  gbuffer_->Unbind();
+}
+
+void Renderer3D::DeferredLightingPass(Scene3D* scene, Framebuffer* framebuffer, DebugRenderMode render_mode) {
+  framebuffer->Bind();
+  rendererAPI_->SetViewport(Viewport{0, 0, framebuffer->GetFramebufferSpec().width, framebuffer->GetFramebufferSpec().height});
+
+  rendererAPI_->Clear(glm::vec4{0, 0, 0, 1});
+
+  deferred_lighting_shader_->Bind();
+  deferred_lighting_shader_->SetUpPipeline();
+
+  SetUpLights(scene, deferred_lighting_shader_.get());
+  SetUpCamera(scene, deferred_lighting_shader_.get());
+
+  gbuffer_->BindColorAttachmentAsTexture(0, 0);
+  gbuffer_->BindColorAttachmentAsTexture(1, 1);
+  gbuffer_->BindColorAttachmentAsTexture(2, 2);
+
+  deferred_lighting_shader_->LoadUniformInt(0, "gPosition");
+  deferred_lighting_shader_->LoadUniformInt(1, "gNormal");
+  deferred_lighting_shader_->LoadUniformInt(2, "gDiffuseSpec");
+
+  /* Setting up render mode */
+  deferred_lighting_shader_->LoadUniformInt(static_cast<int>(render_mode), kUniformNameRenderMode);
+
+  FullscreenDraw();
+
+  framebuffer->Unbind();
+}
+
+void Renderer3D::ForwardPass(Scene3D* scene, Framebuffer* framebuffer, DebugRenderMode render_mode) {
+  framebuffer->Bind();
+  rendererAPI_->SetViewport(Viewport{0, 0, framebuffer->GetFramebufferSpec().width, framebuffer->GetFramebufferSpec().height});
+
+  for (const auto& mesh : scene->GetMeshes()) {
+    for (auto& submesh : mesh->mesh->GetSubmeshes()) {
+      auto shader = submesh.GetMaterial()->GetShader();
+      if (shader->geometry_pass_ != GeometryPass::kForward) {
+        continue;
+      }
+
       shader->Bind();
       shader->SetUpPipeline();
 
@@ -92,9 +189,11 @@ void Renderer3D::RenderScene(Scene3D* scene, DebugRenderMode render_mode) {
     }
   }
 
-  info_.frame_time_ms  = static_cast<float>(clock() - time_start) / CLOCKS_PER_SEC; // in seconds
-  info_.fps            = 1 / info_.frame_time_ms;
-  info_.frame_time_ms *= 1000.f; // convert to milliseconds
+  framebuffer->Unbind();
+}
+
+void Renderer3D::FullscreenDraw() {
+  rendererAPI_->Draw(*screen_quad_);
 }
 
 static void LoadTranslation(Shader* shader, const std::string& name, const Transform& transform) {
@@ -142,6 +241,17 @@ static void LoadSpotLight(Shader* shader, const std::string& name, const SpotLig
 
   shader->LoadUniformFloat(specs.inner_cone_cosine, "{}.{}", name, kStructMemberNameSpotInnerConeCosine);
   shader->LoadUniformFloat(specs.outer_cone_cosine, "{}.{}", name, kStructMemberNameSpotOuterConeCosine);
+}
+
+void Renderer3D::CreateFramebuffers(uint32_t width, uint32_t height) {
+  FramebufferSpec gbuffer_spec{};
+  gbuffer_spec.width       = width;
+  gbuffer_spec.height      = height;
+  gbuffer_spec.attachments = {FramebufferAttachmentFormat::kRGBA32F, //  Position
+                              FramebufferAttachmentFormat::kRGBA32F, //  Normal
+                              FramebufferAttachmentFormat::kRGBA8,   //  Diffuse (RGB), Specular (A)
+                              FramebufferAttachmentFormat::kDepth24Stencil8};
+  gbuffer_ = Framebuffer::Create(gbuffer_spec);
 }
 
 void Renderer3D::SetUpCamera(Scene3D* scene, Shader* shader) {
@@ -195,4 +305,8 @@ void Renderer3D::SetUpLights(Scene3D* scene, Shader* shader) {
 
 Renderer3D::Info Renderer3D::GetInfo() {
   return info_;
+}
+
+RendererAPI* Renderer3D::GetRendererAPI() {
+  return rendererAPI_.get();
 }

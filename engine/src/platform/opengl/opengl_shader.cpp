@@ -224,6 +224,8 @@ void OpenGLShader::SetUpPipeline() const {
     glDepthFunc(GetGLDepthFunc(depth_compare_op_));
   }
 
+  glDepthMask(enable_depth_write_);
+
   /* Color blending */
   if (!enable_blending_) {
     glDisable(GL_BLEND);

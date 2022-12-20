@@ -33,7 +33,7 @@ namespace vulture {
 
 class RendererInfoPanel {
  public:
-  void OnRender();
+  void OnRender(Renderer3D* renderer);
 
   void SetRenderMode(Renderer3D::DebugRenderMode render_mode);
   Renderer3D::DebugRenderMode GetRenderMode() const;

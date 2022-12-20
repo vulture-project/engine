@@ -57,7 +57,7 @@ class Mesh {
   Mesh() = default;
 
   Mesh(SharedPtr<VertexArray> vertex_array, SharedPtr<Material> material) {
-    assert(material->GetShader());
+    // assert(material->GetShader());
     submeshes_.emplace_back(vertex_array, material);
   }
 
@@ -82,5 +82,7 @@ class Mesh {
  * @return SharedPtr<Mesh>
  */
 SharedPtr<Mesh> CreateSkyboxMesh(const std::array<std::string, 6>& faces_filenames);
+
+SharedPtr<VertexArray> CreateQuad();
 
 }  // namespace vulture

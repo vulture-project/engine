@@ -29,6 +29,7 @@
 
 #include "core/core.hpp"
 #include "renderer/renderer_api.hpp"
+#include "renderer/framebuffer.hpp"
 #include "renderer/shader.hpp"
 #include "renderer/3d/scene3d.hpp"
 
@@ -61,18 +62,38 @@ class Renderer3D {
   };
 
  public:
-  static void Init();
-  static void SetViewport(const Viewport& viewport);
-  static void RenderScene(Scene3D* scene, DebugRenderMode render_mode = DebugRenderMode::kDefault);
-  static Info GetInfo();
+  ~Renderer3D();
+
+  void Init();
+  void SetViewport(const Viewport& viewport);
+  void OnFramebufferResize(uint32_t width, uint32_t height);
+  void RenderScene(Scene3D* scene, Framebuffer* framebuffer, DebugRenderMode render_mode = DebugRenderMode::kDefault);
+  Info GetInfo();
+
+  RendererAPI* GetRendererAPI();
 
  private:
-  static void SetUpCamera(Scene3D* scene, Shader* shader);
-  static void SetUpLights(Scene3D* scene, Shader* shader);
+  void CreateFramebuffers(uint32_t width, uint32_t height);
+
+  void SetUpCamera(Scene3D* scene, Shader* shader);
+  void SetUpLights(Scene3D* scene, Shader* shader);
+
+  void DeferredGeometryPass(Scene3D* scene);
+  void DeferredLightingPass(Scene3D* scene, Framebuffer* framebuffer, DebugRenderMode render_mode);
+
+  void ForwardPass(Scene3D* scene, Framebuffer* framebuffer, DebugRenderMode render_mode);
+
+  void FullscreenDraw();
 
  private:
-  static ScopePtr<RendererAPI> rendererAPI_;
-  static Info info_;
+  ScopePtr<RendererAPI> rendererAPI_;
+  Info info_;
+
+ private:
+  SharedPtr<VertexArray> screen_quad_;
+
+  SharedPtr<Shader>      deferred_lighting_shader_;
+  Framebuffer*           gbuffer_;
 };
 
 }  // namespace vulture
