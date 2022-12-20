@@ -27,70 +27,22 @@
 
 #pragma once
 
+#include <cassert>
 #include <queue>
 #include <vector>
 
 #include "platform/window.hpp"
-#include "event_system/event_system.hpp"
 
 namespace vulture {
 
-enum Action {
-  kRelease,
-  kPress,
-  kHold
-};
+enum class MouseButton {
+  kLeftMouseButton = GLFW_MOUSE_BUTTON_LEFT,
+  kRightMouseButton = GLFW_MOUSE_BUTTON_RIGHT,
+  kMiddleMouseButton = GLFW_MOUSE_BUTTON_MIDDLE,
+  kX1MouseButton = GLFW_MOUSE_BUTTON_4,
+  kX2MouseButton = GLFW_MOUSE_BUTTON_5,
 
-enum MouseButton {
-  kLeftMouseButton,
-  kRightMouseButton,
-  kMiddleMouseButton,
-  kX1MouseButton,
-  kX2MouseButton
-};
-
-struct ButtonMods {
-  ButtonMods() = default;
-  explicit ButtonMods(int mods);
-
-  bool shift_pressed : 1;
-  bool ctrl_pressed  : 1;
-  bool alt_pressed   : 1;
-};
-
-struct QuitEvent {};
-
-struct ScrollEvent {
-  ScrollEvent(int dx, int dy) : dx(dx), dy(dy) {}
-
-  int dx;
-  int dy;
-};
-
-struct MouseMoveEvent {         // Do we need dx and dy here?
-  MouseMoveEvent(int x, int y) : x(x), y(y) {}
-
-  int x;
-  int y;
-};
-
-struct MouseButtonEvent {       // Do we need coords here?
-  MouseButtonEvent() = default;
-  MouseButtonEvent(int button, int action, int mods);
-
-  MouseButton button;
-  Action action;
-  ButtonMods mods;
-};
-
-struct KeyEvent {
-  KeyEvent() = default;
-  KeyEvent(int key, int scancode, int action, int mods);
-
-  int key;
-  int scancode;
-  Action action;
-  ButtonMods mods;
+  kMouseButtonsCount
 };
 
 enum class Keys {
@@ -145,17 +97,18 @@ enum class Keys {
   kEnterKey = GLFW_KEY_ENTER,
 };
 
-class InputEventManager {
+class Input {
  private:
-  InputEventManager() = default;
+  Input() = default;
 
  public:
-  static void SetWindowAndDispatcher(Window* window, Dispatcher* dispatcher);
+  static void SetWindow(GLFWwindow* window);
 
-  static void TriggerEvents();
+  static bool GetKeyPressed(Keys key);
+  static bool GetMousePressed(MouseButton button);
 
-  static void GetCursorPosition(float* x, float* y);
-  static void SetCursorEnabled(bool enabled);
+  static void GetMousePosition(float* x, float* y);
+  static void SetMouseEnabled(bool enabled);
 
  private:
   static void KeyCallback        (GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -164,8 +117,56 @@ class InputEventManager {
   static void CloseCallback      (GLFWwindow* window);
   static void ScrollCallback     (GLFWwindow* window, double dx, double dy);
 
-  static Window* window_;
-  static Dispatcher* dispatcher_;
+  static GLFWwindow* window_;
+};
+
+class Mouse {
+ private:
+  Mouse() = default;
+
+ public:
+  static bool Pressed(MouseButton button) {
+    return button_pressed_[static_cast<size_t>(button)];
+  }
+
+  static std::vector<bool>& GetButtons() {
+    return button_pressed_;
+  }
+
+  static void GetScrollDelta(float* dx, float* dy) {
+    assert(dx);
+    assert(dy);
+
+    *dx = scroll_dx_;
+    *dy = scroll_dy_;
+  }
+
+  static void Scroll(float dx, float dy) {
+    scroll_dx_ += dx;
+    scroll_dy_ += dy;
+  }
+
+  static void GetMousePosition(float* x, float* y) {
+    assert(x);
+    assert(y);
+
+    *x = mouse_position_x;
+    *y = mouse_position_y;
+  }
+
+  static void MouseMove(float dx, float dy) {
+    mouse_position_x += dx;
+    mouse_position_y += dy;
+  }
+
+  static const size_t kMaxKey = static_cast<size_t>(MouseButton::kMouseButtonsCount);
+  static std::vector<bool> button_pressed_;
+
+  static float mouse_position_x;
+  static float mouse_position_y;
+
+  static float scroll_dx_;
+  static float scroll_dy_;
 };
 
 class Keyboard {
@@ -174,16 +175,16 @@ class Keyboard {
 
  public:
   static bool Pressed(Keys key) {
-    return keys_pressed_[static_cast<size_t>(key)];
+    return key_pressed_[static_cast<size_t>(key)];
   }
 
   static std::vector<bool>& GetKeys() {
-    return keys_pressed_;
+    return key_pressed_;
   }
 
  private:
   static const size_t kMaxKey = GLFW_KEY_LAST;
-  static std::vector<bool> keys_pressed_;
+  static std::vector<bool> key_pressed_;
 };
 
 }  // namespace vulture

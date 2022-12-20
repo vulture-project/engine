@@ -81,11 +81,11 @@ void CameraMovementScript::OnMouseButton(const MouseButtonEvent& event) {
   if (event.button == kRightMouseButton) {
     if (event.action == kPress) {
       rotation_mode_ = true;
-      InputEventManager::GetCursorPosition(&mouse_prev_x_, &mouse_prev_y_);
-      InputEventManager::SetCursorEnabled(false);
+      Input::GetMousePosition(&mouse_prev_x_, &mouse_prev_y_);
+      Input::SetMouseEnabled(false);
     } else if (event.action == kRelease) {
       rotation_mode_ = false;
-      InputEventManager::SetCursorEnabled(true);
+      Input::SetMouseEnabled(true);
     }
   }
 }

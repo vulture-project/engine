@@ -29,13 +29,13 @@
 
 #include "app/app.hpp"
 #include "event_system/event_system.hpp"
-#include "platform/event.hpp"
+#include "platform/input.hpp"
 #include "platform/window.hpp"
 #include "renderer/3d/scene3d.hpp"
 #include "scene/scene.hpp"
 
-void ProcessMoveEvent(const vulture::MouseMoveEvent& event);
-void ProcessKeyEvent(const vulture::KeyEvent& event);
+// void ProcessMoveEvent(const vulture::MouseMoveEvent& event);
+void ProcessInput();
 
 class SandboxApp : public vulture::Application {
  public:

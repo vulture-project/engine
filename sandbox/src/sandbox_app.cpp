@@ -57,9 +57,9 @@ int SandboxApp::Init() {
     return -1;
   }
 
-  InputEventManager::SetWindowAndDispatcher(&window_, &dispatcher);
+  Input::SetWindow(window_.GetNativeWindow());
 
-  dispatcher.GetSink<KeyEvent>().Connect<&ProcessKeyEvent>();
+  // dispatcher.GetSink<KeyEvent>().Connect<&ProcessKeyEvent>();
 
   return 0;
 }
@@ -78,7 +78,7 @@ class PlayerMovementScript : public IScript {
 
   virtual void OnAttach(EntityHandle entity, Dispatcher& dispatcher) override {
     entity_ = new EntityHandle(entity);
-    dispatcher.GetSink<MouseMoveEvent>().Connect<&PlayerMovementScript::OnMouseMove>(*this);
+    // dispatcher.GetSink<MouseMoveEvent>().Connect<&PlayerMovementScript::OnMouseMove>(*this);
     dispatcher.GetSink<JumpEvent>().Connect<&PlayerMovementScript::OnJump>(*this);
   }
 
@@ -90,15 +90,15 @@ class PlayerMovementScript : public IScript {
 
     float disp = kSpeed * timestep;
 
-    if (Keyboard::Pressed(Keys::kWKey)) {
+    if (Input::GetKeyPressed(Keys::kWKey)) {
       transform->translation += disp * forward;
-    } else if (Keyboard::Pressed(Keys::kSKey)) {
+    } else if (Input::GetKeyPressed(Keys::kSKey)) {
       transform->translation -= disp * forward;
     }
 
-    if (Keyboard::Pressed(Keys::kDKey)) {
+    if (Input::GetKeyPressed(Keys::kDKey)) {
       transform->translation += disp * right;
-    } else if (Keyboard::Pressed(Keys::kAKey)) {
+    } else if (Input::GetKeyPressed(Keys::kAKey)) {
       transform->translation -= disp * right;
     }
 
@@ -108,22 +108,28 @@ class PlayerMovementScript : public IScript {
     transform->translation.y = std::max(2.5f, transform->translation.y);
 
     skybox_->GetComponent<TransformComponent>()->transform.translation = transform->translation;
+
+    ProcessInput();
   }
 
-  void OnMouseMove(const MouseMoveEvent& event) {
+  void ProcessInput() {
     static float prev_x = 0;
     static float prev_y = 0;
     
-    float dx = prev_x - event.x;
-    float dy = prev_y - event.y;
+    float x = 0;
+    float y = 0;
+
+    Input::GetMousePosition(&x, &y);
+    float dx = prev_x - x;
+    float dy = prev_y - y;
 
     Transform* transform = &entity_->GetComponent<TransformComponent>()->transform;
     rotation_y += 0.001f * dx;
     rotation_z += 0.001f * dy;
     transform->rotation = glm::quat(glm::vec3(rotation_z, rotation_y, 0));
 
-    prev_x = event.x;
-    prev_y = event.y;
+    prev_x = x;
+    prev_y = y;
   }
 
   void OnJump(const JumpEvent&) {
@@ -296,10 +302,11 @@ void SandboxApp::Run() {
 
   clock_t time_start = clock();
   while (running) {
+    ProcessInput();
     float timestep = (0.0f + clock() - time_start) / CLOCKS_PER_SEC;
     time_start = clock();
 
-    InputEventManager::TriggerEvents();
+    // Need to process input
 
     scene_.OnUpdate(timestep);
     scene_.Render(render_mode);
@@ -309,33 +316,30 @@ void SandboxApp::Run() {
   }
 }
 
-void ProcessKeyEvent(const vulture::KeyEvent& event) {
-  int key = event.key;
-  int action = (int)event.action;
-
-  if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
+void ProcessInput() {
+  if (Input::GetKeyPressed(Keys::kEscKey)) {
     running = false;
   }
 
-  if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE) {
+  if (Input::GetKeyPressed(Keys::kSpaceKey)) {
     dispatcher.Trigger<JumpEvent>();
   }
 
-  if (key == GLFW_KEY_F && action == GLFW_PRESS) {
-    spot_light->GetComponent<LightSourceComponent>()->runtime_node->SetEnabled(
-        !spot_light->GetComponent<LightSourceComponent>()->runtime_node->IsEnabled());
-  }
+  // if (key == GLFW_KEY_F && action == GLFW_PRESS) {
+  //   spot_light->GetComponent<LightSourceComponent>()->runtime_node->SetEnabled(
+  //       !spot_light->GetComponent<LightSourceComponent>()->runtime_node->IsEnabled());
+  // }
 
-  if (key == GLFW_KEY_G && action == GLFW_PRESS) {
-    dir_light->GetComponent<LightSourceComponent>()->runtime_node->SetEnabled(
-        !dir_light->GetComponent<LightSourceComponent>()->runtime_node->IsEnabled());
-  }
+  // if (key == GLFW_KEY_G && action == GLFW_PRESS) {
+  //   dir_light->GetComponent<LightSourceComponent>()->runtime_node->SetEnabled(
+  //       !dir_light->GetComponent<LightSourceComponent>()->runtime_node->IsEnabled());
+  // }
 
-  if (action == kPress && key >= (int32_t)Keys::k0Key && key <= (int32_t)Keys::k4Key) {
-    render_mode = (Renderer3D::DebugRenderMode)(key - (int32_t)Keys::k0Key);
-  }
+  // if (action == kPress && key >= (int32_t)Keys::k0Key && key <= (int32_t)Keys::k4Key) {
+  //   render_mode = (Renderer3D::DebugRenderMode)(key - (int32_t)Keys::k0Key);
+  // }
 
-  if (key == GLFW_KEY_R && action == GLFW_PRESS) {
-    render_mode = (Renderer3D::DebugRenderMode)(((uint32_t)(render_mode) + 1) % (uint32_t)Renderer3D::DebugRenderMode::kTotal);
-  }
+  // if (key == GLFW_KEY_R && action == GLFW_PRESS) {
+  //   render_mode = (Renderer3D::DebugRenderMode)(((uint32_t)(render_mode) + 1) % (uint32_t)Renderer3D::DebugRenderMode::kTotal);
+  // }
 }
