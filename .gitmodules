@@ -1,0 +1,9 @@
+[submodule "engine/third_party/glm"]
+	path = engine/third_party/glm
+	url = https://github.com/g-truc/glm
+[submodule "engine/third_party/glfw"]
+	path = engine/third_party/glfw
+	url = https://github.com/glfw/glfw
+[submodule "engine/third_party/fmt"]
+	path = engine/third_party/fmt
+	url = https://github.com/fmtlib/fmt
