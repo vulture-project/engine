@@ -10,6 +10,11 @@ build_sandbox/
 
 # binary
 vulture-editor
-vulture-sandbox
 
 log/
+
+# CLion Cache
+.idea
+
+# CLion CMake cache
+cmake-build-debug

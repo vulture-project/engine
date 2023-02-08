@@ -8,30 +8,20 @@ namespace fennecs {
 
 namespace detail {
 
-template <typename... Components>
-struct Mask;
-
-template <typename Component>
-struct Mask<Component> {
-  static const BitMask kValue;
-};
-
-template <typename Component>
-const BitMask Mask<Component>::kValue = ComponentTraits<Component>::Mask();
-
 template <typename Component, typename... Components>
-struct Mask<Component, Components...> {
-  static const BitMask kValue;
-};
-
-template <typename Component, typename... Components>
-const BitMask Mask<Component, Components...>::kValue = ComponentTraits<Component>::Mask() | Mask<Components...>::kValue;
+BitMask MaskOf() {
+  if constexpr (sizeof...(Components) == 0) {
+    return ComponentTraits<Component>::Mask();
+  } else {
+    return ComponentTraits<Component>::Mask() + MaskOf<Components...>();
+  }
+}
 
 }  // namespace detail
 
 template <typename... Components>
 EntityArchetype EntityArchetype::ConsistsOf() {
-  return EntityArchetype{detail::Mask<Components...>::kValue};
+  return EntityArchetype{detail::MaskOf<Components...>()};
 }
 
 template <typename Component>
