@@ -12,7 +12,6 @@ add_executable(vulture-editor)
 
 set(EDITOR_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_subdirectory(${EDITOR_DIR}/../engine engine)
 add_subdirectory(third_party)
 add_subdirectory(src)
 
