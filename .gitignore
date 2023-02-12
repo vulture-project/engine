@@ -4,12 +4,19 @@
 # build directory
 build_editor/
 build_sandbox/
+build/
 
 # Visual Studio Code directory
 .vscode/
 
 # binary
 vulture-editor
+
+build.sh
+run.sh
+
+# ImGui
+imgui.ini
 
 log/
 
