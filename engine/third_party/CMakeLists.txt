@@ -1,3 +1,4 @@
+add_subdirectory(fennecs)
 add_subdirectory(fmt)
 add_subdirectory(glad)
 add_subdirectory(glfw)

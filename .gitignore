@@ -25,3 +25,6 @@ log/
 
 # CLion CMake cache
 cmake-build-debug
+
+# Tests
+fennecs_tests

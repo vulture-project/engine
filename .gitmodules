@@ -7,3 +7,6 @@
 [submodule "engine/third_party/fmt"]
 	path = engine/third_party/fmt
 	url = https://github.com/fmtlib/fmt
+[submodule "engine/third_party/fennecs"]
+	path = engine/third_party/fennecs
+	url = https://github.com/elisfromkirov/fennecs.git
