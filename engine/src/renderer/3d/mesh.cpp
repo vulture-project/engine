@@ -25,9 +25,9 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#include "asset/asset_registry.hpp"
 #include "renderer/3d/mesh.hpp"
 #include "renderer/3d/3d_default_shader_names.hpp"
-#include "core/resource_manager.hpp"
 
 using namespace vulture;
 
@@ -86,7 +86,7 @@ SharedPtr<Mesh> vulture::CreateSkyboxMesh(const std::array<std::string, 6>& face
   vao->SetIndexBuffer(ibo);
 
   // SharedPtr<Material> material = CreateShared<Material>(Shader::Create("res/shaders/skybox.glsl"));
-  SharedPtr<Shader> shader  = ResourceManager::LoadShader("res/shaders/skybox.glsl");
+  SharedPtr<Shader> shader  = AssetRegistry::Instance()->Load<Shader>("res/shaders/skybox.glsl");
   shader->geometry_pass_    = GeometryPass::kForward;
   shader->cull_mode_        = CullMode::kNone;
   shader->depth_compare_op_ = CompareOperation::kLessOrEqual;

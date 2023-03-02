@@ -1,5 +1,7 @@
 #include "editor_app.hpp"
 
+#include "asset/asset_loader_registrar.hpp"
+
 int main(int, char**) {
   vulture::EditorApp app;
   app.Init();

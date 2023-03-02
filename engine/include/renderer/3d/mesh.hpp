@@ -29,6 +29,7 @@
 
 #include <vector>
 
+#include "asset/asset.hpp"
 #include "core/core.hpp"
 #include "renderer/buffer.hpp"
 #include "renderer/material.hpp"
@@ -52,7 +53,7 @@ class Submesh {
   SharedPtr<Material> material_{nullptr};
 };
 
-class Mesh {
+class Mesh : public IAsset {
  public:
   Mesh() = default;
 

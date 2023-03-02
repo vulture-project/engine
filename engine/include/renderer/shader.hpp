@@ -31,6 +31,7 @@
 #include <string>
 #include <fmt/format.h>
 
+#include "asset/asset.hpp"
 #include "core/core.hpp"
 #include "renderer/buffer.hpp"
 
@@ -127,7 +128,7 @@ enum class GeometryPass {
   kForward
 };
 
-class Shader {
+class Shader : public IAsset {
  public:
   GeometryPass geometry_pass_{GeometryPass::kDeferred};
 
@@ -146,8 +147,6 @@ class Shader {
   static SharedPtr<Shader> Create(const std::string& filename);
   // static SharedPtr<Shader> Create(const std::string& filename_vs, const std::string& filename_fs);
   static SharedPtr<Shader> Create(const std::string& vertex_shader, const std::string& fragment_shader);
-
-  virtual ~Shader() = default;
 
   virtual void Bind() const = 0;
   virtual void Unbind() const = 0;

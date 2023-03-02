@@ -27,11 +27,12 @@
 
 #pragma once
 
+#include "asset/asset.hpp"
 #include "core/core.hpp"
 
 namespace vulture {
 
-class Texture {
+class Texture : public IAsset {
  public:
   virtual ~Texture() = default;
 

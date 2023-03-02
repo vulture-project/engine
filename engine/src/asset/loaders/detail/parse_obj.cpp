@@ -1,44 +1,12 @@
-/**
- * @author Nikita Mochalov (github.com/tralf-strues)
- * @file parse_obj.cpp
- * @date 2022-05-01
- * 
- * The MIT License (MIT)
- * Copyright (c) vulture-project
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- * DEALINGS IN THE SOFTWARE.
- */
+#include <asset/asset_registry.hpp>
 
-#include "resource_loaders/parse_obj.hpp"
+#include <asset/loaders/detail/parse_obj.hpp>
 
-#include <cstring>
-#include <fstream>
-#include <iostream>
-#include <map>
-#include <optional>
-#include <string>
+#include <renderer/3d/3d_default_shader_names.hpp>
 
-#include "core/logger.hpp"
-#include "core/resource_manager.hpp"
-#include "renderer/3d/3d_default_shader_names.hpp"
+namespace vulture {
 
-using namespace vulture;
+namespace detail {
 
 struct PackedVertex {
   glm::vec3 position;
@@ -89,7 +57,7 @@ glm::vec3 SafeNormalize(const glm::vec3& vector) {
   }
 }
 
-SharedPtr<Mesh> vulture::ParseMeshWavefront(const std::string& filename) {
+SharedPtr<Mesh> ParseMeshWavefront(const std::string& filename) {
   struct Vertex {
     uint32_t index_position;
     uint32_t index_uv;
@@ -104,14 +72,14 @@ SharedPtr<Mesh> vulture::ParseMeshWavefront(const std::string& filename) {
   LOG_INFO(Renderer, "Loading mesh from file \"{}\"", filename);
 
   SharedPtr<Material> default_material =
-      CreateShared<Material>(ResourceManager::LoadShader("res/shaders/basic_normal_mapped.glsl"));
+      CreateShared<Material>(AssetRegistry::Instance()->Load<Shader>("res/shaders/basic_normal_mapped.glsl"));
   default_material->SetUniform(glm::vec3{1.0}, "{}.{}", kUniformNameMaterial, kStructMemberNameAmbientColor);
   default_material->SetUniform(glm::vec3{0.8}, "{}.{}", kUniformNameMaterial, kStructMemberNameDiffuseColor);
   default_material->SetUniform(glm::vec3{0.5}, "{}.{}", kUniformNameMaterial, kStructMemberNameSpecularColor);
   default_material->SetUniform(225.0f, "{}.{}", kUniformNameMaterial, kStructMemberNameSpecularExponent);
   default_material->SetUniform(1, "{}.{}", kUniformNameMaterial, kStructMemberNameNormalStrength);
   default_material->SetUniform(false, "{}.{}", kUniformNameMaterial, kStructMemberNameUseNormalMap);
-  default_material->AddTexture(ResourceManager::LoadTexture("res/textures/blank.png"), "{}.{}", kUniformNameMaterial,
+  default_material->AddTexture(AssetRegistry::Instance()->Load<Texture>("res/textures/blank.png"), "{}.{}", kUniformNameMaterial,
                                kStructMemberNameDiffuseMap);
 
   std::vector<glm::vec3> positions;
@@ -315,7 +283,7 @@ SharedPtr<Mesh> vulture::ParseMeshWavefront(const std::string& filename) {
   return mesh;
 }
 
-bool vulture::ParseMaterialsWavefront(const std::string& filename, MapMaterials& materials_map) {
+bool ParseMaterialsWavefront(const std::string& filename, MapMaterials& materials_map) {
   LOG_INFO(Renderer, "Loading materials from file \"{}\"", filename);
 
   std::ifstream stream(filename);
@@ -360,13 +328,13 @@ bool vulture::ParseMaterialsWavefront(const std::string& filename, MapMaterials&
   }
 
   for (uint32_t i = 0; i < materials_count; ++i) {
-    SharedPtr<Shader> shader = ResourceManager::LoadShader("res/shaders/deferred_geometry.glsl");
+    SharedPtr<Shader> shader = AssetRegistry::Instance()->Load<Shader>("res/shaders/deferred_geometry.glsl");
     SharedPtr<Material> material = CreateShared<Material>(shader);
 
     shader->enable_blending_ = false;
 
     if (materials[i].map_normal.has_value()) {
-      material->AddTexture(ResourceManager::LoadTexture(materials[i].map_normal.value()), "{}.{}", kUniformNameMaterial,
+      material->AddTexture(AssetRegistry::Instance()->Load<Texture>(materials[i].map_normal.value()), "{}.{}", kUniformNameMaterial,
                            kStructMemberNameNormalMap);
       material->SetUniform(true, "{}.{}", kUniformNameMaterial, kStructMemberNameUseNormalMap);
       material->SetUniform(materials[i].normal_strength, "{}.{}", kUniformNameMaterial,
@@ -376,10 +344,10 @@ bool vulture::ParseMaterialsWavefront(const std::string& filename, MapMaterials&
     }
 
     if (materials[i].map_diffuse.has_value()) {
-      material->AddTexture(ResourceManager::LoadTexture(*materials[i].map_diffuse), "{}.{}", kUniformNameMaterial,
+      material->AddTexture(AssetRegistry::Instance()->Load<Texture>(*materials[i].map_diffuse), "{}.{}", kUniformNameMaterial,
                            kStructMemberNameDiffuseMap);
     } else {
-      material->AddTexture(ResourceManager::LoadTexture("res/textures/blank.png"), "{}.{}", kUniformNameMaterial,
+      material->AddTexture(AssetRegistry::Instance()->Load<Texture>("res/textures/blank.png"), "{}.{}", kUniformNameMaterial,
                            kStructMemberNameDiffuseMap);
     }
 
@@ -396,3 +364,7 @@ bool vulture::ParseMaterialsWavefront(const std::string& filename, MapMaterials&
 
   return true;
 }
+
+}  // namespace detail
+
+}  // namespace vulture

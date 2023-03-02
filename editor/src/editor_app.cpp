@@ -25,12 +25,12 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#include "asset/asset_registry.hpp"
 #include "editor_app.hpp"
 
 #include <glad/glad.h>
 
 #include "camera_movement.hpp"
-#include "core/resource_manager.hpp"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -72,7 +72,7 @@ void EditorApp::Run() {
   camera = scene_.GetEntityWorld().Attach<ScriptComponent>(camera, new CameraMovementScript());
 
   fennecs::EntityHandle sponza = scene_.CreateEntity("Sponza");
-  sponza = scene_.GetEntityWorld().Attach<MeshComponent>(sponza, ResourceManager::LoadMesh("res/meshes/sponza.obj"));
+  sponza = scene_.GetEntityWorld().Attach<MeshComponent>(sponza, AssetRegistry::Instance()->Load<Mesh>("res/meshes/sponza.obj"));
   sponza = scene_.GetEntityWorld().Attach<TransformComponent>(sponza);
   sponza.Get<TransformComponent>().transform.scale = glm::vec3(0.025);
   sponza.Get<TransformComponent>().transform.Rotate(M_PI_2, kDefaultUpVector);
@@ -99,7 +99,7 @@ void EditorApp::Run() {
 
   fennecs::EntityHandle street_lamp = scene_.CreateEntity("Street lamp");
   street_lamp = scene_.GetEntityWorld().Attach<TransformComponent>(street_lamp);
-  street_lamp = scene_.GetEntityWorld().Attach<MeshComponent>(street_lamp, ResourceManager::LoadMesh("res/meshes/street_lamp.obj"));
+  street_lamp = scene_.GetEntityWorld().Attach<MeshComponent>(street_lamp, AssetRegistry::Instance()->Load<Mesh>("res/meshes/street_lamp.obj"));
 
   scene_.OnStart(event_dispatcher_);
 

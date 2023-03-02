@@ -29,10 +29,18 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <iostream>
+
 #include <list>
 #include <memory>
 #include <vector>
+#include <string_view>
+#include <cstring>
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <optional>
+#include <string>
+#include <unordered_map>
 
 #include "platform/window.hpp"
 #include "core/logger.hpp"
@@ -78,5 +86,15 @@ using Vector = std::vector<T>;
 
 template<typename T>
 using List = std::list<T>;
+
+template<typename T>
+using UniquePtr = std::unique_ptr<T>;
+
+using String = std::string;
+
+using StringView = std::string_view;
+
+template<typename K, typename V>
+using HashMap = std::unordered_map<K, V>;
 
 }  // namespace vulture
