@@ -1,6 +1,5 @@
-#include "editor_app.hpp"
-
-#include "asset/asset_loader_registrar.hpp"
+#include <veditor/editor_app.hpp>
+#include <vulture/asset/asset_loader_registrar.hpp>
 
 int main(int, char**) {
   vulture::EditorApp app;

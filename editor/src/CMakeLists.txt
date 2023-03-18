@@ -1,21 +1,16 @@
-set(EDITOR_INCLUDE_DIR ${EDITOR_DIR}/include/)
-set(EDITOR_SOURCE_DIR ${EDITOR_DIR}/src/)
+add_executable(veditor)
 
-target_include_directories(vulture-editor
+file(GLOB_RECURSE VEDITOR_INCLUDE *.hpp *.h)
+file(GLOB_RECURSE VEDITOR_SOURCE *.cpp *.c)
+
+target_include_directories(veditor
   PUBLIC
-    ${EDITOR_INCLUDE_DIR}/
-    ${EDITOR_DIR}/../engine/include
+    .
   )
 
-target_sources(vulture-editor
+target_sources(veditor
   PUBLIC
-    ${EDITOR_INCLUDE_DIR}/camera_movement.hpp
-    ${EDITOR_INCLUDE_DIR}/editor_app.hpp
-
+    ${VEDITOR_INCLUDE}
   PRIVATE
-    ${EDITOR_SOURCE_DIR}/camera_movement.cpp
-    ${EDITOR_SOURCE_DIR}/editor_app.cpp
-    ${EDITOR_SOURCE_DIR}/main.cpp
+    ${VEDITOR_SOURCE}
   )
-
-add_subdirectory(panels)

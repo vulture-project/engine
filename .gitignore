@@ -10,6 +10,7 @@ build/
 .vscode/
 
 # binary
+veditor
 vulture-editor
 
 build.sh
