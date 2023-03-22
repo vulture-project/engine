@@ -1,4 +1,8 @@
-add_library(vulture)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/../")
+
+include("${CMAKE_HOME_DIRECTORY}/cmake/compile_options.cmake")
+
+add_executable(vulture)
 
 file(GLOB_RECURSE VULTURE_INCLUDE *.hpp *.h)
 file(GLOB_RECURSE VULTURE_SOURCE *.cpp *.c)

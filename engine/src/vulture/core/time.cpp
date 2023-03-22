@@ -25,13 +25,17 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#include <vulture/core/logger.hpp>
 #include <vulture/core/time.hpp>
+
+using namespace vulture;
+
+ScopedTimer::~ScopedTimer() { LOG_DEBUG("[TIMER] {0} - {1}ms", name_, timer_.ElapsedMs()); }
 
 const size_t kHhMmSsStart = 11;
 const size_t kHhMmSsLength = 8;
 
-
-std::string GetCurrentTime() {
+std::string vulture::GetCurrentTimeStr() {
   time_t rawtime = std::time(nullptr);
   std::string time_str = asctime(localtime(&rawtime));
   time_str.pop_back();   // remove '\n'

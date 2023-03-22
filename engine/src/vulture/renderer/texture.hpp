@@ -1,10 +1,10 @@
 /**
  * @author Nikita Mochalov (github.com/tralf-strues)
  * @file texture.hpp
- * @date 2022-04-28
+ * @date 2023-03-18
  *
  * The MIT License (MIT)
- * Copyright (c) vulture-project
+ * Copyright (c) 2022 Nikita Mochalov
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -28,21 +28,31 @@
 #pragma once
 
 #include <vulture/asset/asset.hpp>
-#include <vulture/core/core.hpp>
+#include <vulture/renderer/graphics_api/render_device.hpp>
 
 namespace vulture {
 
 class Texture : public IAsset {
  public:
-  virtual ~Texture() = default;
+  Texture(RenderDevice& device, TextureHandle handle);
+  Texture(RenderDevice& device, const TextureSpecification& specification);
+  ~Texture() override;
 
-  virtual uint32_t GetWidth() const = 0;
-  virtual uint32_t GetHeight() const = 0;
-  virtual uint32_t GetID() const = 0;
+  Texture(const Texture& other) = delete;
+  Texture& operator=(const Texture& other) = delete;
 
-  virtual void Bind(uint32_t slot = 0) const = 0;
+  Texture(Texture&& other) = delete;
+  Texture& operator=(Texture&& other) = delete;
 
-  static SharedPtr<Texture> Create(const std::string &filename);
+  TextureHandle GetHandle() const;
+  const TextureSpecification& GetSpecification() const;
+
+  void Recreate(const TextureSpecification& specification);
+
+ private:
+  RenderDevice&        device_;
+  TextureHandle        handle_{kInvalidRenderResourceHandle};
+  TextureSpecification specification_;
 };
 
 }  // namespace vulture

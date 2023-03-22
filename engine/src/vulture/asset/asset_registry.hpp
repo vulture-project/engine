@@ -30,6 +30,8 @@ class AssetRegistry {
   static AssetRegistry* instance_;
 
  private:
+  std::filesystem::path assets_folder_{"assets"};
+
   HashMap<String, SharedPtr<IAsset>> assets_;
 
   HashMap<StringView, SharedPtr<IAssetLoader>> loaders_;

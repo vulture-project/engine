@@ -9,7 +9,8 @@ StringView JPEGLoader::Extension() const {
 }
 
 SharedPtr<IAsset> JPEGLoader::Load(const String& path) {
-  return Texture::Create(path);
+  VULTURE_ASSERT(false, "Not implemented!");
+  return nullptr;
 }
 
 }  // namespace vulture

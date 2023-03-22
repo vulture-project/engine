@@ -40,15 +40,18 @@ Window::Window(const char* title) {
     assert(!"Can't init glfw while creating a window");
   }
 
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+//   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+//   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+//   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-#ifdef __APPLE__
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, 1);
-#endif
+// #ifdef __APPLE__
+//   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, 1);
+// #endif
 
-  window_ = glfwCreateWindow(kDefaultWidth, kDefaultHeight, title, glfwGetPrimaryMonitor(), NULL);
+  glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);  // TODO: (tralf-strues) 
+  glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+
+  window_ = glfwCreateWindow(kDefaultWidth, kDefaultHeight, title, nullptr, nullptr);
   assert(window_ && "Can't create a window");
 
   glfwMakeContextCurrent(window_);
@@ -59,15 +62,18 @@ Window::Window(size_t width, size_t height, const char* title) {
     assert(!"Can't init glfw while creating a window");
   }
 
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+//   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+//   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+//   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-#ifdef __APPLE__
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, 1);
-#endif
+// #ifdef __APPLE__
+//   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, 1);
+// #endif
 
-  window_ = glfwCreateWindow(width, height, title, NULL, NULL);
+  glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);  // TODO: (tralf-strues) 
+  glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+
+  window_ = glfwCreateWindow(width, height, title, nullptr, nullptr);
   assert(window_ && "Can't create a window");
 
   glfwMakeContextCurrent(window_);
@@ -95,36 +101,36 @@ Window::~Window() {
   glfwTerminate();
 }
 
-size_t Window::GetWidth() const {
+uint32_t Window::GetWidth() const {
   int32_t width = 0;
   glfwGetWindowSize(window_, &width, nullptr);
   assert(width >= 0);
 
-  return static_cast<size_t>(width);
+  return static_cast<uint32_t>(width);
 }
 
-size_t Window::GetHeight() const {
+uint32_t Window::GetHeight() const {
   int32_t height = 0;
   glfwGetWindowSize(window_, nullptr, &height);
   assert(height >= 0);
 
-  return static_cast<size_t>(height);
+  return static_cast<uint32_t>(height);
 }
 
-size_t Window::GetFramebufferWidth() const {
+uint32_t Window::GetFramebufferWidth() const {
   int32_t width = 0;
   glfwGetFramebufferSize(window_, &width, nullptr);
   assert(width >= 0);
 
-  return static_cast<size_t>(width);
+  return static_cast<uint32_t>(width);
 }
 
-size_t Window::GetFramebufferHeight() const {
+uint32_t Window::GetFramebufferHeight() const {
   int32_t height = 0;
   glfwGetFramebufferSize(window_, nullptr, &height);
   assert(height >= 0);
 
-  return static_cast<size_t>(height);
+  return static_cast<uint32_t>(height);
 }
 
 }  // namespace vulture

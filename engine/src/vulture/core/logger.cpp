@@ -28,6 +28,8 @@
 #include <vulture/core/logger.hpp>
 #include <cassert>
 
+using namespace vulture;
+
 FILE* Logger::log_file_ = stdout;
 
 // Constants
@@ -64,22 +66,12 @@ void Logger::Close() {
   }
 }
 
-const char* Logger::LevelToString(LoggingLevel level) {
+fmt::text_style Logger::LevelToTextStyle(LogLevel level) {
   switch (level) {
-    case kInfo:  { return "[info]"; }
-    case kWarn:  { return "[warn]"; }
-    case kError: { return "[error]"; }
-    case kDebug: { return "[debug]"; }
-    default:     { return "unknown"; }
-  }
-}
-
-fmt::text_style Logger::LevelToTextStyle(LoggingLevel level) {
-  switch (level) {
-    case kInfo:  { return kInfoStyle; }
-    case kWarn:  { return kWarnStyle; }
-    case kError: { return kErrorStyle; }
-    case kDebug: { return kDebugStyle; }
-    default:     { return fmt::emphasis::italic | fg(fmt::color::purple); }
+    case LogLevel::kInfo:  { return kInfoStyle; }
+    case LogLevel::kWarn:  { return kWarnStyle; }
+    case LogLevel::kError: { return kErrorStyle; }
+    case LogLevel::kDebug: { return kDebugStyle; }
+    default: { return fmt::emphasis::italic | fg(fmt::color::purple); }
   }
 }

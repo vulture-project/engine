@@ -11,10 +11,10 @@ SharedPtr<TAsset> AssetRegistry::Load(const String& path) {
   }
 
   if (auto loader = TryFindLoader(detail::Extension(path))) {
-    return std::static_pointer_cast<TAsset>(FetchInsertAsset(path, loader->Load(path)));
+    return std::static_pointer_cast<TAsset>(FetchInsertAsset(path, loader->Load(assets_folder_ / path)));
   }
 
-  LOG_ERROR(AssetRegistry, "unable to load {}", path);
+  LOG_ERROR("Unable to load {}", path);
   return nullptr;
 }
 

@@ -27,74 +27,21 @@
 
 #pragma once
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include <yaml-cpp/yaml.h>
 
-#include <list>
-#include <memory>
-#include <vector>
-#include <string_view>
+#include <cstdlib>
 #include <cstring>
 #include <fstream>
-#include <iostream>
-#include <map>
-#include <optional>
-#include <string>
-#include <unordered_map>
-
-#include <vulture/platform/window.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <vulture/core/enum_str.hpp>
 #include <vulture/core/logger.hpp>
+#include <vulture/core/time.hpp>
+#include <vulture/core/types.hpp>
+#include <vulture/platform/window.hpp>
 
-#define ASSERT(x, message)    \
-  if (!(x)) {                 \
-    LOG_ERROR(Core, message); \
-    assert(false); \
+#define VULTURE_ASSERT(x, ...) \
+  if (!(x)) {                  \
+    LOG_ERROR(__VA_ARGS__);    \
+    std::abort();              \
   }
-
-#define GL_CALL(x)     \
-  OpenglClearErrors(); \
-  x;                   \
-  ASSERT(OpenglLogCall(), "OpenGL Error!");
-
-namespace vulture {
-
-void OpenglClearErrors();
-
-bool OpenglLogCall();
-
-template <typename T>
-using SharedPtr = std::shared_ptr<T>;
-
-template <typename T>
-using WeakPtr = std::weak_ptr<T>;
-
-template <typename T, typename... Args>
-constexpr SharedPtr<T> CreateShared(Args&&... args) {
-  return std::make_shared<T>(std::forward<Args>(args)...);
-}
-
-template <typename T>
-using ScopePtr = std::unique_ptr<T>;
-
-template <typename T, typename... Args>
-constexpr ScopePtr<T> CreateScope(Args&&... args) {
-  return std::make_unique<T>(std::forward<Args>(args)...);
-}
-
-template<typename T>
-using Vector = std::vector<T>;
-
-template<typename T>
-using List = std::list<T>;
-
-template<typename T>
-using UniquePtr = std::unique_ptr<T>;
-
-using String = std::string;
-
-using StringView = std::string_view;
-
-template<typename K, typename V>
-using HashMap = std::unordered_map<K, V>;
-
-}  // namespace vulture

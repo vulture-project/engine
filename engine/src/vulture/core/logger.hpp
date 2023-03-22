@@ -32,25 +32,23 @@
 
 #include <fstream>
 #include <string>
+#include <vulture/core/enum_str.hpp>
 #include <vulture/core/time.hpp>
 
 #define LINE_TO_STR(x) TO_STR(x)
 #define TO_STR(x) #x
 
-#define LOG_INFO(module, ...)  Logger::Log(#module, __FILE__ ":" LINE_TO_STR(__LINE__), Logger::kInfo, false, __VA_ARGS__)
-#define LOG_WARN(module, ...)  Logger::Log(#module, __FILE__ ":" LINE_TO_STR(__LINE__), Logger::kWarn, false, __VA_ARGS__)
-#define LOG_ERROR(module, ...) Logger::Log(#module, __FILE__ ":" LINE_TO_STR(__LINE__), Logger::kError, true, __VA_ARGS__)
-#define LOG_DEBUG(module, ...) Logger::Log(#module, __FILE__ ":" LINE_TO_STR(__LINE__), Logger::kDebug, true, __VA_ARGS__)
+#define LOG_INFO(...)  vulture::Logger::Log(__FILE__ ":" LINE_TO_STR(__LINE__), vulture::LogLevel::kInfo, false, __VA_ARGS__)
+#define LOG_WARN(...)  vulture::Logger::Log(__FILE__ ":" LINE_TO_STR(__LINE__), vulture::LogLevel::kWarn, false, __VA_ARGS__)
+#define LOG_ERROR(...) vulture::Logger::Log(__FILE__ ":" LINE_TO_STR(__LINE__), vulture::LogLevel::kError, true, __VA_ARGS__)
+#define LOG_DEBUG(...) vulture::Logger::Log(__FILE__ ":" LINE_TO_STR(__LINE__), vulture::LogLevel::kDebug, true, __VA_ARGS__)
+
+namespace vulture {
+
+DECLARE_ENUM_TO_STR(LogLevel, kInfo, kWarn, kError, kDebug);
 
 class Logger {
  public:
-  enum LoggingLevel {
-    kInfo,
-    kWarn,
-    kError,
-    kDebug
-  };
-
   static const fmt::text_style kInfoStyle;
   static const fmt::text_style kWarnStyle;
   static const fmt::text_style kErrorStyle;
@@ -68,14 +66,14 @@ class Logger {
   static void Close();
 
   template <typename... Args>
-  static void Log(const char* module, std::string place, LoggingLevel level, bool flush, Args&&... args) {
+  static void Log(std::string place, LogLevel level, bool flush, Args&&... args) {
     size_t project_start = place.find("engine");
     if (project_start == place.npos) {
       project_start = 0;
     }
 
-    fmt::print(log_file_, "[{}] [{}] ", GetCurrentTime(), module);
-    fmt::print(log_file_, LevelToTextStyle(level), "{:<{}}", LevelToString(level), kLevelStringAlignment);
+    fmt::print(log_file_, "[{}] ", GetCurrentTimeStr());
+    fmt::print(log_file_, LevelToTextStyle(level), "{:<{}}", LogLevelToStr(level), kLevelStringAlignment);
     fmt::print(log_file_, "{:<{}} ", place.substr(project_start), kFilenameAlignment);
 
     fmt::print(log_file_, LevelToTextStyle(level), std::forward<Args>(args)...);
@@ -86,12 +84,13 @@ class Logger {
     }
   }
 
-  static const char* LevelToString(LoggingLevel level);
-  static fmt::text_style LevelToTextStyle(LoggingLevel level);
+  static fmt::text_style LevelToTextStyle(LogLevel level);
 
  private:
   static FILE* log_file_;
 };
+
+}  // namespace vulture
 
 /**
  * Custom-type logging.

@@ -1,6 +1,21 @@
+find_package(Vulkan REQUIRED)
+
+set(ASSIMP_BUILD_TESTS off)
+set(ASSIMP_INSTALL off)
+set(ASSIMP_WARNINGS_AS_ERRORS off)
+set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT off)
+set(ASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT off)
+
+set(ASSIMP_BUILD_FBX_IMPORTER on)
+set(ASSIMP_BUILD_OBJ_IMPORTER on)
+
+add_subdirectory(assimp)
 add_subdirectory(fennecs)
 add_subdirectory(fmt)
 add_subdirectory(glad)
 add_subdirectory(glfw)
 add_subdirectory(glm)
+add_subdirectory(spirv_cross)
 add_subdirectory(stb_image)
+add_subdirectory(vma)
+add_subdirectory(yaml_cpp)

@@ -27,12 +27,45 @@
 
 #pragma once
 
-#include <ctime>
+#include <chrono>
 #include <string>
+#include <vulture/core/types.hpp>
+
+namespace vulture {
+
+class Timer {
+ public:
+  Timer() { Reset(); }
+
+  inline void Reset() { start_ = std::chrono::high_resolution_clock::now(); }
+
+  inline float Elapsed() {
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - start_)
+               .count() * 0.001f * 0.001f * 0.001f;
+  }
+
+  inline float ElapsedMs() { return Elapsed() * 1000.0f; }
+
+ private:
+  std::chrono::time_point<std::chrono::high_resolution_clock> start_;
+};
+
+class ScopedTimer {
+ public:
+  ScopedTimer(const StringView name) : name_(name) {}
+
+  ~ScopedTimer();
+
+ private:
+  std::string name_;
+  Timer       timer_;
+};
 
 /**
  * @brief Get current time in format hh:mm:ss
  * 
  * @return std::string current time
  */
-std::string GetCurrentTime();
+std::string GetCurrentTimeStr();
+
+}  // namespace vulture

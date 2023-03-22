@@ -29,8 +29,7 @@
 
 #include <fennecs/entity/world.hpp>
 #include <vulture/event_system/event_system.hpp>
-#include <vulture/renderer/3d/renderer3d.hpp>
-#include <vulture/renderer/3d/scene3d.hpp>
+#include <vulture/renderer/builtin/renderer.hpp>
 #include <vulture/scene/components.hpp>
 
 namespace vulture {
@@ -50,13 +49,7 @@ class Scene {
    */
   void OnUpdate(float timestep);
 
-  /**
-   * @brief Render the scene.
-   * 
-   * @param renderer 
-   * @param render_mode 
-   */
-  void Render(Renderer3D* renderer, Framebuffer* framebuffer, Renderer3D::DebugRenderMode render_mode = Renderer3D::DebugRenderMode::kDefault);
+  void Render(Renderer& renderer, float time);
 
   /**
    * @brief Create a parentless entity.
@@ -80,7 +73,7 @@ class Scene {
 
  private:
   fennecs::EntityWorld world_;
-  Scene3D scene_;
+  // Scene3D scene_;
 };
 
 }  // namespace vulture

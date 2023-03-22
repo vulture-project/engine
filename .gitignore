@@ -15,6 +15,7 @@ vulture-editor
 
 build.sh
 run.sh
+compile_shaders.sh
 
 # ImGui
 imgui.ini
@@ -29,3 +30,6 @@ cmake-build-debug
 
 # Tests
 fennecs_tests
+
+# SPIR-V binaries
+*.spv

@@ -82,7 +82,7 @@ void InputEventManager::MouseMoveCallback(GLFWwindow* /*window*/, double xpos, d
 }
 
 void InputEventManager::CloseCallback(GLFWwindow* /*window*/) {
-  LOG_INFO(Logger, "Triggering quit event");
+  LOG_INFO("Triggering quit event");
 
   dispatcher_->Trigger<QuitEvent>();
 }

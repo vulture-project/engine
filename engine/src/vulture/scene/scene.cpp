@@ -44,13 +44,13 @@ void Scene::OnViewportResize(uint32_t width, uint32_t height) {
   assert(width > 0);
   assert(height > 0);
 
-  float aspect_ratio = static_cast<float>(width) / static_cast<float>(height);
+  float aspect = static_cast<float>(width) / static_cast<float>(height);
 
   fennecs::EntityStream stream = world_.Query<CameraComponent>();  
   for (fennecs::EntityHandle entity = stream.Next(); !entity.IsNull(); entity = stream.Next()) {
     CameraComponent& camera = entity.Get<CameraComponent>();
-    if (!camera.fixed_aspect_ratio) {
-      camera.specs.aspect_ratio = aspect_ratio;
+    if (!camera.fixed_aspect) {
+      camera.specs.aspect = aspect;
     }
   }
 }
@@ -63,64 +63,138 @@ void Scene::OnUpdate(float timestep) {
   }
 }
 
-void Scene::Render(Renderer3D* renderer, Framebuffer* framebuffer, Renderer3D::DebugRenderMode render_mode) {
-  fennecs::EntityStream lights_stream = world_.Query<LightSourceComponent>();
-  for (fennecs::EntityHandle entity = lights_stream.Next(); !entity.IsNull(); entity = lights_stream.Next()) {
-    LightSourceComponent& light = entity.Get<LightSourceComponent>();
-    if (!light.runtime_node) {
-      light.runtime_node = new LightSourceNode3D(light.specs);
-      scene_.AddLightSource(light.runtime_node);
-    }
+void Scene::Render(Renderer& renderer, float time) {
+  /* Frame */
+  renderer.UpdateFrameData(time);
 
-    assert(entity.Has<TransformComponent>());
-    light.runtime_node->transform = ComputeWorldSpaceTransform(entity);
-    light.runtime_node->SetLightSpecs(light.specs);
-  }
-
-  fennecs::EntityStream mesh_stream = world_.Query<MeshComponent>();
-  for (fennecs::EntityHandle entity = mesh_stream.Next(); !entity.IsNull(); entity = mesh_stream.Next()) {
-    MeshComponent& mesh = entity.Get<MeshComponent>();
-    if (!mesh.runtime_node) {
-      mesh.runtime_node = new MeshNode3D(mesh.mesh);
-      scene_.AddMesh(mesh.runtime_node);
-    }
-
-    assert(entity.Has<TransformComponent>());
-    mesh.runtime_node->outlined = mesh.outlined;
-    mesh.runtime_node->transform = ComputeWorldSpaceTransform(entity);
-  }
-
+  /* View */
   bool main_camera_found = false;
   fennecs::EntityStream camera_stream = world_.Query<CameraComponent>();
   for (fennecs::EntityHandle entity = camera_stream.Next(); !entity.IsNull(); entity = camera_stream.Next()) {
     CameraComponent& camera = entity.Get<CameraComponent>();
-    if (!camera.runtime_node) {
-      camera.runtime_node = new CameraNode3D(camera.specs);
-      scene_.AddCamera(camera.runtime_node);
-    }
-
     assert(entity.Has<TransformComponent>());
-    camera.runtime_node->transform = ComputeWorldSpaceTransform(entity);
-    camera.runtime_node->specs     = camera.specs;
 
     if (camera.is_main) {
       if (!main_camera_found) {
-        scene_.SetMainCamera(camera.runtime_node);
+        Transform transform = entity.Get<TransformComponent>().transform;
+        renderer.UpdateViewData(ComputeWorldSpaceTransform(entity).CalculateInverseMatrix(),
+                                camera.specs.CalculateProjectionMatrix(), transform.translation);
+
         main_camera_found = true;
       } else {
-        LOG_WARN(Scene, "Second main camera entity detected! Using the first main camera detected.");
+        LOG_WARN("Second main camera entity detected! Using the first main camera detected.");
       }
     }
   }
 
-  if (!main_camera_found) {
-    scene_.SetMainCamera(nullptr);
-    LOG_WARN(Scene, "No main camera entity detected!");
+  /* Lights */
+  LightEnvironment& lights = renderer.GetLightEnvironment();
+
+  lights.directional_lights_count = 0;
+  fennecs::EntityStream directional_light_stream = world_.Query<DirectionalLightSpecification>();
+  for (auto entity = directional_light_stream.Next(); !entity.IsNull(); entity = directional_light_stream.Next()) {
+    DirectionalLightSpecification& specs     = entity.Get<DirectionalLightSpecification>();
+    Transform                      transform = entity.Get<TransformComponent>().transform;
+    DirectionalLight               target    = lights.directional_lights[lights.directional_lights_count++];
+
+    target.specification = specs;
+    target.direction     = transform.CalculateForward();
   }
 
-  /* Rendering */
-  renderer->RenderScene(&scene_, framebuffer, render_mode);
+  lights.point_lights_count = 0;
+  fennecs::EntityStream point_light_stream = world_.Query<PointLightSpecification>();
+  for (auto entity = point_light_stream.Next(); !entity.IsNull(); entity = point_light_stream.Next()) {
+    PointLightSpecification& specs     = entity.Get<PointLightSpecification>();
+    Transform                transform = entity.Get<TransformComponent>().transform;
+    PointLight               target    = lights.point_lights[lights.point_lights_count++];
+
+    target.specification = specs;
+    target.position      = transform.translation;
+  }
+
+  lights.spot_lights_count = 0;
+  fennecs::EntityStream spot_light_stream = world_.Query<SpotLightSpecification>();
+  for (auto entity = spot_light_stream.Next(); !entity.IsNull(); entity = spot_light_stream.Next()) {
+    SpotLightSpecification& specs     = entity.Get<SpotLightSpecification>();
+    Transform&              transform = entity.Get<TransformComponent>().transform;
+    SpotLight               target    = lights.spot_lights[lights.spot_lights_count++];
+
+    target.specification = specs;
+    target.position      = transform.translation;
+    target.direction     = transform.CalculateForward();
+  }
+
+  /* Meshes */
+  auto& main_render_queue = renderer.GetBlackboard().Get<RenderQueue<MainQueueTag>>();
+  main_render_queue.render_objects.resize(0);
+
+  fennecs::EntityStream mesh_stream = world_.Query<MeshComponent, TransformComponent>();
+  for (auto entity = mesh_stream.Next(); !entity.IsNull(); entity = mesh_stream.Next()) {
+    MeshComponent& mesh_component = entity.Get<MeshComponent>();
+    Transform&     transform      = entity.Get<TransformComponent>().transform;
+
+    main_render_queue.render_objects.emplace_back(RenderQueueObject{mesh_component.mesh, transform.CalculateMatrix()});
+  }
 }
+
+// void Scene::Render(Renderer3D* renderer, Framebuffer* framebuffer, Renderer3D::DebugRenderMode render_mode) {
+//   fennecs::EntityStream lights_stream = world_.Query<LightSourceComponent>();
+//   for (fennecs::EntityHandle entity = lights_stream.Next(); !entity.IsNull(); entity = lights_stream.Next()) {
+//     LightSourceComponent& light = entity.Get<LightSourceComponent>();
+//     if (!light.runtime_node) {
+//       light.runtime_node = new LightSourceNode3D(light.specs);
+//       scene_.AddLightSource(light.runtime_node);
+//     }
+
+//     assert(entity.Has<TransformComponent>());
+//     light.runtime_node->transform = ComputeWorldSpaceTransform(entity);
+//     light.runtime_node->SetLightSpecs(light.specs);
+//   }
+
+//   fennecs::EntityStream mesh_stream = world_.Query<MeshComponent>();
+//   for (fennecs::EntityHandle entity = mesh_stream.Next(); !entity.IsNull(); entity = mesh_stream.Next()) {
+//     MeshComponent& mesh = entity.Get<MeshComponent>();
+//     if (!mesh.runtime_node) {
+//       mesh.runtime_node = new MeshNode3D(mesh.mesh);
+//       scene_.AddMesh(mesh.runtime_node);
+//     }
+
+//     assert(entity.Has<TransformComponent>());
+//     mesh.runtime_node->outlined = mesh.outlined;
+//     mesh.runtime_node->transform = ComputeWorldSpaceTransform(entity);
+//   }
+
+//   bool main_camera_found = false;
+//   fennecs::EntityStream camera_stream = world_.Query<CameraComponent>();
+//   for (fennecs::EntityHandle entity = camera_stream.Next(); !entity.IsNull(); entity = camera_stream.Next()) {
+//     CameraComponent& camera = entity.Get<CameraComponent>();
+//     if (!camera.runtime_node) {
+//       camera.runtime_node = new CameraNode3D(camera.specs);
+//       scene_.AddCamera(camera.runtime_node);
+//     }
+
+//     assert(entity.Has<TransformComponent>());
+//     camera.runtime_node->transform = ComputeWorldSpaceTransform(entity);
+//     camera.runtime_node->specs     = camera.specs;
+
+//     if (camera.is_main) {
+//       if (!main_camera_found) {
+//         scene_.SetMainCamera(camera.runtime_node);
+//         main_camera_found = true;
+//       } else {
+//         LOG_WARN(Scene, "Second main camera entity detected! Using the first main camera detected.");
+//       }
+//     }
+//   }
+
+//   if (!main_camera_found) {
+//     scene_.SetMainCamera(nullptr);
+//     LOG_WARN(Scene, "No main camera entity detected!");
+//   }
+
+//   /* Rendering */
+//   renderer->RenderScene(&scene_, framebuffer, render_mode);
+// }
 
 fennecs::EntityHandle Scene::CreateEntity(const std::string& name) {
   fennecs::EntityHandle entity = world_.AddEntity();

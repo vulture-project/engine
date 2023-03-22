@@ -51,11 +51,11 @@ class Window {
   void SetTitle(const char* title);
   void SetFPSToTitle(double fps);
 
-  size_t GetWidth() const;
-  size_t GetHeight() const;
+  uint32_t GetWidth() const;
+  uint32_t GetHeight() const;
 
-  size_t GetFramebufferWidth() const;
-  size_t GetFramebufferHeight() const;
+  uint32_t GetFramebufferWidth() const;
+  uint32_t GetFramebufferHeight() const;
 
  public:
   static const size_t kDefaultWidth = 640;

@@ -13,9 +13,6 @@
 [submodule "engine/third_party/vma"]
 	path = engine/third_party/vma
 	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
-[submodule "engine/third_party/spirv_cross"]
-	path = engine/third_party/spirv_cross
-	url = https://github.com/KhronosGroup/SPIRV-Cross.git
 [submodule "engine/third_party/yaml_cpp"]
 	path = engine/third_party/yaml_cpp
 	url = https://github.com/jbeder/yaml-cpp.git

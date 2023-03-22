@@ -29,14 +29,15 @@
 
 #include <optional>
 #include <vulture/core/core.hpp>
-#include <vulture/renderer/3d/scene3d.hpp>
-#include <vulture/renderer/3d/transform.hpp>
+#include <vulture/renderer/camera.hpp>
+#include <vulture/renderer/geometry/mesh.hpp>
+#include <vulture/renderer/geometry/transform.hpp>
 #include <vulture/scene/script.hpp>
 
 namespace vulture {
 
 struct NameComponent {
-  std::string name{"Unnamed entity"};
+  std::string name{"Unnamed"};
 
   NameComponent() = default;
   NameComponent(const std::string& name) : name(name) {}
@@ -64,9 +65,7 @@ struct TransformComponent {
 struct CameraComponent {
   PerspectiveCameraSpecs specs;
   bool is_main{false};
-  bool fixed_aspect_ratio{false};
-
-  CameraNode3D* runtime_node{nullptr};
+  bool fixed_aspect{false};
 
   CameraComponent() = default;
   CameraComponent(const PerspectiveCameraSpecs& specs, bool is_main = false) : specs(specs), is_main(is_main) {}
@@ -74,9 +73,6 @@ struct CameraComponent {
 
 struct MeshComponent {
   SharedPtr<Mesh> mesh{nullptr};
-  bool outlined{false};
-
-  MeshNode3D* runtime_node{nullptr};
 
   MeshComponent() = default;
   MeshComponent(SharedPtr<Mesh> mesh) : mesh(mesh) {}
@@ -88,17 +84,6 @@ struct ScriptComponent {
   ScriptComponent(IScript* script = nullptr) : script(script) {}
 
   ~ScriptComponent() { delete script; }
-};
-
-struct LightSourceComponent {
-  LightSourceSpecs specs;
-
-  LightSourceNode3D* runtime_node{nullptr};
-
-  LightSourceComponent() = default;
-  LightSourceComponent(const DirectionalLightSpecs& specs) : specs(specs) {}
-  LightSourceComponent(const PointLightSpecs& specs) : specs(specs) {}
-  LightSourceComponent(const SpotLightSpecs& specs) : specs(specs) {}
 };
 
 }  // namespace vulture
