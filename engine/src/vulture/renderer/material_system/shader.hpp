@@ -88,6 +88,7 @@ public:
 private:
   bool ParsePipelineDescription(YAML::Node& root);
   bool ParseShaderSources(YAML::Node& root);
+  bool ParseShaderModule(YAML::Node& root, const String& name, ShaderModuleType module_type);
   bool DeclarePushConstants();
   bool CreateDescriptorSetLayouts();
 
@@ -96,7 +97,7 @@ private:
 
   String              name_;
   RenderPassId        target_pass_id_;
-  ShaderReflection    reflection_;
+  ShaderReflection     reflection_;
   PipelineDescription pipeline_description_;
   PipelineHandle      pipeline_{kInvalidRenderResourceHandle};
 };

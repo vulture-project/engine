@@ -72,7 +72,8 @@ class Logger {
       project_start = 0;
     }
 
-    fmt::print(log_file_, "[{}] ", GetCurrentTimeStr());
+    std::string current_time = GetCurrentTimeStr();
+    fmt::print(log_file_, "[{}] ", current_time);
     fmt::print(log_file_, LevelToTextStyle(level), "{:<{}}", LogLevelToStr(level), kLevelStringAlignment);
     fmt::print(log_file_, "{:<{}} ", place.substr(project_start), kFilenameAlignment);
 

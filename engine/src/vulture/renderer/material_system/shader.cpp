@@ -181,36 +181,37 @@ bool Shader::ParsePipelineDescription(YAML::Node& root) {
   return true;
 }
 
-bool Shader::ParseShaderSources(YAML::Node& root) {
-#define PARSE_AND_CREATE_SHADER_MODULE(Str, ModuleType)                                                  \
-  YAML::Node Str##_node = root[#Str];                                                                    \
-  if (Str##_node) {                                                                                      \
-    if (Str##_node.size() != 2) {                                                                        \
-      LOG_ERROR("Shader module declaration must contain two filepaths: source and binary!");             \
-      return false;                                                                                      \
-    }                                                                                                    \
-                                                                                                         \
-    Vector<uint32_t> Str##_binary;                                                                       \
-    String Str##_path = Str##_node[1].as<std::string>();                                                 \
-    if (!detail::ReadBinaryFile(Str##_path, Str##_binary)) {                                             \
-      LOG_ERROR("Shader file \"{}\" not found!", Str##_path);                                            \
-      return false;                                                                                      \
-    }                                                                                                    \
-                                                                                                         \
-    reflection_.AddShaderModule(ShaderModuleType::ModuleType, Str##_binary);                             \
-    /* reflection_.AddShaderModule(ShaderModuleType::ModuleType, Str##_binary); */                       \
-                                                                                                         \
-    uint32_t module_idx = pipeline_description_.shader_modules_count;                                    \
-    pipeline_description_.shader_modules[module_idx] =                                                   \
-        device_.CreateShaderModule(ShaderModuleType::ModuleType, Str##_binary.size() * sizeof(uint32_t), \
-                                   reinterpret_cast<const uint32_t*>(Str##_binary.data()));              \
-    ++pipeline_description_.shader_modules_count;                                                        \
+bool Shader::ParseShaderModule(YAML::Node& root, const String& name, ShaderModuleType module_type) {
+  YAML::Node module_node = root[name];
+  if (module_node) {
+    if (module_node.size() != 2) {
+      LOG_ERROR("Shader module declaration must contain two filepaths: source and binary!");
+      return false;
+    }
+
+    Vector<uint32_t> binary;
+    String path = module_node[1].as<std::string>();
+    if (!detail::ReadBinaryFile(path, binary)) {
+      LOG_ERROR("Shader file \"{}\" not found!", path);
+      return false;
+    }
+
+    reflection_.AddShaderModule(module_type, binary);
+
+    uint32_t module_idx = pipeline_description_.shader_modules_count;
+    pipeline_description_.shader_modules[module_idx] = device_.CreateShaderModule(
+        module_type, binary.size() * sizeof(uint32_t), reinterpret_cast<const uint32_t*>(binary.data()));
+    ++pipeline_description_.shader_modules_count;
+
+    return true;
   }
 
-  PARSE_AND_CREATE_SHADER_MODULE(vert_shader, kVertex);
-  PARSE_AND_CREATE_SHADER_MODULE(frag_shader, kFragment);
+  return false;
+}
 
-#undef PARSE_AND_CREATE_SHADER_MODULE
+bool Shader::ParseShaderSources(YAML::Node& root) {
+  ParseShaderModule(root, "vert_shader", ShaderModuleType::kVertex);
+  ParseShaderModule(root, "frag_shader", ShaderModuleType::kFragment);
 
   return true;
 }
