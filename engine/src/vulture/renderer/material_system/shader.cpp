@@ -191,8 +191,9 @@ bool Shader::ParseShaderSources(YAML::Node& root) {
     }                                                                                                    \
                                                                                                          \
     Vector<uint32_t> Str##_binary;                                                                       \
-    if (!detail::ReadBinaryFile(Str##_node[1].as<std::string>(), Str##_binary)) {                        \
-      LOG_ERROR("Shader file \"{}\" not found!", Str##_node[1].as<std::string>());                       \
+    String Str##_path = Str##_node[1].as<std::string>();                                                 \
+    if (!detail::ReadBinaryFile(Str##_path, Str##_binary)) {                                             \
+      LOG_ERROR("Shader file \"{}\" not found!", Str##_path);                                            \
       return false;                                                                                      \
     }                                                                                                    \
                                                                                                          \
