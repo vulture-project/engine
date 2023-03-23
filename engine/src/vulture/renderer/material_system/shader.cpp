@@ -196,7 +196,7 @@ bool Shader::ParseShaderModule(YAML::Node& root, const String& name, ShaderModul
       return false;
     }
 
-    reflection_.AddShaderModule(module_type, binary);
+//    reflection_.AddShaderModule(module_type, binary);
 
     uint32_t module_idx = pipeline_description_.shader_modules_count;
     pipeline_description_.shader_modules[module_idx] = device_.CreateShaderModule(

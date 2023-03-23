@@ -97,7 +97,8 @@ ShaderDataType SPIRTypeToShaderDataType(spirv_cross::SPIRType type) {
 }
 
 void ShaderReflection::AddShaderModule(ShaderModuleType shader_module, const std::vector<uint32_t>& binary) {
-  spirv_cross::Compiler compiler(binary);
+  std::vector<uint32_t> copy_binary = binary;
+  spirv_cross::Compiler compiler(std::move(copy_binary));
   spirv_cross::ShaderResources resources = compiler.get_shader_resources();
 
   ShaderStageBit stage_bit = GetShaderStageBitFromShaderModuleType(shader_module);
