@@ -19,6 +19,7 @@
 [submodule "engine/third_party/assimp"]
 	path = engine/third_party/assimp
 	url = https://github.com/assimp/assimp/
+	branch=v5.2.5
 [submodule "engine/third_party/SPIRV-Cross"]
 	path = engine/third_party/SPIRV-Cross
 	url = https://github.com/KhronosGroup/SPIRV-Cross.git

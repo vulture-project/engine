@@ -34,7 +34,7 @@ namespace vulture {
 
 using RenderPassId = uint64_t;
 
-constexpr RenderPassId GeneratePassIdFromString(const std::string& pass_name) {
+inline RenderPassId GeneratePassIdFromString(const std::string& pass_name) {
   auto hash_fn = std::hash<std::string>{};
   return hash_fn(pass_name);
 }
