@@ -77,13 +77,17 @@ void Renderer::Render() {
   WriteBlackboard();
   WriteDescriptors();
 
-  command_buffer_.Reset();
-  command_buffer_.Begin();
+  {
+    ScopedTimer trace_timer{"render_graph.Execute()"};
 
-  render_graph_->Execute(device_, command_buffer_);
+    command_buffer_.Reset();
+    command_buffer_.Begin();
 
-  command_buffer_.End();
-  command_buffer_.Submit();
+    render_graph_->Execute(device_, command_buffer_);
+
+    command_buffer_.End();
+    command_buffer_.Submit();
+  }
 }
 
 RenderDevice& Renderer::GetDevice() { return device_; }
@@ -150,21 +154,25 @@ void Renderer::WriteDescriptors() {
   device_.WriteDescriptorUniformBuffer(view_set_.GetHandle(), 0, ub_view_, 0, sizeof(ub_view_data_));
 
   /* Scene */
+  ub_light_data_.directional_lights_count = light_environment_.directional_lights.size();
+  ub_light_data_.point_lights_count       = light_environment_.point_lights.size();
+  ub_light_data_.spot_lights_count        = light_environment_.spot_lights.size();
+
   device_.LoadBufferData<UBLightEnvironmentData>(ub_light_, 0, 1, &ub_light_data_);
   device_.WriteDescriptorUniformBuffer(scene_set_.GetHandle(), 0, ub_light_, 0, sizeof(ub_light_data_));
 
-  device_.LoadBufferData<DirectionalLight>(sb_directional_lights_, 0, light_environment_.directional_lights_count,
+  device_.LoadBufferData<DirectionalLight>(sb_directional_lights_, 0, light_environment_.directional_lights.size(),
                                            light_environment_.directional_lights.data());
   device_.WriteDescriptorStorageBuffer(scene_set_.GetHandle(), 1, sb_directional_lights_, 0,
-                                       light_environment_.directional_lights_count * sizeof(DirectionalLight));
+                                       light_environment_.directional_lights.size() * sizeof(DirectionalLight));
 
-  device_.LoadBufferData<PointLight>(sb_point_lights_, 0, light_environment_.point_lights_count,
+  device_.LoadBufferData<PointLight>(sb_point_lights_, 0, light_environment_.point_lights.size(),
                                      light_environment_.point_lights.data());
   device_.WriteDescriptorStorageBuffer(scene_set_.GetHandle(), 2, sb_point_lights_, 0,
-                                       light_environment_.point_lights_count * sizeof(PointLight));
+                                       light_environment_.point_lights.size() * sizeof(PointLight));
 
-  device_.LoadBufferData<SpotLight>(sb_spot_lights_, 0, light_environment_.spot_lights_count,
+  device_.LoadBufferData<SpotLight>(sb_spot_lights_, 0, light_environment_.spot_lights.size(),
                                     light_environment_.spot_lights.data());
   device_.WriteDescriptorStorageBuffer(scene_set_.GetHandle(), 3, sb_spot_lights_, 0,
-                                       light_environment_.spot_lights_count * sizeof(SpotLight));
+                                       light_environment_.spot_lights.size() * sizeof(SpotLight));
 }

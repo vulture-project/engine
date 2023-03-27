@@ -1,6 +1,6 @@
 # Blender v2.93.5 OBJ File: ''
 # www.blender.org
-mtllib assets/meshes/nk_normals.mtl
+mtllib /meshes/nk_normals.mtl
 o Plane
 v -13.169721 0.000000 13.169721
 v 13.169721 0.000000 13.169721

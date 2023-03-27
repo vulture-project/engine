@@ -43,6 +43,12 @@ public:
   Submesh(const Geometry& geometry, SharedPtr<Material> material = nullptr, bool dynamic = false);
   ~Submesh();
 
+  Submesh(Submesh&& other);
+  Submesh& operator=(Submesh&& other);
+
+  Submesh(const Submesh& other) = delete;
+  Submesh& operator=(const Submesh& other) = delete;
+
   Geometry& GetGeometry();
   const Geometry& GetGeometry() const;
 

@@ -47,6 +47,37 @@ Submesh::~Submesh() {
   DeleteBuffers();
 }
 
+Submesh::Submesh(Submesh&& other)
+    : device_(other.device_),
+      geometry_(std::move(other.geometry_)),
+      dynamic_(other.dynamic_),
+      vertex_buffer_(other.vertex_buffer_),
+      index_buffer_(other.index_buffer_),
+      material_(other.material_) {
+  other.vertex_buffer_ = kInvalidRenderResourceHandle;
+  other.index_buffer_  = kInvalidRenderResourceHandle;
+  other.material_      = nullptr;
+}
+
+Submesh& Submesh::operator=(Submesh&& other) {
+  if (this != &other) {
+    DeleteBuffers();
+
+    device_        = other.device_;
+    geometry_      = std::move(other.geometry_);
+    dynamic_       = other.dynamic_;
+    vertex_buffer_ = other.vertex_buffer_;
+    index_buffer_  = other.index_buffer_;
+    material_      = other.material_;
+    
+    other.vertex_buffer_ = kInvalidRenderResourceHandle;
+    other.index_buffer_  = kInvalidRenderResourceHandle;
+    other.material_      = nullptr;
+  }
+
+  return *this;
+}
+
 void Submesh::DeleteBuffers() {
   if (ValidRenderHandle(vertex_buffer_)) {
     VULTURE_ASSERT(device_, "Vertex buffer created without a valid RenderDevice");
@@ -71,17 +102,17 @@ void Submesh::UpdateDeviceBuffers(RenderDevice& device) {
 
   uint32_t vertex_count = geometry_.GetVertices().size();
   if (!ValidRenderHandle(vertex_buffer_)) {
-    vertex_buffer_ = device_->CreateBuffer(vertex_count, kBufferUsageBitVertexBuffer, false);
+    vertex_buffer_ = device_->CreateStaticVertexBuffer<Vertex3D>(vertex_count);
   }
 
-  device_->LoadBufferData(vertex_buffer_, 0, vertex_count, geometry_.GetVertices().data());
+  device_->LoadBufferData<Vertex3D>(vertex_buffer_, 0, vertex_count, geometry_.GetVertices().data());
 
   uint32_t index_count = geometry_.GetIndices().size();
   if (!ValidRenderHandle(index_buffer_)) {
-    index_buffer_ = device_->CreateBuffer(geometry_.GetIndices().size(), kBufferUsageBitIndexBuffer, false);
+    index_buffer_ = device_->CreateStaticIndexBuffer(geometry_.GetIndices().size());
   }
 
-  device_->LoadBufferData(index_buffer_, 0, index_count, geometry_.GetIndices().data());
+  device_->LoadBufferData<uint32_t>(index_buffer_, 0, index_count, geometry_.GetIndices().data());
 }
 
 BufferHandle Submesh::GetVertexBuffer() const { return vertex_buffer_; }

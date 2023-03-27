@@ -1,6 +1,6 @@
 # Blender v2.93.5 OBJ File: ''
 # www.blender.org
-mtllib assets/meshes/brick_cubes.mtl
+mtllib /meshes/brick_cubes.mtl
 o Cube
 v 1.000000 1.000000 -2.146284
 v 1.000000 -1.000000 -2.146284

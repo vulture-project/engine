@@ -1,6 +1,6 @@
 # Blender v2.93.5 OBJ File: ''
 # www.blender.org
-mtllib assets/meshes/bench.mtl
+mtllib /meshes/bench.mtl
 o Shape001_Mesh.002
 v -1.304757 1.662732 -0.650502
 v -1.304757 1.707604 -0.739521

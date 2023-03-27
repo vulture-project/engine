@@ -64,6 +64,8 @@ inline ShaderStageBit GetShaderStageBitFromShaderModuleType(ShaderModuleType typ
 
     default: { assert(!"Invalid ShaderModuleType"); }
   }
+
+  return kShaderStageBitNone;
 }
 
 }  // namespace vulture

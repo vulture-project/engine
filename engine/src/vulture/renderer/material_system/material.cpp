@@ -44,6 +44,12 @@ MaterialPass& Material::GetMaterialPass(RenderPassId pass_id) {
   return material_passes_[pass_id];
 }
 
+void Material::WriteMaterialPassDescriptors() {
+  for (auto& [pass_id, material_pass] : material_passes_) {
+    material_pass.WriteDescriptorSet();
+  }
+}
+
 bool Material::Has(RenderPassId pass_id) const {
   return material_passes_.Contains(pass_id);
 }

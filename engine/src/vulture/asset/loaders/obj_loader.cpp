@@ -18,6 +18,7 @@ SharedPtr<IAsset> OBJLoader::Load(const String& path) {
                                                  aiProcess_SortByPType |
                                                  aiProcess_CalcTangentSpace |
                                                  aiProcess_GenSmoothNormals |
+                                                 aiProcess_JoinIdenticalVertices |
                                                  aiProcess_GenUVCoords);
   if (scene == nullptr) {
     LOG_ERROR("No file \"{}\" found", path);
@@ -85,8 +86,8 @@ SharedPtr<IAsset> OBJLoader::Load(const String& path) {
     }
 
     submesh.UpdateDeviceBuffers(device_);
-
-    // mesh->mMaterialIndex;
+    submesh.SetMaterial(materials[mesh->mMaterialIndex]);
+    
 
     // result_mesh->vertex_buffer = device->CreateStaticVertexBuffer<Vertex3D>(vertices.size());
     // device->LoadBufferData<Vertex3D>(result_mesh->vertex_buffer, 0, vertices.size(), vertices.data());
@@ -100,7 +101,7 @@ SharedPtr<IAsset> OBJLoader::Load(const String& path) {
 }
 
 void OBJLoader::LoadMaterials(const aiScene* scene, Vector<SharedPtr<Material>>& materials) {
-  materials.resize(scene->mNumMaterials);
+  materials.clear();
 
   AssetRegistry* asset_registry = AssetRegistry::Instance();
 
@@ -109,6 +110,10 @@ void OBJLoader::LoadMaterials(const aiScene* scene, Vector<SharedPtr<Material>>&
   SharedPtr<Texture> default_texture_normal = asset_registry->Load<Texture>(".vulture/textures/blank_normal.png");
 
   SharedPtr<Shader> forward_shader = asset_registry->Load<Shader>(".vulture/shaders/BuiltIn.Forward.shader");
+
+  LOG_DEBUG("Shader reflection ({}):", ".vulture/shaders/BuiltIn.Forward.shader");
+  forward_shader->GetReflection().PrintData();  // FIXME: Debug only
+
   for (uint32_t material_idx = 0; material_idx < scene->mNumMaterials; ++material_idx) {
     SharedPtr<Material> material = CreateShared<Material>(device_);
     material->AddShader(forward_shader);
@@ -143,29 +148,40 @@ void OBJLoader::LoadMaterials(const aiScene* scene, Vector<SharedPtr<Material>>&
     auto& diffuse_map = material_pass.GetTextureSampler("uDiffuseMap");
     diffuse_map.sampler = default_sampler;
 
+    bool diffuse_map_found = false;
     aiString diffuse_map_path;
     if (assimp_material->GetTexture(aiTextureType_DIFFUSE, 0, &diffuse_map_path) == aiReturn_SUCCESS) {
       diffuse_map.texture = asset_registry->Load<Texture>(diffuse_map_path.C_Str());
 
-      if (!diffuse_map.texture) {
-        diffuse_map.texture = default_texture;
+      if (diffuse_map.texture) {
+        diffuse_map_found = true;
       }
+    }
+
+    if (!diffuse_map_found) {
+      diffuse_map.texture = default_texture;
     }
 
     auto& normal_map = material_pass.GetTextureSampler("uNormalMap");
     normal_map.sampler = default_sampler;
 
+    bool normal_map_found = false;
+    material_pass.GetProperty<uint32_t>("useNormalMap") = 1;  // FIXME: (tralf-strues) not always needed!
     aiString normal_map_path;
     if (assimp_material->GetTexture(aiTextureType_NORMALS, 0, &normal_map_path) == aiReturn_SUCCESS) {
       normal_map.texture = asset_registry->Load<Texture>(normal_map_path.C_Str());
 
-      if (!normal_map.texture) {
-        normal_map.texture = default_texture_normal;
-        material_pass.GetProperty<bool>("useNormalMap") = false;
-      } else {
-        material_pass.GetProperty<bool>("useNormalMap") = true;
+      if (normal_map.texture) {
+        normal_map_found = true;
       }
     }
+
+    if (!normal_map_found) {
+      normal_map.texture = default_texture_normal;
+    }
+
+    material->WriteMaterialPassDescriptors();
+    materials.push_back(material);
   }
 }
 

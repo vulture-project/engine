@@ -39,12 +39,12 @@ namespace rg {
 
 struct PassNode {
   struct TextureUsage {
-    TextureVersionId         in          {kInvalidTextureVersionId};
-    TextureVersionId         out         {kInvalidTextureVersionId};
+    TextureVersionId in          {kInvalidTextureVersionId};
+    TextureVersionId out         {kInvalidTextureVersionId};
 
-    AttachmentLoadOperation  load        {AttachmentLoadOperation::kDontCare};
-    AttachmentStoreOperation store       {AttachmentStoreOperation::kDontCare};
-    ClearValue               clear_value {0, 0, 0, 0};
+    AttachmentLoad   load        {AttachmentLoad::kDontCare};
+    AttachmentStore  store       {AttachmentStore::kDontCare};
+    ClearValue       clear_value {0, 0, 0, 0};
   };
 
   PassNode(const std::string_view name, IRenderPass* render_pass) : name(name), render_pass(render_pass) {

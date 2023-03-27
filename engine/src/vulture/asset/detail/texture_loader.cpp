@@ -37,7 +37,10 @@ SharedPtr<Texture> detail::LoadTexture(RenderDevice& device, const String& path)
 
   stbi_set_flip_vertically_on_load(true);
   stbi_uc* pixels = stbi_load(path.c_str(), &tex_width, &tex_height, &tex_channels, STBI_rgb_alpha);
-  assert(pixels);
+  if (pixels == nullptr) {
+    LOG_ERROR("Texture file \"{}\" not found!", path);
+    return nullptr;
+  }
 
   uint32_t tex_mip_levels = static_cast<uint32_t>(std::floor(std::log2(std::max(tex_width, tex_height)))) + 1;
 
@@ -70,5 +73,8 @@ SharedPtr<Texture> detail::LoadTexture(RenderDevice& device, const String& path)
 
   command_buffer->End();
   command_buffer->Submit();
+
+  stbi_image_free(pixels);
+
   return CreateShared<Texture>(device, handle);
 }

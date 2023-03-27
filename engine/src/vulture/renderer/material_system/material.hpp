@@ -42,6 +42,8 @@ class Material : public IAsset {
   bool Has(RenderPassId pass_id) const;
   MaterialPass& GetMaterialPass(RenderPassId pass_id);
 
+  void WriteMaterialPassDescriptors();
+
  private:
   RenderDevice&                   device_;
   PerRenderPassData<MaterialPass> material_passes_;

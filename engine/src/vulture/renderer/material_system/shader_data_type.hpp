@@ -8,6 +8,8 @@ namespace vulture {
 
 DECLARE_ENUM_TO_STR(ShaderDataType,
                     kInvalid,
+                    
+                    kStruct,
 
                     kBoolean,
                     kInt,

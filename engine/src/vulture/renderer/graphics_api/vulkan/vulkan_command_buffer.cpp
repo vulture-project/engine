@@ -57,7 +57,7 @@ RenderDevice& VulkanCommandBuffer::GetDevice() {
 void VulkanCommandBuffer::Begin() {
   VkCommandBufferBeginInfo vk_command_buffer_begin_info{};
   vk_command_buffer_begin_info.sType            = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-  vk_command_buffer_begin_info.flags            = 0;
+  vk_command_buffer_begin_info.flags             = 0;
   vk_command_buffer_begin_info.pInheritanceInfo = nullptr;  // For secondary command buffers
 
   VkResult result = vkBeginCommandBuffer(vk_command_buffer_, &vk_command_buffer_begin_info);

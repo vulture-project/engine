@@ -37,15 +37,24 @@
 #include <vulture/renderer/builtin/renderer.hpp>
 #include <vulture/renderer/light.hpp>
 #include <vulture/scene/scene.hpp>
+#include <vulture/core/core.hpp>
+#include <vector>
+#include <fstream>
+#include <string>
+#include <iostream>
 
 using namespace vulture;
 
 int main() {
-  Window window{1600, 900, "Vulture"};
+  Logger::SetTraceEnabled(true);
+
+  Window window{900, 600, "Vulture"};
+  LOG_INFO("Window size = ({}, {}), framebuffer size = ({}, {})", window.GetWidth(), window.GetHeight(),
+           window.GetFramebufferWidth(), window.GetFramebufferHeight());
 
   Dispatcher event_dispatcher;
   InputEventManager::SetWindowAndDispatcher(&window, &event_dispatcher);
-  
+
   RenderDevice& device = *RenderDevice::Create(RenderDevice::DeviceFamily::kVulkan);
   device.Init(&window, nullptr, nullptr, true);
 
@@ -67,7 +76,7 @@ int main() {
 
   const TextureSpecification& swapchain_texture_spec = device.GetTextureSpecification(swapchain_textures[0]);
   uint32_t   surface_width  = swapchain_texture_spec.width;
-  uint32_t   surface_height = swapchain_texture_spec.width;
+  uint32_t   surface_height = swapchain_texture_spec.height;
   DataFormat surface_format = swapchain_texture_spec.format;
 
   TextureSpecification color_output_spec{};
@@ -91,6 +100,11 @@ int main() {
   render_graph->Setup();
   render_graph->Compile(device);
 
+  std::ofstream output_file("log/render_graph.dot", std::ios::trunc);
+  assert(output_file.is_open());
+  render_graph->ExportGraphviz(output_file);
+  system("dot -Tpng log/render_graph.dot > log/render_graph.png");
+
   /* Renderer */
   Renderer renderer{device, std::move(render_graph)};
 
@@ -98,7 +112,7 @@ int main() {
   Scene scene;
 
   fennecs::EntityHandle camera = scene.CreateEntity("Editor camera");
-  camera = scene.GetEntityWorld().Attach<CameraComponent>(camera, PerspectiveCameraSpecs(1280 / 960), true);
+  camera = scene.GetEntityWorld().Attach<CameraComponent>(camera, PerspectiveCameraSpecs((float)surface_width / (float)surface_height), true);
   camera = scene.GetEntityWorld().Attach<TransformComponent>(camera, glm::vec3(0, 3, 15));
   // camera = scene.GetEntityWorld().Attach<ScriptComponent>(camera, new CameraMovementScript());
 
@@ -121,27 +135,50 @@ int main() {
 
     InputEventManager::TriggerEvents();
 
-    scene.OnUpdate(timestep);
+    {
+      ScopedTimer trace_timer{"scene.OnUpdate()"};
+      scene.OnUpdate(timestep);
+    }
 
     uint32_t texture_idx = 0;
-    device.FrameBegin(swapchain, &texture_idx);
+    {
+      ScopedTimer trace_timer{"FrameBegin()"};
+      device.FrameBegin(swapchain, &texture_idx);
+    }
 
-    scene.Render(renderer, timer.Elapsed());
+    {
+      ScopedTimer trace_timer{"scene.Render()"};
+      scene.Render(renderer, timer.Elapsed());
+    }
 
-    command_buffer.Reset();
-    command_buffer.Begin();
+    {
+      ScopedTimer trace_timer{"layout transition()"};
 
-    command_buffer.TransitionLayout(swapchain_textures[texture_idx], TextureLayout::kUndefined, TextureLayout::kTransferDst);
-    command_buffer.CopyTexture(color_output->GetHandle(), swapchain_textures[texture_idx], surface_width, surface_height);
-    command_buffer.TransitionLayout(swapchain_textures[texture_idx], TextureLayout::kTransferDst, TextureLayout::kPresentSrc);
+      command_buffer.Reset();
+      command_buffer.Begin();
 
-    command_buffer.End();
-    command_buffer.Submit();
+      command_buffer.TransitionLayout(swapchain_textures[texture_idx], TextureLayout::kUndefined, TextureLayout::kTransferDst);
+      command_buffer.CopyTexture(color_output->GetHandle(), swapchain_textures[texture_idx], surface_width, surface_height);
+      command_buffer.TransitionLayout(swapchain_textures[texture_idx], TextureLayout::kTransferDst, TextureLayout::kPresentSrc);
 
-    device.FrameEnd(swapchain);
-    device.Present(swapchain);
+      command_buffer.End();
+      command_buffer.Submit();
+    }
 
-    window.SetFPSToTitle(1 / timestep);
+    {
+      ScopedTimer trace_timer{"FrameEnd()"};
+      device.FrameEnd(swapchain);
+    }
+
+    {
+      ScopedTimer trace_timer{"Present()"};
+      device.Present(swapchain);
+    }
+
+    {
+      ScopedTimer trace_timer{"window.SetFPSToTitle()"};
+      window.SetFPSToTitle(1 / timestep);
+    }
   }
 
   return 0;

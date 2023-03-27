@@ -27,6 +27,8 @@
 
 #pragma once
 
+#include <yaml-cpp/yaml.h>
+
 #include <vulture/asset/asset.hpp>
 #include <vulture/renderer/geometry/vertex_formats.hpp>
 #include <vulture/renderer/graphics_api/render_device.hpp>

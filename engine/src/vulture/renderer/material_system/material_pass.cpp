@@ -56,6 +56,10 @@ MaterialPass::MaterialPass(RenderDevice& device, SharedPtr<Shader> shader) : dev
 }
 
 MaterialPass::~MaterialPass() {
+  if (ValidRenderHandle(descriptor_set_)) {
+    device_.DeleteDescriptorSet(descriptor_set_);
+  }
+
   for (uint32_t i = 0; i < property_buffers_count_; ++i) {
     if (ValidRenderHandle(property_buffers_[i].handle)) {
       device_.DeleteBuffer(property_buffers_[i].handle);
@@ -64,8 +68,25 @@ MaterialPass::~MaterialPass() {
     delete[] property_buffers_[i].buffer;
 
     property_buffers_[i].reflected_uniform_buffer = nullptr;
-    property_buffers_[i].handle                   = kInvalidRenderResourceHandle;
-    property_buffers_[i].buffer                   = nullptr;
+    property_buffers_[i].handle                  = kInvalidRenderResourceHandle;
+    property_buffers_[i].buffer                  = nullptr;
+  }
+}
+
+MaterialPass::MaterialPass(MaterialPass&& other) : device_(other.device_) {
+  shader_                 = std::move(other.shader_);
+  descriptor_set_         = std::move(other.descriptor_set_);
+  texture_samplers_       = std::move(other.texture_samplers_);
+  property_buffers_count_ = std::move(other.property_buffers_count_);
+
+  for (uint32_t i = 0; i < property_buffers_count_; ++i) {
+    property_buffers_[i].reflected_uniform_buffer = other.property_buffers_[i].reflected_uniform_buffer;
+    property_buffers_[i].handle                  = other.property_buffers_[i].handle;
+    property_buffers_[i].buffer                  = other.property_buffers_[i].buffer;
+
+    other.property_buffers_[i].reflected_uniform_buffer = nullptr;
+    other.property_buffers_[i].handle                  = kInvalidRenderResourceHandle;
+    other.property_buffers_[i].buffer                  = nullptr;
   }
 }
 
@@ -92,14 +113,22 @@ DescriptorSetHandle MaterialPass::WriteDescriptorSet() {
     device_.LoadBufferData(property_buffer.handle, 0, size, property_buffer.buffer);
 
     device_.WriteDescriptorUniformBuffer(descriptor_set_, property_buffer.reflected_uniform_buffer->binding,
-                                        property_buffer.handle, 0, size);
+                                         property_buffer.handle, 0, size);
   }
 
   for (const auto& [name, texture_sampler] : texture_samplers_) {
     device_.WriteDescriptorSampler(descriptor_set_, texture_sampler.binding,
-                                  texture_sampler.texture->GetHandle(),
-                                  texture_sampler.sampler->GetHandle());
+                                   texture_sampler.texture->GetHandle(),
+                                   texture_sampler.sampler->GetHandle());
   }
+
+  return descriptor_set_;
+}
+
+DescriptorSetHandle MaterialPass::GetDescriptorSet() const {
+  VULTURE_ASSERT(ValidRenderHandle(descriptor_set_),
+                 "Trying to get material pass' descriptor set without first "
+                 "creating it (see WriteDescriptorSet function)");
 
   return descriptor_set_;
 }

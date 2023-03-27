@@ -1,13 +1,12 @@
 #version 450
 
 /* Descriptor Sets */
-layout(set = 0, binding = 0) uniform VultureFrameData
+layout(set = 0, binding = 0) uniform FrameData
 {
     float uTime;
-    vec3 VultureFrameDataPadding;
 };
 
-layout(set = 1, binding = 0) uniform VultureViewData
+layout(set = 1, binding = 0) uniform ViewData
 {
     mat4 uView;
     mat4 uProj;
@@ -15,7 +14,7 @@ layout(set = 1, binding = 0) uniform VultureViewData
 };
 
 /* Push constants */
-layout(push_constant) uniform VultureModelConstant
+layout(push_constant) uniform ModelConstant
 {
     mat4 uModel;
 };

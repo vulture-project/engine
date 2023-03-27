@@ -162,22 +162,22 @@ inline VkDescriptorType GetVKDescriptorType(DescriptorType type) {
   }
 }
 
-inline VkAttachmentLoadOp GetVKAttachmentLoadOperation(AttachmentLoadOperation operation) {
+inline VkAttachmentLoadOp GetVKAttachmentLoadOperation(AttachmentLoad operation) {
   switch (operation) {
-    case AttachmentLoadOperation::kLoad:     { return VK_ATTACHMENT_LOAD_OP_LOAD; }
-    case AttachmentLoadOperation::kClear:    { return VK_ATTACHMENT_LOAD_OP_CLEAR; }
-    case AttachmentLoadOperation::kDontCare: { return VK_ATTACHMENT_LOAD_OP_DONT_CARE; }
+    case AttachmentLoad::kLoad:     { return VK_ATTACHMENT_LOAD_OP_LOAD; }
+    case AttachmentLoad::kClear:    { return VK_ATTACHMENT_LOAD_OP_CLEAR; }
+    case AttachmentLoad::kDontCare: { return VK_ATTACHMENT_LOAD_OP_DONT_CARE; }
 
-    default: { assert(!"Invalid AttachmentLoadOperation!"); }
+    default: { assert(!"Invalid AttachmentLoad!"); }
   }
 }
 
-inline VkAttachmentStoreOp GetVKAttachmentStoreOperation(AttachmentStoreOperation operation) {
+inline VkAttachmentStoreOp GetVKAttachmentStoreOperation(AttachmentStore operation) {
   switch (operation) {
-    case AttachmentStoreOperation::kStore:    { return VK_ATTACHMENT_STORE_OP_STORE; }
-    case AttachmentStoreOperation::kDontCare: { return VK_ATTACHMENT_STORE_OP_DONT_CARE; }
+    case AttachmentStore::kStore:    { return VK_ATTACHMENT_STORE_OP_STORE; }
+    case AttachmentStore::kDontCare: { return VK_ATTACHMENT_STORE_OP_DONT_CARE; }
 
-    default: { assert(!"Invalid AttachmentStoreOperation!"); }
+    default: { assert(!"Invalid AttachmentStore!"); }
   }
 }
 

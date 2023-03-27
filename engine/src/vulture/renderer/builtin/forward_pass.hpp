@@ -46,8 +46,8 @@ class ForwardPass final : public IRenderQueuePass<MainQueueTag> {
     depth_specification.height.SetDependency(color_output.texture_id);
     depth_buffer.texture_id = builder.CreateTexture("depth_buffer", depth_specification);
 
-    builder.SetDepthStencil(depth_buffer.texture_id, AttachmentLoadOperation::kClear, AttachmentStoreOperation::kStore);
-    builder.AddColorAttachment(color_output.texture_id);
+    builder.SetDepthStencil(depth_buffer.texture_id, AttachmentLoad::kClear, AttachmentStore::kStore);
+    builder.AddColorAttachment(color_output.texture_id, AttachmentLoad::kClear, AttachmentStore::kStore);
   }
 };
 

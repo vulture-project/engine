@@ -49,6 +49,14 @@ class PerRenderPassData {
     return it->second;
   };
 
+  auto begin() {
+    return data_.begin();
+  }
+
+  auto end() {
+    return data_.end();
+  }
+
   void Emplace(RenderPassId pass_id, T&& value) {
     data_.emplace(pass_id, std::forward<T>(value));
   }

@@ -90,38 +90,31 @@ void Scene::Render(Renderer& renderer, float time) {
   /* Lights */
   LightEnvironment& lights = renderer.GetLightEnvironment();
 
-  lights.directional_lights_count = 0;
+  lights.directional_lights.clear();
   fennecs::EntityStream directional_light_stream = world_.Query<DirectionalLightSpecification>();
   for (auto entity = directional_light_stream.Next(); !entity.IsNull(); entity = directional_light_stream.Next()) {
-    DirectionalLightSpecification& specs     = entity.Get<DirectionalLightSpecification>();
-    Transform                      transform = entity.Get<TransformComponent>().transform;
-    DirectionalLight               target    = lights.directional_lights[lights.directional_lights_count++];
+    const auto& specs     = entity.Get<DirectionalLightSpecification>();
+    const auto& transform = entity.Get<TransformComponent>().transform;
 
-    target.specification = specs;
-    target.direction     = transform.CalculateForward();
+    lights.directional_lights.emplace_back(specs, transform.CalculateForward());
   }
 
-  lights.point_lights_count = 0;
+  lights.point_lights.clear();
   fennecs::EntityStream point_light_stream = world_.Query<PointLightSpecification>();
   for (auto entity = point_light_stream.Next(); !entity.IsNull(); entity = point_light_stream.Next()) {
-    PointLightSpecification& specs     = entity.Get<PointLightSpecification>();
-    Transform                transform = entity.Get<TransformComponent>().transform;
-    PointLight               target    = lights.point_lights[lights.point_lights_count++];
+    const auto& specs     = entity.Get<PointLightSpecification>();
+    const auto& transform = entity.Get<TransformComponent>().transform;
 
-    target.specification = specs;
-    target.position      = transform.translation;
+    lights.point_lights.emplace_back(specs, transform.translation);
   }
 
-  lights.spot_lights_count = 0;
+  lights.spot_lights.clear();
   fennecs::EntityStream spot_light_stream = world_.Query<SpotLightSpecification>();
   for (auto entity = spot_light_stream.Next(); !entity.IsNull(); entity = spot_light_stream.Next()) {
-    SpotLightSpecification& specs     = entity.Get<SpotLightSpecification>();
-    Transform&              transform = entity.Get<TransformComponent>().transform;
-    SpotLight               target    = lights.spot_lights[lights.spot_lights_count++];
+    const auto& specs     = entity.Get<SpotLightSpecification>();
+    const auto& transform = entity.Get<TransformComponent>().transform;
 
-    target.specification = specs;
-    target.position      = transform.translation;
-    target.direction     = transform.CalculateForward();
+    lights.spot_lights.emplace_back(specs, transform.translation, transform.CalculateForward());
   }
 
   /* Meshes */
@@ -135,6 +128,8 @@ void Scene::Render(Renderer& renderer, float time) {
 
     main_render_queue.render_objects.emplace_back(RenderQueueObject{mesh_component.mesh, transform.CalculateMatrix()});
   }
+
+  renderer.Render();
 }
 
 // void Scene::Render(Renderer3D* renderer, Framebuffer* framebuffer, Renderer3D::DebugRenderMode render_mode) {

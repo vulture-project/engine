@@ -11,6 +11,7 @@ SharedPtr<TAsset> AssetRegistry::Load(const String& path) {
   }
 
   if (auto loader = TryFindLoader(detail::Extension(path))) {
+    ScopedTimer timer{fmt::format("Load {}", path)};
     return std::static_pointer_cast<TAsset>(FetchInsertAsset(path, loader->Load(assets_folder_ / path)));
   }
 

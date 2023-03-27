@@ -35,7 +35,7 @@ T& MaterialPass::GetProperty(const StringView name) {
 
     for (const auto& member : property_buffer.reflected_uniform_buffer->members) {
       if (member.name == name) {
-        VULTURE_ASSERT(sizeof(T) == member.size, "Invalid property size!");
+        VULTURE_ASSERT(sizeof(T) == member.size, "Invalid property size (name = {0})!", name);
         result = reinterpret_cast<T*>(property_buffer.buffer + member.offset);
         found = true;
         break;

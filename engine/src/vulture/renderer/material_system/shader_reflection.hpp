@@ -40,36 +40,47 @@ class ShaderReflection {
   struct VertexAttribute {
     uint32_t       location{0};
     ShaderDataType type{ShaderDataType::kInvalid};
-    std::string    name;
+    String         name;
   };
 
   struct Member {
     ShaderDataType type{ShaderDataType::kInvalid};
-    std::string    name;
+    String         name;
     uint32_t       size{0};
     uint32_t       offset{0};
+    bool           is_array{false};
+    bool           is_array_variable_size{false};
+    uint32_t       array_size{0};   // For scalar size arrays
   };
 
   struct PushConstant {
-    ShaderModuleType    shader_module{ShaderModuleType::kInvalid};
-    std::string         name;
-    uint32_t            offset{0};
-    uint32_t            size{0};
-    std::vector<Member> members;
+    ShaderModuleType shader_module{ShaderModuleType::kInvalid};
+    String           name;
+    uint32_t         offset{0};
+    uint32_t         size{0};
+    Vector<Member>   members;
   };
 
   struct UniformBuffer {
-    ShaderStageFlags    shader_stages{0};
-    std::string         name;
-    uint32_t            size{0};
-    uint32_t            set{0};
-    uint32_t            binding{0};
-    std::vector<Member> members;
+    ShaderStageFlags shader_stages{0};
+    String           name;
+    uint32_t         size{0};
+    uint32_t         set{0};
+    uint32_t         binding{0};
+    Vector<Member>   members;
+  };
+
+  struct StorageBuffer {
+    ShaderStageFlags shader_stages{0};
+    String           name;
+    uint32_t         set{0};
+    uint32_t         binding{0};
+    Vector<Member>   members;
   };
 
   struct Sampler2D {
     ShaderStageFlags shader_stages{0};
-    std::string      name;
+    String           name;
     uint32_t         array_size{1};
     uint32_t         set{0};
     uint32_t         binding{0};
@@ -78,20 +89,22 @@ class ShaderReflection {
  public:
   ShaderReflection() = default;
 
-  void AddShaderModule(ShaderModuleType shader_module, const std::vector<uint32_t>& binary);
+  void AddShaderModule(ShaderModuleType shader_module, const Vector<uint32_t>& binary);
 
-  const std::vector<VertexAttribute>& GetVertexAttributes() const;
-  const std::vector<PushConstant>&    GetPushConstants() const;
-  const std::vector<UniformBuffer>&   GetUniformBuffers() const;
-  const std::vector<Sampler2D>&       GetSampler2Ds() const;
+  const Vector<VertexAttribute>& GetVertexAttributes() const;
+  const Vector<PushConstant>&    GetPushConstants() const;
+  const Vector<UniformBuffer>&   GetUniformBuffers() const;
+  const Vector<StorageBuffer>&   GetStorageBuffers() const;
+  const Vector<Sampler2D>&       GetSampler2Ds() const;
 
   void PrintData() const;
 
  private:
-  std::vector<VertexAttribute> vertex_attributes_;
-  std::vector<PushConstant>    push_constants_;
-  std::vector<UniformBuffer>   uniform_buffers_;
-  std::vector<Sampler2D>       sampler2Ds_;
+  Vector<VertexAttribute> vertex_attributes_;
+  Vector<PushConstant>    push_constants_;
+  Vector<UniformBuffer>   uniform_buffers_;
+  Vector<StorageBuffer>   storage_buffers_;
+  Vector<Sampler2D>       sampler2Ds_;
 };
 
 }  // namespace vulture

@@ -1,6 +1,6 @@
 # Blender v2.93.5 OBJ File: '8 Sg.blend'
 # www.blender.org
-mtllib assets/meshes/Low_poly_guard.mtl
+mtllib /meshes/Low_poly_guard.mtl
 o Cube.001
 vt 0.0 0.0 0.0
 v 2.072255 0.126964 -0.126584

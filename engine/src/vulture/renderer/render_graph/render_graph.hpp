@@ -210,18 +210,18 @@ class RenderGraphBuilder {
                                  TextureLayout final_layout = TextureLayout::kUndefined);
 
   TextureVersionId SetDepthStencil(TextureVersionId texture,
-                                   AttachmentLoadOperation load = AttachmentLoadOperation::kLoad,
-                                   AttachmentStoreOperation store = AttachmentStoreOperation::kStore,
+                                   AttachmentLoad load = AttachmentLoad::kLoad,
+                                   AttachmentStore store = AttachmentStore::kStore,
                                    ClearValue clear_value = ClearValue{1.0f, 0});
 
   TextureVersionId AddColorAttachment(TextureVersionId texture,
-                                      AttachmentLoadOperation load = AttachmentLoadOperation::kLoad,
-                                      AttachmentStoreOperation store = AttachmentStoreOperation::kStore,
+                                      AttachmentLoad load = AttachmentLoad::kLoad,
+                                      AttachmentStore store = AttachmentStore::kStore,
                                       ClearValue clear_value = ClearValue{0, 0, 0, 0});
 
   TextureVersionId AddResolveAttachment(TextureVersionId texture,
-                                        AttachmentLoadOperation load = AttachmentLoadOperation::kDontCare,
-                                        AttachmentStoreOperation store = AttachmentStoreOperation::kStore,
+                                        AttachmentLoad load = AttachmentLoad::kDontCare,
+                                        AttachmentStore store = AttachmentStore::kStore,
                                         ClearValue clear_value = ClearValue{0, 0, 0, 0});
 
   void AddSampledTexture(TextureVersionId texture);

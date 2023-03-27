@@ -33,7 +33,7 @@ namespace vulture {
 
 struct DirectionalLightSpecification {
   glm::vec3 color     {0};
-  float     intensity {1};
+  float      intensity {1};
 
   DirectionalLightSpecification(const glm::vec3& color = glm::vec3{0}, float intensity = 1)
       : color(color), intensity(intensity) {}
@@ -41,46 +41,50 @@ struct DirectionalLightSpecification {
 
 struct PointLightSpecification {
   glm::vec3 color     {0};
-  float     intensity {1};
-  float     range     {1};
+  float      intensity {1};
+  float      range     {1};
 };
 
 struct SpotLightSpecification {
   glm::vec3 color      {0};
-  float     intensity  {1};
-  float     range      {1};
-  float     inner_cone {0};
-  float     outer_cone {0};
+  float      intensity  {1};
+  float      range      {1};
+  float      inner_cone {0};
+  float      outer_cone {0};
 };
 
 struct DirectionalLight {
   DirectionalLightSpecification specification {};
-  glm::vec3                     direction     {1, 0, 0};
+  glm::vec3                    direction    {1, 0, 0};
 
-  char                          _padding[1]   {0};
+  char                         _padding[1]  {0};
+
+  DirectionalLight(const DirectionalLightSpecification& specification, const glm::vec3& direction)
+      : specification(specification), direction(direction) {}
 };
 
 struct PointLight {
   PointLightSpecification specification {};
-  glm::vec3               position      {0};
+  glm::vec3              position     {0};
+
+  PointLight(const PointLightSpecification& specification, const glm::vec3& position)
+      : specification(specification), position(position) {}
 };
 
 struct SpotLight {
   SpotLightSpecification specification {};
-  glm::vec3              position      {0};
-  glm::vec3              direction     {1, 0, 0};
+  glm::vec3             position     {0};
+  glm::vec3             direction    {1, 0, 0};
 
-  char                   _padding[3]   {0};
+  char                  _padding[3]  {0, 0, 0};
+
+  SpotLight(const SpotLightSpecification& specification, const glm::vec3& position, const glm::vec3& direction)
+      : specification(specification), position(position), direction(direction) {}
 };
 
 struct LightEnvironment {
-  uint32_t                 directional_lights_count;
   Vector<DirectionalLight> directional_lights;
-
-  uint32_t                 point_lights_count;
   Vector<PointLight>       point_lights;
-
-  uint32_t                 spot_lights_count;
   Vector<SpotLight>        spot_lights;
 };
 

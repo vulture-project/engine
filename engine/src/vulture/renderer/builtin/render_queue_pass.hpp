@@ -79,10 +79,7 @@ class IRenderQueuePass : public rg::IRenderPass {
         }
 
         if (prev_material == nullptr || prev_material != &material) {
-          // TODO: (tralf-strues) only if changed
-          DescriptorSetHandle material_set = material_pass.WriteDescriptorSet();
-          command_buffer.CmdBindDescriptorSet(pipeline, kMaterialDescriptorSetIdx, material_set);
-
+          command_buffer.CmdBindDescriptorSet(pipeline, kMaterialDescriptorSetIdx, material_pass.GetDescriptorSet());
           prev_material = &material;
         }
 

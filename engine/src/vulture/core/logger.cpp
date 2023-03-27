@@ -30,13 +30,17 @@
 
 using namespace vulture;
 
-FILE* Logger::log_file_ = stdout;
+FILE*    Logger::log_file_          = stdout;
+uint32_t Logger::cur_tracer_depth_ = 0;
+bool     Logger::trace_enabled_    = false;
 
 // Constants
-const fmt::text_style Logger::kInfoStyle  = fmt::emphasis::faint;
-const fmt::text_style Logger::kWarnStyle  = fmt::emphasis::bold | fg(fmt::color::purple);
-const fmt::text_style Logger::kErrorStyle = fmt::emphasis::bold | fg(fmt::color::red);
-const fmt::text_style Logger::kDebugStyle = fmt::emphasis::bold;
+const fmt::text_style Logger::kInfoStyle        = fmt::emphasis::faint;
+const fmt::text_style Logger::kWarnStyle        = fmt::emphasis::bold | fg(fmt::color::purple);
+const fmt::text_style Logger::kTraceStartStyle  = fg(fmt::color::dark_olive_green);
+const fmt::text_style Logger::kTraceFinishStyle = fg(fmt::color::olive_drab);
+const fmt::text_style Logger::kErrorStyle       = fmt::emphasis::bold | fg(fmt::color::red);
+const fmt::text_style Logger::kDebugStyle       = fmt::emphasis::bold;
 
 const char* Logger::kDefaultLogFileName = "log/log.txt"; 
 const char* Logger::kProjectDirectoryName = "engine"; 
@@ -66,12 +70,30 @@ void Logger::Close() {
   }
 }
 
+void Logger::SetTraceEnabled(bool enabled) {
+  trace_enabled_ = enabled;
+}
+
+const char* Logger::LevelToTextLabel(LogLevel level) {
+  switch (level) {
+    case LogLevel::kInfo:        { return "[    INFO     ]"; }
+    case LogLevel::kWarn:        { return "[    WARN     ]"; }
+    case LogLevel::kTraceStart:  { return "[ TRACE START ]"; }
+    case LogLevel::kTraceFinish: { return "[  TRACE END  ]"; }
+    case LogLevel::kError:       { return "[    ERROR    ]"; }
+    case LogLevel::kDebug:       { return "[    DEBUG    ]"; }
+    default:                     { return "[   UNKNOWN   ]"; }
+  }
+}
+
 fmt::text_style Logger::LevelToTextStyle(LogLevel level) {
   switch (level) {
-    case LogLevel::kInfo:  { return kInfoStyle; }
-    case LogLevel::kWarn:  { return kWarnStyle; }
-    case LogLevel::kError: { return kErrorStyle; }
-    case LogLevel::kDebug: { return kDebugStyle; }
+    case LogLevel::kInfo:        { return kInfoStyle; }
+    case LogLevel::kWarn:        { return kWarnStyle; }
+    case LogLevel::kTraceStart:  { return kTraceStartStyle; }
+    case LogLevel::kTraceFinish: { return kTraceFinishStyle; }
+    case LogLevel::kError:       { return kErrorStyle; }
+    case LogLevel::kDebug:       { return kDebugStyle; }
     default: { return fmt::emphasis::italic | fg(fmt::color::purple); }
   }
 }

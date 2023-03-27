@@ -77,7 +77,7 @@ layout(set = 3, binding = 0) uniform MaterialData
     vec3 specularColor;
     float specularExponent;
     float normalStrength;
-    bool useNormalMap;
+    uint useNormalMap;
 } uMaterial;
 
 layout(set = 3, binding = 1) uniform sampler2D uDiffuseMap;
@@ -90,22 +90,24 @@ layout(location = 3) in vec4 tangentWS;
 
 layout(location = 0) out vec4 outColor;
 
-// vec3 CalculateBumpNormal();
-// vec3 CalculateDirectionalLight(DirectionalLight light, vec3 bumpNormalWS, vec3 toCameraWS);
+vec3 CalculateBumpNormal();
+vec3 CalculateDirectionalLight(DirectionalLight light, vec3 bumpNormalWS, vec3 toCameraWS);
 // vec3 CalculatePointLight(PointLight light, vec3 bumpNormalWS, vec3 toCameraWS);
 // vec3 CalculateSpotLight(SpotLight light, vec3 bumpNormalWS, vec3 toCameraWS);
 
 void main()
 {
-    if (texture(uDiffuseMap, texCoords).a < 0.1)
+    if (texture(uDiffuseMap, texCoords).a < 0.01)
     {
         discard;
     }
 
-    // vec3 bumpNormalWS = CalculateBumpNormal();
-    // vec3 toCameraWS   = normalize(uCameraWS - positionWS);
+    vec3 bumpNormalWS = CalculateBumpNormal();
+    vec3 toCameraWS   = normalize(uCameraWS - positionWS);
 
     outColor = texture(uDiffuseMap, texCoords);
+
+    // outColor = vec4(0, 0, 0, 0);
 
     // for (int i = 0; i < uDirectionalLightsCount; ++i)
     // {
@@ -123,51 +125,69 @@ void main()
     // }
 }
 
-// vec3 CalculateBumpNormal()
-// {
-//     if (!uMaterial.useNormalMap)
-//     {
-//         return normalWS;
-//     }
-//     else
-//     {
-//         vec3 bumpNormalWS = normalize(normalWS);
+vec3 CalculateBumpNormal()
+{
+    if (uMaterial.useNormalMap == 0)
+    {
+        return normalWS;
+    }
+    else
+    {
+        vec3 bumpNormalWS    = normalize(normalWS);
+        vec3 bumpTangentWS   = normalize(tangentWS.xyz);
+        vec3 bumpBitangentWS = normalize(cross(bumpTangentWS, bumpNormalWS));
+        mat3 tbn = mat3(bumpTangentWS, bumpBitangentWS, bumpNormalWS);
+
+        bumpNormalWS = tbn * (2.0 * texture(uNormalMap, texCoords).xyz - vec3(1.0));
+        bumpNormalWS = normalize(bumpNormalWS);
+
+        bumpNormalWS.xy *= uMaterial.normalStrength;
+        bumpNormalWS = normalize(bumpNormalWS);
+
+        return bumpNormalWS;
+
+
+
+        // vec3 bumpNormalWS = normalize(normalWS);
         
-//         // Gram-Schmidt proccess to make TBN orthonormal
-//         vec3 bumpTangentWS = normalize(tangentWS.xyz);
-//         bumpTangentWS      = normalize(bumpTangentWS - dot(bumpNormalWS, bumpTangentWS) * bumpNormalWS);
+        // // Gram-Schmidt proccess to make TBN orthonormal
+        // vec3 bumpTangentWS = normalize(tangentWS.xyz);
+        // bumpTangentWS      = normalize(bumpTangentWS - dot(bumpNormalWS, bumpTangentWS) * bumpNormalWS);
 
-//         vec3 bumpBitangentWS = normalize(cross(bumpTangentWS, bumpNormalWS)) * tangentWS.w;
+        // vec3 bumpBitangentWS = normalize(cross(bumpTangentWS, bumpNormalWS)) * tangentWS.w;
 
-//         mat3 tbn = mat3(bumpTangentWS, bumpBitangentWS, bumpNormalWS);
+        // mat3 tbn = mat3(bumpTangentWS, bumpBitangentWS, bumpNormalWS);
 
-//         bumpNormalWS = tbn * (2.0 * texture(uNormalMap, texCoords).xyz - vec3(1.0));
-//         bumpNormalWS = normalize(bumpNormalWS);
+        // bumpNormalWS = tbn * (2.0 * texture(uNormalMap, texCoords).xyz - vec3(1.0));
+        // bumpNormalWS = normalize(bumpNormalWS);
 
-//         bumpNormalWS.xy *= uMaterial.normalStrength;
-//         bumpNormalWS = normalize(bumpNormalWS);
+        // bumpNormalWS.xy *= uMaterial.normalStrength;
+        // bumpNormalWS = normalize(bumpNormalWS);
 
-//         return bumpNormalWS;
-//     }
-// }
+        // return bumpNormalWS;
+    }
+}
 
-// vec3 CalculateDirectionalLight(DirectionalLight light, vec3 bumpNormalWS, vec3 toCameraWS)
-// {
-//     vec3 textureDiffuse = texture(uDiffuseMap, texCoords).xyz;
+vec3 CalculateDirectionalLight(DirectionalLight light, vec3 bumpNormalWS, vec3 toCameraWS)
+{
+    vec3 textureDiffuse = texture(uDiffuseMap, texCoords).xyz;
 
-//     // Ambient
-//     vec3 ambient = light.ambientColor * uMaterial.ambientColor;
+    vec3 light_color = light.color * light.intensity;
 
-//     // Diffuse
-//     vec3 diffuse = light.diffuseColor * uMaterial.diffuseColor * textureDiffuse * max(dot(bumpNormalWS, -normalize(light.directionWS)), 0);
+    // Ambient
+    // vec3 ambient = uMaterial.ambientColor;
 
-//     // Specular
-//     float specularMultiplier = pow(max(dot(toCameraWS, normalize(reflect(normalize(light.directionWS), bumpNormalWS))), 0), uMaterial.specularExponent);
-//     vec3 specular = light.specularColor * uMaterial.specularColor * 1;
+    // Diffuse
+    vec3 diffuse = light_color * uMaterial.diffuseColor * textureDiffuse * max(dot(bumpNormalWS, -normalize(light.directionWS)), 0);
 
-//     // Result
-//     return ambient + diffuse + specular;
-// }
+    // Specular
+    float specularMultiplier = pow(max(dot(toCameraWS, normalize(reflect(normalize(light.directionWS), bumpNormalWS))), 0), uMaterial.specularExponent);
+    vec3 specular = light_color * uMaterial.specularColor * 1;
+
+    // Result
+    // return ambient + diffuse + specular;
+    return diffuse + specular;
+}
 
 // vec3 CalculatePointLight(PointLight light, vec3 bumpNormalWS, vec3 toCameraWS)
 // {

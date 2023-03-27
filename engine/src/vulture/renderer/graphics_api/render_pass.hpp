@@ -37,18 +37,18 @@
 namespace vulture {
 
 /* Render Pass Attachment */
-DECLARE_ENUM_TO_STR(AttachmentLoadOperation, kLoad, kClear, kDontCare);
-DECLARE_ENUM_TO_STR(AttachmentStoreOperation, kStore, kDontCare);
+DECLARE_ENUM_TO_STR(AttachmentLoad, kLoad, kClear, kDontCare);
+DECLARE_ENUM_TO_STR(AttachmentStore, kStore, kDontCare);
 
 struct AttachmentDescription {
-  DataFormat               format         {DataFormat::kInvalid};
-  uint32_t                 samples        {1};
+  DataFormat      format         {DataFormat::kInvalid};
+  uint32_t        samples        {1};
 
-  AttachmentLoadOperation  load_op        {AttachmentLoadOperation::kDontCare};
-  AttachmentStoreOperation store_op       {AttachmentStoreOperation::kDontCare};
+  AttachmentLoad  load_op        {AttachmentLoad::kDontCare};
+  AttachmentStore store_op       {AttachmentStore::kDontCare};
 
-  TextureLayout            initial_layout {TextureLayout::kUndefined};
-  TextureLayout            final_layout   {TextureLayout::kUndefined};
+  TextureLayout   initial_layout {TextureLayout::kUndefined};
+  TextureLayout   final_layout    {TextureLayout::kUndefined};
 };
 
 /* Subpass */

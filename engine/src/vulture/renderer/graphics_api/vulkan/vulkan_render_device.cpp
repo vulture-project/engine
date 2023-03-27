@@ -671,7 +671,7 @@ bool VulkanRenderDevice::FrameBegin(SwapchainHandle swapchain_handle, uint32_t* 
 void VulkanRenderDevice::FrameEnd(SwapchainHandle) {
   assert(frame_began_);
 
-  vkDeviceWaitIdle(device_);
+  vkQueueWaitIdle(graphics_queue_);
   frame_began_ = false;
 }
 
@@ -955,15 +955,18 @@ BufferHandle VulkanRenderDevice::CreateBuffer(uint32_t size, BufferUsageFlags us
   // buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;  // Owned by one queue - graphics_queue_
 
   VmaAllocationCreateInfo vma_alloc_info = {};
-  vma_alloc_info.usage  = (dynamic_memory ? VMA_MEMORY_USAGE_AUTO : VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
+  vma_alloc_info.usage = (dynamic_memory ? VMA_MEMORY_USAGE_AUTO : VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
   vma_alloc_info.flags |= (dynamic_memory ? VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT : 0);
 
   VkResult result =
       vmaCreateBuffer(allocator_, &buffer_info, &vma_alloc_info, &buffer.vk_buffer, &buffer.vma_allocation, nullptr);
   assert(result == VK_SUCCESS);
 
-  if (dynamic_memory && map_data != nullptr) {
-    vmaMapMemory(allocator_, buffer.vma_allocation, map_data);
+  if (dynamic_memory) {
+    vmaMapMemory(allocator_, buffer.vma_allocation, &buffer.map_data);
+    if (map_data != nullptr) {
+      *map_data = buffer.map_data;
+    }
   }
 
   BufferHandle handle = GenNextHandle();
@@ -1141,6 +1144,10 @@ void VulkanRenderDevice::DeleteDescriptorSet(DescriptorSetHandle handle) {
 void VulkanRenderDevice::WriteDescriptorUniformBuffer(DescriptorSetHandle ds_handle, uint32_t binding,
                                                       BufferHandle uniform_buffer_handle, uint32_t offset,
                                                       uint32_t size) {
+  if (size == 0) {
+    return;
+  }
+  
   VulkanDescriptorSet& descriptor_set = GetVulkanDescriptorSet(ds_handle);
   VulkanBuffer&        uniform_buffer = GetVulkanBuffer(uniform_buffer_handle);
 
@@ -1166,6 +1173,10 @@ void VulkanRenderDevice::WriteDescriptorUniformBuffer(DescriptorSetHandle ds_han
 void VulkanRenderDevice::WriteDescriptorStorageBuffer(DescriptorSetHandle ds_handle, uint32_t binding,
                                                       BufferHandle storage_buffer_handle, uint32_t offset,
                                                       uint32_t size) {
+  if (size == 0) {
+    return;
+  }
+
   VulkanDescriptorSet& descriptor_set = GetVulkanDescriptorSet(ds_handle);
   VulkanBuffer&        storage_buffer = GetVulkanBuffer(storage_buffer_handle);
 

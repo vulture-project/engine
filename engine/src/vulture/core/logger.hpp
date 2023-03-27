@@ -29,6 +29,7 @@
 
 #include <fmt/color.h>
 #include <fmt/core.h>
+#include <fmt/ostream.h>
 
 #include <fstream>
 #include <string>
@@ -38,19 +39,23 @@
 #define LINE_TO_STR(x) TO_STR(x)
 #define TO_STR(x) #x
 
-#define LOG_INFO(...)  vulture::Logger::Log(__FILE__ ":" LINE_TO_STR(__LINE__), vulture::LogLevel::kInfo, false, __VA_ARGS__)
-#define LOG_WARN(...)  vulture::Logger::Log(__FILE__ ":" LINE_TO_STR(__LINE__), vulture::LogLevel::kWarn, false, __VA_ARGS__)
-#define LOG_ERROR(...) vulture::Logger::Log(__FILE__ ":" LINE_TO_STR(__LINE__), vulture::LogLevel::kError, true, __VA_ARGS__)
-#define LOG_DEBUG(...) vulture::Logger::Log(__FILE__ ":" LINE_TO_STR(__LINE__), vulture::LogLevel::kDebug, true, __VA_ARGS__)
+#define LOG_INFO(...)         vulture::Logger::Log(__FILE__ ":" LINE_TO_STR(__LINE__), vulture::LogLevel::kInfo, false, __VA_ARGS__)
+#define LOG_WARN(...)         vulture::Logger::Log(__FILE__ ":" LINE_TO_STR(__LINE__), vulture::LogLevel::kWarn, false, __VA_ARGS__)
+#define LOG_TRACE_START(...)  vulture::Logger::Log(__FILE__ ":" LINE_TO_STR(__LINE__), vulture::LogLevel::kTraceStart, true, __VA_ARGS__)
+#define LOG_TRACE_FINISH(...) vulture::Logger::Log(__FILE__ ":" LINE_TO_STR(__LINE__), vulture::LogLevel::kTraceFinish, true, __VA_ARGS__)
+#define LOG_ERROR(...)        vulture::Logger::Log(__FILE__ ":" LINE_TO_STR(__LINE__), vulture::LogLevel::kError, true, __VA_ARGS__)
+#define LOG_DEBUG(...)        vulture::Logger::Log(__FILE__ ":" LINE_TO_STR(__LINE__), vulture::LogLevel::kDebug, true, __VA_ARGS__)
 
 namespace vulture {
 
-DECLARE_ENUM_TO_STR(LogLevel, kInfo, kWarn, kError, kDebug);
+DECLARE_ENUM_TO_STR(LogLevel, kInfo, kWarn, kTraceStart, kTraceFinish, kError, kDebug);
 
 class Logger {
  public:
   static const fmt::text_style kInfoStyle;
   static const fmt::text_style kWarnStyle;
+  static const fmt::text_style kTraceStartStyle;
+  static const fmt::text_style kTraceFinishStyle;
   static const fmt::text_style kErrorStyle;
   static const fmt::text_style kDebugStyle;
 
@@ -64,20 +69,37 @@ class Logger {
   static void OpenLogFile(const char* filename = kDefaultLogFileName);
   static void Flush();
   static void Close();
+  static void SetTraceEnabled(bool enabled);
 
   template <typename... Args>
   static void Log(std::string place, LogLevel level, bool flush, Args&&... args) {
+    if (!trace_enabled_) {
+      return;
+    }
+
     size_t project_start = place.find("engine");
     if (project_start == place.npos) {
       project_start = 0;
     }
 
-    std::string current_time = GetCurrentTimeStr();
-    fmt::print(log_file_, "[{}] ", current_time);
-    // fmt::print(log_file_, LevelToTextStyle(level), "{:<{}}", LogLevelToStr(level), kLevelStringAlignment);
-    fmt::print(log_file_, LevelToTextStyle(level), "{} ", LogLevelToStr(level));
+    if (level == LogLevel::kTraceStart) {
+      fmt::print(log_file_, "{: >{}}", "", 2 * (cur_tracer_depth_++));
+    } else if (level == LogLevel::kTraceFinish) {
+      assert(cur_tracer_depth_ > 0);
+
+      fmt::print(log_file_, "{: >{}}", "", 2 * (--cur_tracer_depth_));
+    }
+
+    // std::string current_time = GetCurrentTimeStr();
+    // fmt::print(log_file_, "[{}] ", current_time);
+    // fmt::print(log_file_, LevelToTextStyle(level), "{:<s{}}", LogLevelToStr(level), kLevelStringAlignment);
+    fmt::print(log_file_, LevelToTextStyle(level), "{} ", LevelToTextLabel(level));
     // fmt::print(log_file_, "{:<{}} ", place.substr(project_start), kFilenameAlignment);
-    fmt::print(log_file_, fmt::emphasis::underline, "{} ", place.substr(project_start));
+
+    if (level == LogLevel::kError || level == LogLevel::kDebug) {
+      fmt::print(log_file_, fmt::emphasis::underline, "{}", place.substr(project_start));
+      fmt::print(log_file_, " ");
+    }
 
     fmt::print(log_file_, LevelToTextStyle(level), std::forward<Args>(args)...);
     fmt::print(log_file_, "\n");
@@ -87,10 +109,13 @@ class Logger {
     }
   }
 
+  static const char*     LevelToTextLabel(LogLevel level);
   static fmt::text_style LevelToTextStyle(LogLevel level);
 
  private:
   static FILE* log_file_;
+  static uint32_t cur_tracer_depth_;
+  static bool trace_enabled_;
 };
 
 }  // namespace vulture

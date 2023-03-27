@@ -50,7 +50,7 @@ class MaterialPass {
   explicit MaterialPass(RenderDevice& device, SharedPtr<Shader> shader);
   ~MaterialPass();
 
-  MaterialPass(MaterialPass&& other) = default;
+  MaterialPass(MaterialPass&& other);
   MaterialPass& operator=(MaterialPass&& other) = delete;
 
   MaterialPass(const MaterialPass& other) = delete;
@@ -66,6 +66,7 @@ class MaterialPass {
 
   // TODO: (tralf-strues) come up with some sort of caching system to only update if changed
   DescriptorSetHandle WriteDescriptorSet();
+  DescriptorSetHandle GetDescriptorSet() const;
 
  private:
   struct PropertyBuffer {

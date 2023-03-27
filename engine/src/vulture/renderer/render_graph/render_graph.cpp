@@ -246,7 +246,7 @@ void RenderGraph::RecreateRenderPasses(RenderDevice& device) {
       built_pass.clear_values[attachment]         = pass_node.depth_stencil_usage->clear_value;
 
       TextureLayout initial_layout = TextureLayout::kUndefined;
-      if (pass_node.depth_stencil_usage->load == AttachmentLoadOperation::kLoad) {
+      if (pass_node.depth_stencil_usage->load == AttachmentLoad::kLoad) {
         initial_layout = TextureLayout::kDepthStencilAttachment;
       }
 
@@ -267,7 +267,7 @@ void RenderGraph::RecreateRenderPasses(RenderDevice& device) {
       attachment_description.load_op        = pass_node.depth_stencil_usage->load;
       attachment_description.store_op       = pass_node.depth_stencil_usage->store;
       attachment_description.initial_layout = initial_layout;
-      attachment_description.final_layout   = final_layout;
+      attachment_description.final_layout    = final_layout;
       built_pass.description.attachments[attachment] = attachment_description;
 
       subpass.depth_stencil_attachment = AttachmentReference{attachment, TextureLayout::kDepthStencilAttachment};
@@ -283,7 +283,7 @@ void RenderGraph::RecreateRenderPasses(RenderDevice& device) {
       built_pass.clear_values[attachment]         = color_attachment_usage.clear_value;
 
       TextureLayout initial_layout = TextureLayout::kUndefined;
-      if (color_attachment_usage.load == AttachmentLoadOperation::kLoad) {
+      if (color_attachment_usage.load == AttachmentLoad::kLoad) {
         initial_layout = TextureLayout::kColorAttachment;
       }
 
@@ -304,7 +304,7 @@ void RenderGraph::RecreateRenderPasses(RenderDevice& device) {
       attachment_description.load_op        = color_attachment_usage.load;
       attachment_description.store_op       = color_attachment_usage.store;
       attachment_description.initial_layout = initial_layout;
-      attachment_description.final_layout   = final_layout;
+      attachment_description.final_layout    = final_layout;
       built_pass.description.attachments[attachment] = attachment_description;
 
       subpass.color_attachments[color_attachment_idx] =
@@ -322,7 +322,7 @@ void RenderGraph::RecreateRenderPasses(RenderDevice& device) {
       built_pass.clear_values[attachment]         = resolve_attachment_usage.clear_value;
 
       TextureLayout initial_layout = TextureLayout::kUndefined;
-      if (resolve_attachment_usage.load == AttachmentLoadOperation::kLoad) {
+      if (resolve_attachment_usage.load == AttachmentLoad::kLoad) {
         initial_layout = TextureLayout::kColorAttachment;
       }
 
@@ -343,7 +343,7 @@ void RenderGraph::RecreateRenderPasses(RenderDevice& device) {
       attachment_description.load_op        = resolve_attachment_usage.load;
       attachment_description.store_op       = resolve_attachment_usage.store;
       attachment_description.initial_layout = initial_layout;
-      attachment_description.final_layout   = final_layout;
+      attachment_description.final_layout    = final_layout;
       built_pass.description.attachments[attachment] = attachment_description;
 
       subpass.resolve_attachments[resolve_attachment_idx] =
@@ -444,27 +444,22 @@ void RenderGraph::EndSubgraph() {
 
 std::ostream& ExportGraphvizWriteColor(std::ostream& os, ClearValue clear_value, bool is_depth) {
   if (is_depth) {
-    os << "clear_depth = " << clear_value.depth_stencil.depth;
+    fmt::print(os, "clear_depth = {0}", clear_value.depth_stencil.depth);
   } else {
-    os << "clear_rgba = (" << clear_value.color.rgba_float32[0] << ", "
-       << clear_value.color.rgba_float32[1] << ", "
-       << clear_value.color.rgba_float32[2] << ", "
-       << clear_value.color.rgba_float32[3] << ")";
+    fmt::print(os, "clear_rgba = ({0}, {1}, {2}, {3})",
+               clear_value.color.rgba_float32[0],
+               clear_value.color.rgba_float32[1],
+               clear_value.color.rgba_float32[2],
+               clear_value.color.rgba_float32[3]);
   }
 
   return os;
 };
 
 void RenderGraph::ExportGraphviz(std::ostream& os) const {
-  os << "digraph  {" << std::endl;
-  os << "graph [style=invis, rankdir=\""
-     << "LR"
-     << "\" ordering=out, splines=spline]" << std::endl;
-
-  os << "node [shape=record, fontname=\""
-     << "helvetica"
-     << "\", fontsize=" << 14 << ", margin=\"0.2,0.15\"]" << std::endl
-     << std::endl;
+  fmt::print(os, "digraph {{\n"
+                 "graph [style=invis, rankdir=\"LR\" ordering=out, splines=spline]\n"
+                 "node [shape=record, fontname=\"helvetica\", fontsize=14, margin=\"0.2,0.15\"]\n\n");
 
   /* Subgraphs */
   for (int32_t subgraph_idx = 0; subgraph_idx < static_cast<int32_t>(subgraph_names_.size()); ++subgraph_idx) {
@@ -479,49 +474,51 @@ void RenderGraph::ExportGraphviz(std::ostream& os) const {
 
     /* Writes */
     if (pass_node.depth_stencil_usage.has_value()) {
-      os << "P" << pass_idx << " -> "
-         << "T" << pass_node.depth_stencil_usage->out << " [label=\""
-         << "Depth Stencil, store_op = " << AttachmentStoreOperationToStr(pass_node.depth_stencil_usage->store) << "\" "
-         << "fontcolor="
-         << "orangered"
-         << " color="
-         << "orangered"
-         << "]" << std::endl;
+      fmt::print(os,
+                 "P{0} -> T{1} ["
+                 "label=\"Depth Stencil, store_op = {2}\""
+                 "fontcolor=orangered color=orangered"
+                 "]\n",
+                 pass_idx,
+                 pass_node.depth_stencil_usage->out,
+                 AttachmentStoreToStr(pass_node.depth_stencil_usage->store));
     }
 
     uint32_t attachment_idx = 0;
     for (const auto& color_attachment_usage : pass_node.color_attachment_usages) {
-      os << "P" << pass_idx << " -> "
-         << "T" << color_attachment_usage.out << " [label=\""
-         << "Color [" << attachment_idx++ << "], store_op = " << AttachmentStoreOperationToStr(color_attachment_usage.store)
-         << "\" "
-         << "fontcolor="
-         << "orangered"
-         << " color="
-         << "orangered"
-         << "]" << std::endl;
+      fmt::print(os,
+                 "P{0} -> T{1} ["
+                 "label=\"Color [{2}], store_op = {3}\""
+                 "fontcolor=orangered color=orangered"
+                 "]\n",
+                 pass_idx,
+                 color_attachment_usage.out,
+                 attachment_idx++,
+                 AttachmentStoreToStr(color_attachment_usage.store));
     }
 
     attachment_idx = 0;
     for (const auto& resolve_attachment_usage : pass_node.resolve_attachment_usages) {
-      os << "P" << pass_idx << " -> "
-         << "T" << resolve_attachment_usage.out << " [label=\""
-         << "Resolve [" << attachment_idx++
-         << "], store_op = " << AttachmentStoreOperationToStr(resolve_attachment_usage.store) << "\" "
-         << "fontcolor="
-         << "orangered"
-         << " color="
-         << "orangered"
-         << "]" << std::endl;
+      fmt::print(os,
+                 "P{0} -> T{1} ["
+                 "label=\"Resolve [{2}], store_op = {3}\""
+                 "fontcolor=orangered color=orangered"
+                 "]\n",
+                 pass_idx,
+                 resolve_attachment_usage.out,
+                 attachment_idx++,
+                 AttachmentStoreToStr(resolve_attachment_usage.store));
     }
+
+    // TODO: (tralf-strues) rewrite the remaining std::ostream usage to fmt
 
     /* Reads */
     if (pass_node.depth_stencil_usage.has_value()) {
       os << "T" << pass_node.depth_stencil_usage->in << " -> "
          << "P" << pass_idx << " [label=\""
-         << "load_op = " << AttachmentLoadOperationToStr(pass_node.depth_stencil_usage->load);
+         << "load_op = " << AttachmentLoadToStr(pass_node.depth_stencil_usage->load);
       
-      if (pass_node.depth_stencil_usage->load == AttachmentLoadOperation::kClear) {
+      if (pass_node.depth_stencil_usage->load == AttachmentLoad::kClear) {
         os << ", ";
         ExportGraphvizWriteColor(os, pass_node.depth_stencil_usage->clear_value, true);
       }
@@ -539,9 +536,9 @@ void RenderGraph::ExportGraphviz(std::ostream& os) const {
     for (const auto& color_attachment_usage : pass_node.color_attachment_usages) {
       os << "T" << color_attachment_usage.in << " -> "
          << "P" << pass_idx << " [label=\""
-         << "load_op = " << AttachmentLoadOperationToStr(color_attachment_usage.load);
+         << "load_op = " << AttachmentLoadToStr(color_attachment_usage.load);
       
-      if (color_attachment_usage.load == AttachmentLoadOperation::kClear) {
+      if (color_attachment_usage.load == AttachmentLoad::kClear) {
         os << ", ";
         ExportGraphvizWriteColor(os, color_attachment_usage.clear_value, false);
       }
@@ -559,9 +556,9 @@ void RenderGraph::ExportGraphviz(std::ostream& os) const {
     for (const auto& resolve_attachment_usage : pass_node.resolve_attachment_usages) {
       os << "T" << resolve_attachment_usage.in << " -> "
          << "P" << pass_idx << " [label=\""
-         << "load_op = " << AttachmentLoadOperationToStr(resolve_attachment_usage.load);
+         << "load_op = " << AttachmentLoadToStr(resolve_attachment_usage.load);
       
-      if (resolve_attachment_usage.load == AttachmentLoadOperation::kClear) {
+      if (resolve_attachment_usage.load == AttachmentLoad::kClear) {
         os << ", ";
         ExportGraphvizWriteColor(os, resolve_attachment_usage.clear_value, false);
       }
@@ -641,7 +638,7 @@ void RenderGraph::ExportGraphvizSubgraph(std::ostream& os, int32_t subgraph_idx)
 
     if (texture_node.subgraph_idx == subgraph_idx) {
       os << "T" << texture_node.version_id << " [label=<{ {<B>" << entry.name << "</B>"
-         << "   <FONT>(v." << texture_node.version_num << ")</FONT>"
+         << " <FONT>(v." << texture_node.version_num << ")</FONT>"
          << "<BR/><BR/>"
          << entry.specification.width.Get() << "x" << entry.specification.height.Get();
 
@@ -691,8 +688,8 @@ TextureVersionId RenderGraphBuilder::CreateTexture(const std::string_view name,
 }
 
 TextureVersionId RenderGraphBuilder::SetDepthStencil(TextureVersionId texture_version_id,
-                                                     AttachmentLoadOperation load,
-                                                     AttachmentStoreOperation store,
+                                                     AttachmentLoad load,
+                                                     AttachmentStore store,
                                                      ClearValue clear_value) {
   assert(texture_version_id != kInvalidTextureVersionId);
 
@@ -707,8 +704,8 @@ TextureVersionId RenderGraphBuilder::SetDepthStencil(TextureVersionId texture_ve
 }
 
 TextureVersionId RenderGraphBuilder::AddColorAttachment(TextureVersionId texture_version_id,
-                                                        AttachmentLoadOperation load,
-                                                        AttachmentStoreOperation store,
+                                                        AttachmentLoad load,
+                                                        AttachmentStore store,
                                                         ClearValue clear_value) {
   assert(texture_version_id != kInvalidTextureVersionId);
 
@@ -724,8 +721,8 @@ TextureVersionId RenderGraphBuilder::AddColorAttachment(TextureVersionId texture
 }
 
 TextureVersionId RenderGraphBuilder::AddResolveAttachment(TextureVersionId texture_version_id,
-                                                          AttachmentLoadOperation load,
-                                                          AttachmentStoreOperation store,
+                                                          AttachmentLoad load,
+                                                          AttachmentStore store,
                                                           ClearValue clear_value) {
   assert(texture_version_id != kInvalidTextureVersionId);
 

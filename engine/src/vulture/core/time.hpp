@@ -52,20 +52,19 @@ class Timer {
 
 class ScopedTimer {
  public:
-  ScopedTimer(const StringView name) : name_(name) {}
-
+  ScopedTimer(const String& name);
   ~ScopedTimer();
 
  private:
-  std::string name_;
-  Timer       timer_;
+  String name_;
+  Timer  timer_;
 };
 
 /**
  * @brief Get current time in format hh:mm:ss
  * 
- * @return std::string current time
+ * @return String current time
  */
-std::string GetCurrentTimeStr();
+String GetCurrentTimeStr();
 
 }  // namespace vulture

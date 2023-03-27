@@ -69,8 +69,6 @@ Shader::~Shader() {
 }
 
 bool Shader::Load(const StringView filename) {
-  LOG_INFO("Loading shader \"{}\"", filename);
-
   YAML::Node root = YAML::LoadFile(filename.data());
   if (!root.IsDefined()) {
     LOG_ERROR("Couldn't open shader file \"{}\"!", filename);
@@ -239,6 +237,15 @@ bool Shader::CreateDescriptorSetLayouts() {
     binding_info.shader_stages   = uniform_buffer.shader_stages;
 
     layout_infos[uniform_buffer.set].bindings_layout_info.emplace_back(binding_info);
+  }
+
+  for (const auto& storage_buffer : reflection_.GetStorageBuffers()) {
+    DescriptorSetLayoutBindingInfo binding_info{};
+    binding_info.binding_idx     = storage_buffer.binding;
+    binding_info.descriptor_type = DescriptorType::kStorageBuffer;
+    binding_info.shader_stages   = storage_buffer.shader_stages;
+
+    layout_infos[storage_buffer.set].bindings_layout_info.emplace_back(binding_info);
   }
 
   for (const auto& sampler2d : reflection_.GetSampler2Ds()) {

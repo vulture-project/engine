@@ -30,14 +30,20 @@
 
 using namespace vulture;
 
-ScopedTimer::~ScopedTimer() { LOG_DEBUG("[TIMER] {0} - {1}ms", name_, timer_.ElapsedMs()); }
+ScopedTimer::ScopedTimer(const String& name) : name_(name) {
+  LOG_TRACE_START("{}", name_);
+}
+
+ScopedTimer::~ScopedTimer() {
+  LOG_TRACE_FINISH("{} - {:.{}f}ms", name_, timer_.ElapsedMs(), 2);
+}
 
 const size_t kHhMmSsStart = 11;
 const size_t kHhMmSsLength = 8;
 
-std::string vulture::GetCurrentTimeStr() {
+String vulture::GetCurrentTimeStr() {
   time_t rawtime = std::time(nullptr);
-  std::string time_str = asctime(localtime(&rawtime));
+  String time_str = asctime(localtime(&rawtime));
   time_str.pop_back();   // remove '\n'
 
   return time_str.substr(kHhMmSsStart, kHhMmSsLength);

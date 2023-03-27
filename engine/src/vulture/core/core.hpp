@@ -27,8 +27,6 @@
 
 #pragma once
 
-#include <yaml-cpp/yaml.h>
-
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
@@ -38,7 +36,6 @@
 #include <vulture/core/logger.hpp>
 #include <vulture/core/time.hpp>
 #include <vulture/core/types.hpp>
-#include <vulture/platform/window.hpp>
 
 #define VULTURE_ASSERT(x, ...) \
   if (!(x)) {                  \
