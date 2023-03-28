@@ -1,0 +1,2 @@
+glslc assets/.vulture/shaders/BuiltIn.Forward.vert -o assets/.vulture/shaders/BuiltIn.Forward.vert.spv
+glslc assets/.vulture/shaders/BuiltIn.Forward.frag -o assets/.vulture/shaders/BuiltIn.Forward.frag.spv

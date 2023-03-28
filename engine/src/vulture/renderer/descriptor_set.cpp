@@ -29,16 +29,21 @@
 
 using namespace vulture;
 
-DescriptorSet::DescriptorSet(RenderDevice& device) : device_(device) {}
+DescriptorSet::DescriptorSet(RenderDevice* device) : device_(device) {}
 
 DescriptorSet::~DescriptorSet() {
   if (ValidRenderHandle(layout_handle_)) {
-    device_.DeleteDescriptorSetLayout(layout_handle_);
+    device_->DeleteDescriptorSetLayout(layout_handle_);
   }
 
   if (ValidRenderHandle(set_handle_)) {
-    device_.DeleteDescriptorSet(set_handle_);
+    device_->DeleteDescriptorSet(set_handle_);
   }
+}
+
+void DescriptorSet::SetRenderDevice(RenderDevice* device) {
+  VULTURE_ASSERT(device_ == nullptr, "Render device is already set");
+  device_ = device;
 }
 
 const DescriptorSetLayoutInfo& DescriptorSet::GetLayoutInfo() const { return layout_info_; }
@@ -66,6 +71,6 @@ DescriptorSet& DescriptorSet::AddBinding(DescriptorType type, ShaderStageFlags s
 }
 
 void DescriptorSet::Build() {
-  layout_handle_ = device_.CreateDescriptorSetLayout(layout_info_);
-  set_handle_    = device_.CreateDescriptorSet(layout_handle_);
+  layout_handle_ = device_->CreateDescriptorSetLayout(layout_info_);
+  set_handle_    = device_->CreateDescriptorSet(layout_handle_);
 }

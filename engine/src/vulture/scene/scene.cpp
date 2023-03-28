@@ -63,7 +63,7 @@ void Scene::OnUpdate(float timestep) {
   }
 }
 
-void Scene::Render(Renderer& renderer, float time) {
+void Scene::Render(Renderer& renderer, CommandBuffer& command_buffer, uint32_t current_frame, float time) {
   /* Frame */
   renderer.UpdateFrameData(time);
 
@@ -129,7 +129,7 @@ void Scene::Render(Renderer& renderer, float time) {
     main_render_queue.render_objects.emplace_back(RenderQueueObject{mesh_component.mesh, transform.CalculateMatrix()});
   }
 
-  renderer.Render();
+  renderer.Render(command_buffer, current_frame);
 }
 
 // void Scene::Render(Renderer3D* renderer, Framebuffer* framebuffer, Renderer3D::DebugRenderMode render_mode) {

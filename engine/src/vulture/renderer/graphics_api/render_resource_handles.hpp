@@ -36,6 +36,8 @@ constexpr RenderResourceHandle kInvalidRenderResourceHandle = 0;
 
 inline bool ValidRenderHandle(RenderResourceHandle handle) { return handle != kInvalidRenderResourceHandle; }
 
+using SemaphoreHandle           = RenderResourceHandle;
+using FenceHandle               = RenderResourceHandle;
 using SwapchainHandle           = RenderResourceHandle;
 using TextureHandle             = RenderResourceHandle;
 using SamplerHandle             = RenderResourceHandle;

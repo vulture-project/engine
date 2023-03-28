@@ -27,6 +27,7 @@
 
 #pragma once
 
+#include <array>
 #include <iostream>
 #include <list>
 #include <map>
@@ -57,6 +58,9 @@ template <typename T, typename... Args>
 constexpr UniquePtr<T> CreateUnique(Args&&... args) {
   return std::make_unique<T>(std::forward<Args>(args)...);
 }
+
+template <typename T, size_t size>
+using Array = std::array<T, size>;
 
 template<typename T>
 using Vector = std::vector<T>;

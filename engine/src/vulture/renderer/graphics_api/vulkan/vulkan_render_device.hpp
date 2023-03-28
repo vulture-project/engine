@@ -49,6 +49,14 @@
 
 namespace vulture {
 
+struct VulkanFence {
+  VkFence vk_fence{VK_NULL_HANDLE};
+};
+
+struct VulkanSemaphore {
+  VkSemaphore vk_semaphore{VK_NULL_HANDLE};
+};
+
 struct VulkanTexture {
   VulkanTexture() = default;
   VulkanTexture(const TextureSpecification& specification) : specification(specification) {}
@@ -144,19 +152,36 @@ class VulkanRenderDevice final : public RenderDevice {
   };
 
  public:
+  VulkanRenderDevice();
+  ~VulkanRenderDevice() override;
+
   void WaitIdle() override;
+
+  uint32_t CurrentFrame() const override;
+
+  void FrameBegin() override;
+  void FrameEnd() override;
 
   /************************************************************************************************
    * INIT
    ************************************************************************************************/
-  VulkanRenderDevice();
-  ~VulkanRenderDevice() override;
-
   void Init(Window* window, const DeviceFeatures* required_features, const DeviceProperties* required_properties,
             bool enable_validation) override;
 
   DeviceFeatures GetDeviceFeatures() override;
   DeviceProperties GetDeviceProperties() override;
+
+  /************************************************************************************************
+   * SYNCHRONIZATION
+   ************************************************************************************************/
+  FenceHandle CreateFence() override;
+  void DeleteFence(FenceHandle fence) override;
+
+  void WaitForFences(uint32_t count, const FenceHandle* fences) override;
+  void ResetFence(FenceHandle fence) override;
+
+  SemaphoreHandle CreateSemaphore() override;
+  void DeleteSemaphore(SemaphoreHandle semaphore) override;
 
   /************************************************************************************************
    * SWAPCHAIN
@@ -166,10 +191,9 @@ class VulkanRenderDevice final : public RenderDevice {
 
   void GetSwapchainTextures(SwapchainHandle swapchain, uint32_t* textures_count, TextureHandle* textures) override;
 
-  bool FrameBegin(SwapchainHandle swapchain, uint32_t* texture_idx) override;
-  void FrameEnd(SwapchainHandle swapchain) override;
+  bool AcquireNextTexture(SwapchainHandle swapchain, uint32_t* texture_idx) override;
 
-  bool Present(SwapchainHandle swapchain) override;
+  bool Present(SwapchainHandle swapchain, SemaphoreHandle wait_semaphore) override;
 
   SwapchainHandle RecreateSwapchain(SwapchainHandle swapchain) override;
 
@@ -245,6 +269,8 @@ class VulkanRenderDevice final : public RenderDevice {
  private:
   uint32_t GenNextHandle();
 
+  VulkanFence&               GetVulkanFence(FenceHandle);
+  VulkanSemaphore&           GetVulkanSemaphore(SemaphoreHandle);
   VulkanTexture&             GetVulkanTexture(TextureHandle);
   VulkanSampler&             GetVulkanSampler(SamplerHandle);
   VulkanBuffer&              GetVulkanBuffer(BufferHandle);
@@ -322,10 +348,14 @@ class VulkanRenderDevice final : public RenderDevice {
   VkCommandPool main_command_pool_{VK_NULL_HANDLE};
 
   bool frame_began_{false};
+  uint32_t current_frame_{0};
+
   uint32_t current_swapchain_texture_idx_{0};
   VkFence fence_swapchain_image_available_{VK_NULL_HANDLE};  // FIXME: Don't wait on image acquiring
 
   uint32_t next_handle_{1};
+  std::map<FenceHandle, VulkanFence>                             fences_;
+  std::map<SemaphoreHandle, VulkanSemaphore>                     semaphores_;
   std::map<SwapchainHandle, VulkanSwapchain>                     swapchains_;
   std::map<TextureHandle, VulkanTexture>                         textures_;
   std::map<SamplerHandle, VulkanSampler>                         samplers_;

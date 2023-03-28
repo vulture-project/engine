@@ -31,6 +31,7 @@
 #include <fmt/core.h>
 #include <fmt/ostream.h>
 
+#include <cassert>
 #include <fstream>
 #include <string>
 #include <vulture/core/enum_str.hpp>
@@ -73,7 +74,7 @@ class Logger {
 
   template <typename... Args>
   static void Log(std::string place, LogLevel level, bool flush, Args&&... args) {
-    if (!trace_enabled_) {
+    if (!trace_enabled_ && (level == LogLevel::kTraceStart || level == LogLevel::kTraceFinish)) {
       return;
     }
 

@@ -43,7 +43,7 @@ class Renderer {
   Renderer(RenderDevice& device, UniquePtr<rg::RenderGraph> render_graph);
   ~Renderer();
 
-  void Render();
+  void Render(CommandBuffer& command_buffer, uint32_t current_frame);
 
   RenderDevice& GetDevice();
 
@@ -56,10 +56,12 @@ class Renderer {
   LightEnvironment& GetLightEnvironment();
 
  private:
+  // void CreateCommandBuffers();
   void CreateDescriptorSets();
   void CreateBuffers();
-  void WriteBlackboard();
-  void WriteDescriptors();
+
+  void WriteBlackboard(uint32_t current_frame);
+  void WriteDescriptors(uint32_t current_frame);
 
  private:
   /* Device */
@@ -67,20 +69,19 @@ class Renderer {
 
   /* Render Graph */
   UniquePtr<rg::RenderGraph> render_graph_;
-  CommandBuffer& command_buffer_;
 
   /* Frame data */
-  DescriptorSet frame_set_;
+  Array<DescriptorSet, kFramesInFlight> frame_set_;
 
-  BufferHandle ub_frame_{kInvalidRenderResourceHandle};
+  Array<BufferHandle, kFramesInFlight> ub_frame_{kInvalidRenderResourceHandle};
   struct UBFrameData {
     float time{0};
   } ub_frame_data_;
 
   /* View data */
-  DescriptorSet view_set_;
+  Array<DescriptorSet, kFramesInFlight> view_set_;
 
-  BufferHandle ub_view_{kInvalidRenderResourceHandle};
+  Array<BufferHandle, kFramesInFlight> ub_view_{kInvalidRenderResourceHandle};
   struct UBViewData {
     glm::mat4 view;
     glm::mat4 proj;
@@ -88,15 +89,15 @@ class Renderer {
   } ub_view_data_;
 
   /* Light */
-  DescriptorSet scene_set_;
+  Array<DescriptorSet, kFramesInFlight> scene_set_;
 
   LightEnvironment light_environment_;
 
-  BufferHandle sb_directional_lights_{kInvalidRenderResourceHandle};
-  BufferHandle sb_point_lights_{kInvalidRenderResourceHandle};
-  BufferHandle sb_spot_lights_{kInvalidRenderResourceHandle};
+  Array<BufferHandle, kFramesInFlight> sb_directional_lights_{kInvalidRenderResourceHandle};
+  Array<BufferHandle, kFramesInFlight> sb_point_lights_{kInvalidRenderResourceHandle};
+  Array<BufferHandle, kFramesInFlight> sb_spot_lights_{kInvalidRenderResourceHandle};
 
-  BufferHandle ub_light_{kInvalidRenderResourceHandle};
+  Array<BufferHandle, kFramesInFlight> ub_light_{kInvalidRenderResourceHandle};
   struct UBLightEnvironmentData {
     int directional_lights_count{0};
     int point_lights_count{0};

@@ -69,13 +69,23 @@ void VulkanCommandBuffer::End() {
   assert(result == VK_SUCCESS);
 }
 
-void VulkanCommandBuffer::Submit() {
+void VulkanCommandBuffer::Submit(FenceHandle signal_fence, SemaphoreHandle signal_semaphore) {
+  VkFence vk_fence = ValidRenderHandle(signal_fence) ? device_.GetVulkanFence(signal_fence).vk_fence : VK_NULL_HANDLE;
+  VkSemaphore vk_semaphore =
+      ValidRenderHandle(signal_semaphore) ? device_.GetVulkanSemaphore(signal_semaphore).vk_semaphore : VK_NULL_HANDLE;
+
   VkSubmitInfo submit_info{};
   submit_info.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   submit_info.commandBufferCount   = 1;
   submit_info.pCommandBuffers      = &vk_command_buffer_;
-  submit_info.signalSemaphoreCount = 0;
-  submit_info.pSignalSemaphores    = nullptr;
+
+  if (ValidRenderHandle(signal_semaphore)) {
+    submit_info.signalSemaphoreCount = 1;
+    submit_info.pSignalSemaphores    = &vk_semaphore;
+  } else {
+    submit_info.signalSemaphoreCount = 0;
+    submit_info.pSignalSemaphores    = nullptr;
+  }
 
   VkQueue vk_queue{VK_NULL_HANDLE};
   switch (type_) {
@@ -83,7 +93,7 @@ void VulkanCommandBuffer::Submit() {
     default:                           { assert(!"Invalid CommandBufferType"); break; }
   }
 
-  VkResult result = vkQueueSubmit(vk_queue, /*submitCount=*/1, &submit_info, /*fence=*/VK_NULL_HANDLE);
+  VkResult result = vkQueueSubmit(vk_queue, /*submitCount=*/1, &submit_info, /*fence=*/vk_fence);
   assert(result == VK_SUCCESS);
 }
 
@@ -95,7 +105,7 @@ void VulkanCommandBuffer::Reset() {
 }
 
 void VulkanCommandBuffer::GenerateMipmaps(TextureHandle handle, TextureLayout final_layout) {
-  VulkanTexture& texture         = device_.GetVulkanTexture(handle);
+  VulkanTexture& texture        = device_.GetVulkanTexture(handle);
   VkImageLayout  vk_final_layout = GetVKImageLayout(final_layout);
 
   /* Check if format supports linear blitting */

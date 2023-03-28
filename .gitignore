@@ -14,10 +14,6 @@ veditor
 vulture
 vulture-editor
 
-build.sh
-run.sh
-compile_shaders.sh
-
 # ImGui
 imgui.ini
 

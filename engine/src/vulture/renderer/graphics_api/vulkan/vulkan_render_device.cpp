@@ -101,7 +101,7 @@ void VulkanRenderDevice::CopyBuffer(VkCommandBuffer command_buffer, VkBuffer src
 VkCommandPool VulkanRenderDevice::CreateCommandPool(VkCommandPoolCreateFlags flags) {
   VkCommandPoolCreateInfo pool_create_info{};
   pool_create_info.sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-  pool_create_info.flags            = flags;
+  pool_create_info.flags             = flags;
   pool_create_info.queueFamilyIndex = queue_family_indices_.graphics_family.value();
 
   VkCommandPool command_pool{VK_NULL_HANDLE};
@@ -162,16 +162,7 @@ void VulkanRenderDevice::EndSingleTimeCommands(VkCommandBuffer command_buffer) {
   vkFreeCommandBuffers(device_, transient_command_pool_, /*commandBufferCount*/1, &command_buffer);
 }
 
-void VulkanRenderDevice::WaitIdle() {
-  vkDeviceWaitIdle(device_);
-}
-
-/************************************************************************************************
- * INIT
- ************************************************************************************************/
-VulkanRenderDevice::VulkanRenderDevice() {
-    
-}
+VulkanRenderDevice::VulkanRenderDevice() {}
 
 VulkanRenderDevice::~VulkanRenderDevice() {
   vkDestroyFence(device_, fence_swapchain_image_available_, /*allocator=*/nullptr);
@@ -187,6 +178,34 @@ VulkanRenderDevice::~VulkanRenderDevice() {
   vkDestroyInstance(instance_, /*allocator=*/nullptr);
 }
 
+void VulkanRenderDevice::WaitIdle() {
+  vkDeviceWaitIdle(device_);
+}
+
+uint32_t VulkanRenderDevice::CurrentFrame() const {
+  return current_frame_;
+}
+
+void VulkanRenderDevice::FrameBegin() {
+  assert(!frame_began_);
+  
+  // vkWaitForFences(device_, 1, &fences_in_flight[CurrentFrame()], /*waitAll=*/VK_TRUE, /*timeout=*/UINT64_MAX);
+  // vkResetFences(device_, 1, &fences_in_flight[CurrentFrame()]);
+
+  frame_began_ = true;
+}
+
+void VulkanRenderDevice::FrameEnd() {
+  assert(frame_began_);
+
+  // vkQueueWaitIdle(graphics_queue_);
+  frame_began_ = false;
+  current_frame_ = (current_frame_ + 1) % kFramesInFlight;
+}
+
+/************************************************************************************************
+ * INIT
+ ************************************************************************************************/
 void VulkanRenderDevice::Init(Window* window, const DeviceFeatures* required_features,
                               const DeviceProperties* required_properties, bool enable_validation) {
   window_ = window;
@@ -208,7 +227,10 @@ void VulkanRenderDevice::Init(Window* window, const DeviceFeatures* required_fea
   
   VkFenceCreateInfo fence_info = {};
   fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+  fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
   result = vkCreateFence(device_, &fence_info, /*allocator=*/nullptr, &fence_swapchain_image_available_);
+  assert(result == VK_SUCCESS);
+  result = vkResetFences(device_, 1, &fence_swapchain_image_available_);
   assert(result == VK_SUCCESS);
 }
 
@@ -511,6 +533,78 @@ void VulkanRenderDevice::CreateLogicalDevice() {
 }
 
 /************************************************************************************************
+ * SYNCHRONIZATION
+ ************************************************************************************************/
+FenceHandle VulkanRenderDevice::CreateFence() {
+  VkFence vk_fence{VK_NULL_HANDLE};
+
+  VkFenceCreateInfo fence_info = {};
+  fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+  fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+  VkResult result = vkCreateFence(device_, &fence_info, /*allocator=*/nullptr, &vk_fence);
+  assert(result == VK_SUCCESS);
+
+  VulkanFence fence{};
+  fence.vk_fence = vk_fence;
+
+  FenceHandle handle = GenNextHandle();
+  fences_.emplace(handle, std::move(fence));
+  return handle;
+}
+
+void VulkanRenderDevice::DeleteFence(FenceHandle handle) {
+  auto it = fences_.find(handle);
+  assert(it != fences_.end());
+
+  VulkanFence& fence = it->second;
+
+  vkDestroyFence(device_, fence.vk_fence, /*allocator=*/nullptr);
+  fences_.erase(it);
+}
+
+void VulkanRenderDevice::WaitForFences(uint32_t count, const FenceHandle* handles) {
+  static Vector<VkFence> vk_fences;
+  vk_fences.resize(count);
+
+  for (uint32_t i = 0; i < count; ++i) {
+    vk_fences[i] = GetVulkanFence(handles[i]).vk_fence;
+  }
+
+  vkWaitForFences(device_, count, vk_fences.data(), /*waitAll=*/true, /*timeout=*/UINT64_MAX);
+}
+
+void VulkanRenderDevice::ResetFence(FenceHandle handle) {
+  VulkanFence& fence = GetVulkanFence(handle);
+  vkResetFences(device_, 1, &fence.vk_fence);
+}
+
+SemaphoreHandle VulkanRenderDevice::CreateSemaphore() {
+  VkSemaphore vk_semaphore{VK_NULL_HANDLE};
+
+  VkSemaphoreCreateInfo semaphore_info = {};
+  semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+  VkResult result = vkCreateSemaphore(device_, &semaphore_info, /*allocator=*/nullptr, &vk_semaphore);
+  assert(result == VK_SUCCESS);
+
+  VulkanSemaphore semaphore{};
+  semaphore.vk_semaphore = vk_semaphore;
+
+  SemaphoreHandle handle = GenNextHandle();
+  semaphores_.emplace(handle, std::move(semaphore));
+  return handle;
+}
+
+void VulkanRenderDevice::DeleteSemaphore(SemaphoreHandle handle) {
+  auto it = semaphores_.find(handle);
+  assert(it != semaphores_.end());
+
+  VulkanSemaphore& semaphore = it->second;
+
+  vkDestroySemaphore(device_, semaphore.vk_semaphore, /*allocator=*/nullptr);
+  semaphores_.erase(it);
+}
+
+/************************************************************************************************
  * SWAPCHAIN
  ************************************************************************************************/
 SwapchainHandle VulkanRenderDevice::CreateSwapchain(TextureUsageFlags usage) {
@@ -520,6 +614,8 @@ SwapchainHandle VulkanRenderDevice::CreateSwapchain(TextureUsageFlags usage) {
   VkPresentModeKHR   present_mode    = ChooseSwapPresentMode(swap_chain_support);
   VkExtent2D         extent          = VkExtent2D{window_->GetFramebufferWidth(), window_->GetFramebufferHeight()};
   uint32_t           min_image_count = swap_chain_support.capabilities.minImageCount + 1;  // FIXME: clamp!
+
+  LOG_DEBUG("present_mode = {0}", present_mode);
 
   VkSwapchainCreateInfoKHR create_info{};
   create_info.sType            = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -642,9 +738,7 @@ void VulkanRenderDevice::GetSwapchainTextures(SwapchainHandle swapchain_handle, 
   }
 }
 
-bool VulkanRenderDevice::FrameBegin(SwapchainHandle swapchain_handle, uint32_t* texture_idx) {
-  assert(!frame_began_);
-
+bool VulkanRenderDevice::AcquireNextTexture(SwapchainHandle swapchain_handle, uint32_t* texture_idx) {
   VulkanSwapchain& swapchain = GetVulkanSwapchain(swapchain_handle);
 
   uint32_t tmp_texture_idx = 0;
@@ -664,31 +758,29 @@ bool VulkanRenderDevice::FrameBegin(SwapchainHandle swapchain_handle, uint32_t* 
   vkWaitForFences(device_, 1, &fence_swapchain_image_available_, true, /*timeout=*/UINT64_MAX);
   vkResetFences(device_, 1, &fence_swapchain_image_available_);
 
-  frame_began_ = true;
   return true;
 }
 
-void VulkanRenderDevice::FrameEnd(SwapchainHandle) {
-  assert(frame_began_);
-
-  vkQueueWaitIdle(graphics_queue_);
-  frame_began_ = false;
-}
-
-bool VulkanRenderDevice::Present(SwapchainHandle swapchain_handle) {
+bool VulkanRenderDevice::Present(SwapchainHandle swapchain_handle, SemaphoreHandle wait_semaphore_handle) {
   assert(!frame_began_);
 
   VulkanSwapchain& swapchain = GetVulkanSwapchain(swapchain_handle);
 
   VkPresentInfoKHR present_info{};
   present_info.sType              = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-  present_info.waitSemaphoreCount = 0;
-  present_info.pWaitSemaphores    = nullptr;
   present_info.swapchainCount     = 1;
   present_info.pSwapchains        = &swapchain.vk_swapchain;
   present_info.pImageIndices      = &current_swapchain_texture_idx_;
   // Optional array of results, to check per swap chain if presenting was successful 
   present_info.pResults           = nullptr;
+
+  if (ValidRenderHandle(wait_semaphore_handle)) {
+    present_info.waitSemaphoreCount = 1;
+    present_info.pWaitSemaphores    = &GetVulkanSemaphore(wait_semaphore_handle).vk_semaphore;
+  } else {
+    present_info.waitSemaphoreCount = 0;
+    present_info.pWaitSemaphores    = nullptr;
+  }
 
   VkResult result = vkQueuePresentKHR(present_queue_, &present_info);
   if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
@@ -729,7 +821,7 @@ VkPresentModeKHR VulkanRenderDevice::ChooseSwapPresentMode(const VulkanSwapChain
     }
   }
 
-  return VK_PRESENT_MODE_FIFO_KHR;  // Guaranteed to be always available
+  return VK_PRESENT_MODE_IMMEDIATE_KHR;  // Guaranteed to be always available
 }
 
 /************************************************************************************************
@@ -1705,6 +1797,18 @@ CommandBuffer* VulkanRenderDevice::CreateCommandBuffer(CommandBufferType type, b
 void VulkanRenderDevice::DeleteCommandBuffer(CommandBuffer* command_buffer) {
   assert(command_buffer);
   delete command_buffer;
+}
+
+VulkanFence& VulkanRenderDevice::GetVulkanFence(FenceHandle handle) {
+  auto it = fences_.find(handle);
+  assert(it != fences_.end());
+  return it->second;
+}
+
+VulkanSemaphore& VulkanRenderDevice::GetVulkanSemaphore(SemaphoreHandle handle) {
+  auto it = semaphores_.find(handle);
+  assert(it != semaphores_.end());
+  return it->second;
 }
 
 VulkanTexture& VulkanRenderDevice::GetVulkanTexture(TextureHandle handle) {

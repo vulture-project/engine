@@ -33,8 +33,11 @@ namespace vulture {
 
 class DescriptorSet {
  public:
-  explicit DescriptorSet(RenderDevice& device);
+  DescriptorSet() = default;
+  explicit DescriptorSet(RenderDevice* device);
   ~DescriptorSet();
+
+  void SetRenderDevice(RenderDevice* device);
 
   const DescriptorSetLayoutInfo& GetLayoutInfo() const;
   DescriptorSetLayoutHandle GetLayoutHandle() const;
@@ -45,7 +48,7 @@ class DescriptorSet {
   void Build();
 
  private:
-  RenderDevice&             device_;
+  RenderDevice*             device_{nullptr};
 
   DescriptorSetLayoutInfo   layout_info_{};
   DescriptorSetLayoutHandle layout_handle_{kInvalidRenderResourceHandle};

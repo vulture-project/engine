@@ -70,6 +70,8 @@ int main() {
   uint32_t swapchain_size{0};
   device.GetSwapchainTextures(swapchain, &swapchain_size, nullptr);
 
+  LOG_INFO("Swapchain size is {0}", swapchain_size);
+
   Vector<TextureHandle> swapchain_textures;
   swapchain_textures.resize(swapchain_size);
   device.GetSwapchainTextures(swapchain, nullptr, swapchain_textures.data());
@@ -87,7 +89,21 @@ int main() {
   SharedPtr<Texture> color_output = CreateShared<Texture>(device, color_output_spec);
 
   /* Command Buffer */
-  CommandBuffer& command_buffer = *device.CreateCommandBuffer(CommandBufferType::kGraphics);
+  Array<CommandBuffer*, kFramesInFlight> command_buffers{nullptr};
+  for (auto& command_buffer : command_buffers) {
+    command_buffer = device.CreateCommandBuffer(CommandBufferType::kGraphics);
+  }
+
+  /* Sync primitives for frames in flight */
+  Array<FenceHandle, kFramesInFlight> fences_in_flight{kInvalidRenderResourceHandle};
+  for (auto& fence : fences_in_flight) {
+    fence = device.CreateFence();
+  }
+
+  Array<SemaphoreHandle, kFramesInFlight> semaphores_render_finished{kInvalidRenderResourceHandle};
+  for (auto& semaphore : semaphores_render_finished) {
+    semaphore = device.CreateSemaphore();
+  }
 
   /* Render Graph */
   auto render_graph = CreateUnique<rg::RenderGraph>();
@@ -135,50 +151,70 @@ int main() {
 
     InputEventManager::TriggerEvents();
 
-    {
-      ScopedTimer trace_timer{"scene.OnUpdate()"};
-      scene.OnUpdate(timestep);
-    }
+    scene.OnUpdate(timestep);
+
+    device.FrameBegin();
 
     uint32_t texture_idx = 0;
+    device.AcquireNextTexture(swapchain, &texture_idx);
+
+    uint32_t current_frame = device.CurrentFrame();
+    // LOG_DEBUG("Current frame = {0}", current_frame);
     {
-      ScopedTimer trace_timer{"FrameBegin()"};
-      device.FrameBegin(swapchain, &texture_idx);
+      ScopedTimer trace_timer{"WaitForFences()"};
+      device.WaitForFences(1, &fences_in_flight[current_frame]);
+      device.ResetFence(fences_in_flight[current_frame]);
+    }
+
+    CommandBuffer& command_buffer = *command_buffers[current_frame];
+    {
+      ScopedTimer trace_timer{"command_buffer.Reset() and Begin()"};
+      command_buffer.Reset();
+      command_buffer.Begin();
     }
 
     {
       ScopedTimer trace_timer{"scene.Render()"};
-      scene.Render(renderer, timer.Elapsed());
+      scene.Render(renderer, command_buffer, current_frame, timer.Elapsed());
     }
 
     {
-      ScopedTimer trace_timer{"layout transition()"};
-
-      command_buffer.Reset();
-      command_buffer.Begin();
-
+      ScopedTimer trace_timer{"TransitionLayout(swapchain_texture -> kTransferDst)"};
       command_buffer.TransitionLayout(swapchain_textures[texture_idx], TextureLayout::kUndefined, TextureLayout::kTransferDst);
-      command_buffer.CopyTexture(color_output->GetHandle(), swapchain_textures[texture_idx], surface_width, surface_height);
-      command_buffer.TransitionLayout(swapchain_textures[texture_idx], TextureLayout::kTransferDst, TextureLayout::kPresentSrc);
-
-      command_buffer.End();
-      command_buffer.Submit();
     }
 
     {
-      ScopedTimer trace_timer{"FrameEnd()"};
-      device.FrameEnd(swapchain);
+      ScopedTimer trace_timer{"CopyTexture()"};
+      command_buffer.CopyTexture(color_output->GetHandle(), swapchain_textures[texture_idx], surface_width, surface_height);
     }
+
+    {
+      ScopedTimer trace_timer{"TransitionLayout(swapchain_texture -> kPresentSrc)"};
+      command_buffer.TransitionLayout(swapchain_textures[texture_idx], TextureLayout::kTransferDst, TextureLayout::kPresentSrc);
+    }
+
+    {
+      ScopedTimer trace_timer{"command_buffer.End() and Submit()"};
+      command_buffer.End();
+      command_buffer.Submit(fences_in_flight[current_frame], semaphores_render_finished[current_frame]);
+      // command_buffer.Submit(fences_in_flight[current_frame]);
+    }
+
+    device.FrameEnd();
 
     {
       ScopedTimer trace_timer{"Present()"};
-      device.Present(swapchain);
+      device.Present(swapchain, semaphores_render_finished[current_frame]);
+      // device.Present(swapchain, kInvalidRenderResourceHandle);
     }
 
-    {
-      ScopedTimer trace_timer{"window.SetFPSToTitle()"};
-      window.SetFPSToTitle(1 / timestep);
-    }
+    // {
+    //   ScopedTimer trace_timer{"window.SetFPSToTitle()"};
+    //   window.SetFPSToTitle(1 / timestep);
+    // }
+
+    float frame_time = timer.Elapsed() - time_start;
+    LOG_DEBUG("Frame: {0} FPS: {1}", current_frame, 1 / frame_time);
   }
 
   return 0;

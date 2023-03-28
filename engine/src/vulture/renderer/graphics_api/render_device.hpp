@@ -38,6 +38,8 @@
 
 namespace vulture {
 
+constexpr uint32_t kFramesInFlight = 2;
+
 class Window;
 
 /**
@@ -55,6 +57,11 @@ public:
   enum class DeviceFamily {kVulkan, /*kOpenGL*/ /*kMetal*/};
 
   virtual void WaitIdle() = 0;
+
+  virtual uint32_t CurrentFrame() const = 0;
+
+  virtual void FrameBegin() = 0;
+  virtual void FrameEnd() = 0;
   
   /************************************************************************************************
    * INIT
@@ -68,6 +75,18 @@ public:
 
   virtual DeviceFeatures GetDeviceFeatures() = 0;
   virtual DeviceProperties GetDeviceProperties() = 0;
+
+  /************************************************************************************************
+   * SYNCHRONIZATION
+   ************************************************************************************************/
+  virtual FenceHandle CreateFence() = 0;
+  virtual void DeleteFence(FenceHandle fence) = 0;
+
+  virtual void WaitForFences(uint32_t count, const FenceHandle* fences) = 0;
+  virtual void ResetFence(FenceHandle fence) = 0;
+
+  virtual SemaphoreHandle CreateSemaphore() = 0;
+  virtual void DeleteSemaphore(SemaphoreHandle semaphore) = 0;
 
   /************************************************************************************************
    * SWAPCHAIN
@@ -87,17 +106,17 @@ public:
    */
   virtual void GetSwapchainTextures(SwapchainHandle swapchain, uint32_t* textures_count, TextureHandle* textures) = 0;
 
-  virtual bool FrameBegin(SwapchainHandle swapchain, uint32_t* texture_idx) = 0;
-  virtual void FrameEnd(SwapchainHandle swapchain) = 0;
+  virtual bool AcquireNextTexture(SwapchainHandle swapchain, uint32_t* texture_idx) = 0;
 
   /**
    * @brief Present rendered window surface.
    * 
    * @param swapchain
+   * @param wait_semaphore
    * 
    * @return true If swapchain is up to date and DOESN'T need recreating.
    */
-  virtual bool Present(SwapchainHandle swapchain) = 0;
+  virtual bool Present(SwapchainHandle swapchain, SemaphoreHandle wait_semaphore) = 0;
 
   /**
    * @brief Recreates the swapchain.
