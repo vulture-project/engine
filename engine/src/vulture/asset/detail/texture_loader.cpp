@@ -45,7 +45,7 @@ SharedPtr<Texture> detail::LoadTexture(RenderDevice& device, const String& path)
   uint32_t tex_mip_levels = static_cast<uint32_t>(std::floor(std::log2(std::max(tex_width, tex_height)))) + 1;
 
   TextureSpecification tex_specification{};
-  tex_specification.format     = DataFormat::kR8G8B8A8_SRGB;
+  tex_specification.format     = DataFormat::kR8G8B8A8_UNORM;
   tex_specification.usage      = kTextureUsageBitSampled;
   tex_specification.type       = TextureType::kTexture2D;
   tex_specification.width      = static_cast<uint32_t>(tex_width);

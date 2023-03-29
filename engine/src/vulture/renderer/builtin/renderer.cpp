@@ -34,6 +34,7 @@ Renderer::Renderer(RenderDevice& device, UniquePtr<rg::RenderGraph> render_graph
   // CreateCommandBuffers();
   CreateDescriptorSets();
   CreateBuffers();
+  InitLightBuffers();
 
   auto& blackboard = GetBlackboard();
   blackboard.Add<ColorOutput>();
@@ -147,6 +148,22 @@ void Renderer::CreateBuffers() {
   }
 }
 
+void Renderer::InitLightBuffers() {
+  for (uint32_t frame = 0; frame < kFramesInFlight; ++frame) {
+    light_environment_.directional_lights.reserve(kMaxDirectionalLights);
+    device_.WriteDescriptorStorageBuffer(scene_set_[frame].GetHandle(), 1, sb_directional_lights_[frame], 0,
+                                         kMaxDirectionalLights * sizeof(DirectionalLight));
+
+    light_environment_.point_lights.reserve(kMaxPointLights);
+    device_.WriteDescriptorStorageBuffer(scene_set_[frame].GetHandle(), 2, sb_point_lights_[frame], 0,
+                                         kMaxPointLights * sizeof(PointLight));
+
+    light_environment_.spot_lights.reserve(kMaxSpotLights);
+    device_.WriteDescriptorStorageBuffer(scene_set_[frame].GetHandle(), 3, sb_spot_lights_[frame], 0,
+                                         kMaxSpotLights * sizeof(SpotLight));
+  }
+}
+
 void Renderer::WriteBlackboard(uint32_t current_frame) {
   auto& blackboard = GetBlackboard();
 
@@ -178,16 +195,16 @@ void Renderer::WriteDescriptors(uint32_t current_frame) {
   device_.LoadBufferData<DirectionalLight>(sb_directional_lights_[current_frame], 0,
                                            light_environment_.directional_lights.size(),
                                            light_environment_.directional_lights.data());
-  device_.WriteDescriptorStorageBuffer(scene_set_[current_frame].GetHandle(), 1, sb_directional_lights_[current_frame],
-                                       0, light_environment_.directional_lights.size() * sizeof(DirectionalLight));
+  // device_.WriteDescriptorStorageBuffer(scene_set_[current_frame].GetHandle(), 1, sb_directional_lights_[current_frame],
+                                      //  0, light_environment_.directional_lights.size() * sizeof(DirectionalLight));
 
   device_.LoadBufferData<PointLight>(sb_point_lights_[current_frame], 0, light_environment_.point_lights.size(),
                                      light_environment_.point_lights.data());
-  device_.WriteDescriptorStorageBuffer(scene_set_[current_frame].GetHandle(), 2, sb_point_lights_[current_frame], 0,
-                                       light_environment_.point_lights.size() * sizeof(PointLight));
+  // device_.WriteDescriptorStorageBuffer(scene_set_[current_frame].GetHandle(), 2, sb_point_lights_[current_frame], 0,
+                                      //  light_environment_.point_lights.size() * sizeof(PointLight));
 
   device_.LoadBufferData<SpotLight>(sb_spot_lights_[current_frame], 0, light_environment_.spot_lights.size(),
                                     light_environment_.spot_lights.data());
-  device_.WriteDescriptorStorageBuffer(scene_set_[current_frame].GetHandle(), 3, sb_spot_lights_[current_frame], 0,
-                                       light_environment_.spot_lights.size() * sizeof(SpotLight));
+  // device_.WriteDescriptorStorageBuffer(scene_set_[current_frame].GetHandle(), 3, sb_spot_lights_[current_frame], 0,
+                                      //  light_environment_.spot_lights.size() * sizeof(SpotLight));
 }

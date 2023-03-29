@@ -1,21 +1,21 @@
 /**
  * @author Nikita Mochalov (github.com/tralf-strues)
- * @file vertex_formats.hpp
- * @date 2023-03-18
- * 
+ * @file camera_movement.hpp
+ * @date 2022-09-05
+ *
  * The MIT License (MIT)
  * Copyright (c) 2022 Nikita Mochalov
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
  * the rights to use, copy, modify, merge, publish, distribute, sublicense,
  * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,35 +27,32 @@
 
 #pragma once
 
-#include <glm/glm.hpp>
-#include <vulture/renderer/graphics_api/pipeline.hpp>
+#include <vulture/event_system/event_system.hpp>
+#include <vulture/platform/event.hpp>
+#include <vulture/scene/script.hpp>
 
 namespace vulture {
 
-enum class VertexFormat : uint32_t{
-  kVertex3D,
+class CameraMovementScript : public IScript {
+ public:
+  constexpr static float kSpeed = 15;
 
-  kCustom
-};
+  virtual void OnAttach(fennecs::EntityHandle entity, Dispatcher& dispatcher) override;
+  virtual void OnUpdate(float timestep) override;
 
-struct Vertex3D {
-  glm::vec3 position;
-  glm::vec2 tex_coords;
-  glm::vec3 normal;
-  glm::vec3 tangent;
-  glm::vec3 bitangent;
+ private:
+  void OnMouseMove(const MouseMoveEvent& event);
+  void OnMouseButton(const MouseButtonEvent& event);
 
-  static const InputVertexDataInfo* GetVertexDataInfo() {
-    static InputVertexDataInfo info{{InputVertexDataInfo::BindingInfo{}}};
-    
-    info.bindings[0] = {0, sizeof(Vertex3D), {{0, DataFormat::kR32G32B32_SFLOAT, offsetof(Vertex3D, position)},
-                                              {1, DataFormat::kR32G32_SFLOAT,    offsetof(Vertex3D, tex_coords)},
-                                              {2, DataFormat::kR32G32B32_SFLOAT, offsetof(Vertex3D, normal)},
-                                              {3, DataFormat::kR32G32B32_SFLOAT, offsetof(Vertex3D, tangent)},
-                                              {4, DataFormat::kR32G32B32_SFLOAT, offsetof(Vertex3D, bitangent)}}};
+ private:
+  fennecs::EntityHandle entity_{fennecs::EntityHandle::Null()};  // FIXME: Fix you =)
+  float rotation_y_{0};            // Yaw
+  float rotation_z_{0};            // Pitch
 
-    return &info;
-  }
+  bool rotation_mode_{false};
+
+  float mouse_prev_x_{0};
+  float mouse_prev_y_{0};
 };
 
 }  // namespace vulture

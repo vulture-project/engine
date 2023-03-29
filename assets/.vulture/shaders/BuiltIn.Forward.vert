@@ -23,12 +23,12 @@ layout(push_constant) uniform ModelConstant
 layout(location = 0) in vec3 aPositionMS;
 layout(location = 1) in vec2 aTexCoords;
 layout(location = 2) in vec3 aNormalMS;
-layout(location = 3) in vec4 aTangentMS; // tangent.w = +-1; it shows the handedness of TBN
+layout(location = 3) in vec3 aTangentMS;
+layout(location = 4) in vec3 aBitangentMS;
 
 layout(location = 0) out vec3 positionWS;
 layout(location = 1) out vec2 texCoords;
-layout(location = 2) out vec3 normalWS;
-layout(location = 3) out vec4 tangentWS;
+layout(location = 2) out mat3 TBN;
 
 void main()
 {
@@ -36,8 +36,7 @@ void main()
     texCoords  = aTexCoords;
 
     mat3 normalMatrix = transpose(inverse(mat3(uModel)));
-    normalWS          = normalize(normalMatrix * aNormalMS);
-    tangentWS         = vec4(normalize(normalMatrix * aTangentMS.xyz), aTangentMS.w);
+    TBN = normalMatrix * mat3(aTangentMS.xyz, aBitangentMS, aNormalMS.xyz);
 
     gl_Position = uProj * uView * vec4(positionWS, 1.0);
 }

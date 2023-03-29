@@ -1,6 +1,6 @@
 # Blender v2.93.5 OBJ File: ''
 # www.blender.org
-mtllib /meshes/wooden_watch_tower.mtl
+mtllib wooden_watch_tower.mtl
 o watchtowerHigh_watchtower
 v 2.110932 7.630302 -2.110861
 v -2.110932 7.630302 2.111001

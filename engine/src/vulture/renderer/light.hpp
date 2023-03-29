@@ -32,32 +32,33 @@
 namespace vulture {
 
 struct DirectionalLightSpecification {
-  glm::vec3 color     {0};
-  float      intensity {1};
+  alignas(16) glm::vec3 color     {0};
+  alignas(4)  float      intensity {1};
 
   DirectionalLightSpecification(const glm::vec3& color = glm::vec3{0}, float intensity = 1)
       : color(color), intensity(intensity) {}
 };
 
 struct PointLightSpecification {
-  glm::vec3 color     {0};
-  float      intensity {1};
-  float      range     {1};
+  alignas(16) glm::vec3 color     {0};
+  alignas(4)  float      intensity {1};
+  alignas(4)  float      range     {1};
+
+  PointLightSpecification(const glm::vec3& color = glm::vec3{0}, float intensity = 1, float range = 1)
+      : color(color), intensity(intensity), range(range) {}
 };
 
 struct SpotLightSpecification {
-  glm::vec3 color      {0};
-  float      intensity  {1};
-  float      range      {1};
-  float      inner_cone {0};
-  float      outer_cone {0};
+  alignas(16) glm::vec3 color      {0};
+  alignas(4)  float      intensity  {1};
+  alignas(4)  float      range      {1};
+  alignas(4)  float      inner_cone {0};
+  alignas(4)  float      outer_cone {0};
 };
 
 struct DirectionalLight {
   DirectionalLightSpecification specification {};
-  glm::vec3                    direction    {1, 0, 0};
-
-  char                         _padding[1]  {0};
+  alignas(16) glm::vec3        direction    {1, 0, 0};
 
   DirectionalLight(const DirectionalLightSpecification& specification, const glm::vec3& direction)
       : specification(specification), direction(direction) {}
@@ -65,7 +66,7 @@ struct DirectionalLight {
 
 struct PointLight {
   PointLightSpecification specification {};
-  glm::vec3              position     {0};
+  alignas(16) glm::vec3  position     {0};
 
   PointLight(const PointLightSpecification& specification, const glm::vec3& position)
       : specification(specification), position(position) {}
@@ -73,10 +74,8 @@ struct PointLight {
 
 struct SpotLight {
   SpotLightSpecification specification {};
-  glm::vec3             position     {0};
-  glm::vec3             direction    {1, 0, 0};
-
-  char                  _padding[3]  {0, 0, 0};
+  alignas(16) glm::vec3 position     {0};
+  alignas(16) glm::vec3 direction    {1, 0, 0};
 
   SpotLight(const SpotLightSpecification& specification, const glm::vec3& position, const glm::vec3& direction)
       : specification(specification), position(position), direction(direction) {}

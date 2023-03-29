@@ -59,6 +59,7 @@ class Renderer {
   // void CreateCommandBuffers();
   void CreateDescriptorSets();
   void CreateBuffers();
+  void InitLightBuffers();
 
   void WriteBlackboard(uint32_t current_frame);
   void WriteDescriptors(uint32_t current_frame);

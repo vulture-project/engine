@@ -25,41 +25,52 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <vector>
 #include <vulture/asset/asset_registry.hpp>
+#include <vulture/asset/loaders/fbx_loader.hpp>
 #include <vulture/asset/loaders/jpg_loader.hpp>
 #include <vulture/asset/loaders/obj_loader.hpp>
 #include <vulture/asset/loaders/png_loader.hpp>
 #include <vulture/asset/loaders/shader_loader.hpp>
 #include <vulture/asset/loaders/tga_loader.hpp>
+#include <vulture/core/core.hpp>
 #include <vulture/event_system/event_system.hpp>
 #include <vulture/platform/event.hpp>
 #include <vulture/renderer/builtin/forward_pass.hpp>
 #include <vulture/renderer/builtin/renderer.hpp>
 #include <vulture/renderer/light.hpp>
 #include <vulture/scene/scene.hpp>
-#include <vulture/core/core.hpp>
-#include <vector>
-#include <fstream>
-#include <string>
-#include <iostream>
+
+#include "camera_movement.hpp"
 
 using namespace vulture;
 
-int main() {
-  Logger::SetTraceEnabled(true);
+bool running = true;
 
-  Window window{900, 600, "Vulture"};
+void OnQuit(const QuitEvent&) {
+  running = false;
+}
+
+int main() {
+  Logger::SetTraceEnabled(false);
+
+  Window window{1600, 900, "Vulture"};
   LOG_INFO("Window size = ({}, {}), framebuffer size = ({}, {})", window.GetWidth(), window.GetHeight(),
            window.GetFramebufferWidth(), window.GetFramebufferHeight());
 
   Dispatcher event_dispatcher;
   InputEventManager::SetWindowAndDispatcher(&window, &event_dispatcher);
+  event_dispatcher.GetSink<QuitEvent>().Connect<&OnQuit>();
 
   RenderDevice& device = *RenderDevice::Create(RenderDevice::DeviceFamily::kVulkan);
   device.Init(&window, nullptr, nullptr, true);
 
   /* Register loaders */
   AssetRegistry::Instance()->RegisterLoader(CreateShared<OBJLoader>(device));
+  AssetRegistry::Instance()->RegisterLoader(CreateShared<FBXLoader>(device));
   AssetRegistry::Instance()->RegisterLoader(CreateShared<TGALoader>(device));
   AssetRegistry::Instance()->RegisterLoader(CreateShared<JPGLoader>(device));
   AssetRegistry::Instance()->RegisterLoader(CreateShared<PNGLoader>(device));
@@ -130,22 +141,40 @@ int main() {
   fennecs::EntityHandle camera = scene.CreateEntity("Editor camera");
   camera = scene.GetEntityWorld().Attach<CameraComponent>(camera, PerspectiveCameraSpecs((float)surface_width / (float)surface_height), true);
   camera = scene.GetEntityWorld().Attach<TransformComponent>(camera, glm::vec3(0, 3, 15));
-  // camera = scene.GetEntityWorld().Attach<ScriptComponent>(camera, new CameraMovementScript());
+  camera = scene.GetEntityWorld().Attach<ScriptComponent>(camera, new CameraMovementScript());
 
   fennecs::EntityHandle sponza = scene.CreateEntity("Sponza");
   sponza = scene.GetEntityWorld().Attach<MeshComponent>(sponza, AssetRegistry::Instance()->Load<Mesh>("meshes/sponza.obj"));
   sponza = scene.GetEntityWorld().Attach<TransformComponent>(sponza);
-  sponza.Get<TransformComponent>().transform.scale = glm::vec3(0.025);
+  sponza.Get<TransformComponent>().transform.scale = glm::vec3(0.02);
   sponza.Get<TransformComponent>().transform.Rotate(M_PI_2, glm::vec3{0, 1, 0});
 
-  fennecs::EntityHandle dir_light = scene.CreateEntity("Directional light");
-  dir_light = scene.GetEntityWorld().Attach<DirectionalLightSpecification>(dir_light, glm::vec3{1, 1, 0.5});
-  dir_light = scene.GetEntityWorld().Attach<TransformComponent>(dir_light, Transform(glm::vec3(0), glm::vec3(-0.5, 0, 0)));
+  // fennecs::EntityHandle dir_light = scene.CreateEntity("Directional light");
+  // dir_light = scene.GetEntityWorld().Attach<DirectionalLightSpecification>(dir_light, glm::vec3{0.5, 0.5, 0.25}, 0);
+  // dir_light = scene.GetEntityWorld().Attach<TransformComponent>(dir_light, Transform(glm::vec3(0), glm::vec3(-0.5, 0, 0)));
+
+  fennecs::EntityHandle point_light1 = scene.CreateEntity("Point light1");
+  point_light1 = scene.GetEntityWorld().Attach<PointLightSpecification>(point_light1, glm::vec3{1.0, 0.5, 0.1}, 2, 4);
+  point_light1 = scene.GetEntityWorld().Attach<TransformComponent>(point_light1, Transform(glm::vec3(-8.9, 2.5, 24)));
+
+  fennecs::EntityHandle point_light2 = scene.CreateEntity("Point light2");
+  point_light2 = scene.GetEntityWorld().Attach<PointLightSpecification>(point_light2, glm::vec3{1.0, 0.5, 0.1}, 2, 4);
+  point_light2 = scene.GetEntityWorld().Attach<TransformComponent>(point_light2, Transform(glm::vec3(-8.9, 2.5, -22)));
+
+  fennecs::EntityHandle point_light3 = scene.CreateEntity("Point light3");
+  point_light3 = scene.GetEntityWorld().Attach<PointLightSpecification>(point_light3, glm::vec3{1.0, 0.5, 0.1}, 2, 4);
+  point_light3 = scene.GetEntityWorld().Attach<TransformComponent>(point_light3, Transform(glm::vec3(8.5, 2.5, 24)));
+
+  fennecs::EntityHandle point_light4 = scene.CreateEntity("Point light4");
+  point_light4 = scene.GetEntityWorld().Attach<PointLightSpecification>(point_light4, glm::vec3{1.0, 0.5, 0.1}, 2, 4);
+  point_light4 = scene.GetEntityWorld().Attach<TransformComponent>(point_light4, Transform(glm::vec3(8.5, 2.5, -22)));
+
+  scene.OnStart(event_dispatcher);
 
   /* Render Loop */
   Timer timer;
   float time_start = timer.Elapsed();
-  while (true) {
+  while (running) {
     float timestep = timer.Elapsed() - time_start;
     time_start = timer.Elapsed();
 
@@ -208,14 +237,16 @@ int main() {
       // device.Present(swapchain, kInvalidRenderResourceHandle);
     }
 
-    // {
-    //   ScopedTimer trace_timer{"window.SetFPSToTitle()"};
-    //   window.SetFPSToTitle(1 / timestep);
-    // }
-
     float frame_time = timer.Elapsed() - time_start;
-    LOG_DEBUG("Frame: {0} FPS: {1}", current_frame, 1 / frame_time);
+    {
+      ScopedTimer trace_timer{"window.SetFPSToTitle()"};
+      window.SetFPSToTitle(1 / frame_time);
+    }
+
+    // LOG_DEBUG("Frame: {0} FPS: {1}", current_frame, 1 / frame_time);
   }
+
+  device.WaitIdle();
 
   return 0;
 }

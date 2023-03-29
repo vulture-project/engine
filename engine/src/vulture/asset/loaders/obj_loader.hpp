@@ -19,9 +19,6 @@ class OBJLoader : public IAssetLoader {
   SharedPtr<IAsset> Load(const String& path) override;
 
  private:
-  void LoadMaterials(const aiScene* scene, Vector<SharedPtr<Material>>& materials);
- 
- private:
   RenderDevice& device_;
 };
 

@@ -107,8 +107,8 @@ enum class SamplerBorderColor : uint32_t {
 };
 
 struct SamplerSpecification {
-  SamplerFilter      min_filter         {SamplerFilter::kLinear};
-  SamplerFilter      mag_filter         {SamplerFilter::kLinear};
+  SamplerFilter      min_filter          {SamplerFilter::kLinear};
+  SamplerFilter      mag_filter          {SamplerFilter::kLinear};
 
   SamplerAddressMode address_mode_u     {SamplerAddressMode::kRepeat};
   SamplerAddressMode address_mode_v     {SamplerAddressMode::kRepeat};
@@ -116,12 +116,12 @@ struct SamplerSpecification {
   SamplerBorderColor border_color       {SamplerBorderColor::kIntOpaqueBlack};
 
   bool               anisotropy_enabled {false};
-  float              max_anisotropy     {0.0f};
+  float               max_anisotropy     {0.0f};
 
   SamplerMipmapMode  mipmap_mode        {SamplerMipmapMode::kLinear};
-  float              min_lod            {0.0f};
-  float              max_lod            {0.0f};
-  float              lod_bias           {0.0f};
+  float               min_lod            {0.0f};
+  float               max_lod            {0.0f};
+  float               lod_bias           {0.0f};
 
   /* TODO: compare operation */
   /* TODO: unnormalized coordinates */
