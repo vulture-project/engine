@@ -12,4 +12,5 @@ target_link_libraries(veditor
     glm
     stb_image
     imgui
+    ImGuizmo
   )

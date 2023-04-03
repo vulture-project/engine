@@ -13,6 +13,7 @@ target_link_libraries(vulture
     glfw
     glm
     imgui
+    ImGuizmo
     spirv-cross-core
     spirv-cross-glsl
     stb_image

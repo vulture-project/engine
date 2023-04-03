@@ -42,6 +42,8 @@ class Scene {
 
   void OnViewportResize(uint32_t width, uint32_t height);
 
+  fennecs::EntityHandle GetMainCamera();
+
   /**
    * @brief Simulate the game world.
    *

@@ -55,6 +55,20 @@ void Scene::OnViewportResize(uint32_t width, uint32_t height) {
   }
 }
 
+fennecs::EntityHandle Scene::GetMainCamera() {
+  fennecs::EntityStream camera_stream = world_.Query<CameraComponent>();
+  for (fennecs::EntityHandle entity = camera_stream.Next(); !entity.IsNull(); entity = camera_stream.Next()) {
+    CameraComponent& camera = entity.Get<CameraComponent>();
+    assert(entity.Has<TransformComponent>());
+
+    if (camera.is_main) {
+      return entity;
+    }
+  }
+
+  return fennecs::EntityHandle::Null();
+}
+
 void Scene::OnUpdate(float timestep) {
   fennecs::EntityStream stream = world_.Query<ScriptComponent>();  
   for (fennecs::EntityHandle entity = stream.Next(); !entity.IsNull(); entity = stream.Next()) {
