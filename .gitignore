@@ -10,24 +10,24 @@ build/
 .vscode/
 
 # binary
-veditor
-vulture
-vulture-editor
+/veditor
+/vulture
+/vulture-editor
 
 # ImGui
-imgui.ini
+/imgui.ini
 
-log/
+/log/
 
 # CLion Cache
 .idea
 
 # CLion CMake cache
-cmake-build-debug
-cmake-build-debug-coverage
+/cmake-build-debug
+/cmake-build-debug-coverage
 
 # Tests
-fennecs_tests
+/fennecs_tests
 
 # SPIR-V binaries
 *.spv
