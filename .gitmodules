@@ -24,6 +24,3 @@
 	path = engine/third_party/SPIRV-Cross
 	url = https://github.com/KhronosGroup/SPIRV-Cross.git
 	branch = sdk-1.3.243
-[submodule "engine/third_party/ImGuizmo"]
-	path = engine/third_party/ImGuizmo
-	url = https://github.com/CedricGuillemet/ImGuizmo.git
