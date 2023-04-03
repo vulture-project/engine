@@ -139,8 +139,7 @@ class RenderGraph {
   template <typename RenderPassT, typename... RenderPassArgs>
   void AddPass(const std::string_view name, RenderPassArgs... args);
 
-  TextureVersionId ImportTexture(const std::string_view name, SharedPtr<Texture> texture,
-                                 const TextureSpecification& specification, TextureLayout final_layout);
+  TextureVersionId ImportTexture(const std::string_view name, SharedPtr<Texture> texture, TextureLayout final_layout);
 
   Blackboard& GetBlackboard();
 
@@ -153,8 +152,7 @@ class RenderGraph {
   void Execute(RenderDevice& device, CommandBuffer& command_buffer);
 
   /* Update phase */
-  void ReimportTexture(TextureVersionId version_id, SharedPtr<Texture> texture,
-                       const TextureSpecification& specification);
+  void ReimportTexture(TextureVersionId version_id, SharedPtr<Texture> texture);
 
   /* Other */
   void Destroy(RenderDevice& device);

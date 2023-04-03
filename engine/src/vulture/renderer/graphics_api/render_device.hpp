@@ -53,7 +53,7 @@ class Window;
  *       2) RenderArea: (0, 0) - top-left; (width, height) - bottom-right
  */
 class RenderDevice {
-public:
+ public:
   enum class DeviceFamily {kVulkan, /*kOpenGL*/ /*kMetal*/};
 
   virtual void WaitIdle() = 0;
@@ -67,6 +67,8 @@ public:
    * INIT
    ************************************************************************************************/
   virtual ~RenderDevice() = default;
+
+  inline DeviceFamily GetDeviceFamily() const { return device_family_; }
 
   static RenderDevice* Create(DeviceFamily family);
 
@@ -323,7 +325,10 @@ public:
   virtual void DeleteCommandBuffer(CommandBuffer* command_buffer) = 0;
  
  protected:
-  RenderDevice() = default;
+  RenderDevice(DeviceFamily device_family) : device_family_(device_family) {}
+
+ private:
+  DeviceFamily device_family_;
 };
 
 }  // namespace vulture

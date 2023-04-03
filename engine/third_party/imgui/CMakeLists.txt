@@ -5,7 +5,7 @@ file(GLOB_RECURSE IMGUI_SOURCE *.cpp *.c)
 
 target_include_directories(imgui
   PUBLIC
-    .
+    ./include/
   )
 
 target_sources(imgui
@@ -15,8 +15,3 @@ target_sources(imgui
     ${IMGUI_SOURCE}
   )
 
-target_link_libraries(imgui
-  PUBLIC
-    glad
-    glfw
-  )

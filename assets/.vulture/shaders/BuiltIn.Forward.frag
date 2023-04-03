@@ -155,7 +155,7 @@ vec3 CalculateDirectionalLight(DirectionalLight light, vec3 bumpNormalWS, vec3 t
 
     // Result
     // return ambient + diffuse + specular;
-    return diffuse + specular;
+    return diffuse;
     // return ambient + diffuse;
     // return diffuse;
 }
@@ -182,8 +182,8 @@ vec3 CalculatePointLight(PointLight light, vec3 bumpNormalWS, vec3 toCameraWS)
     float attenuation = 1.0 / (1.0 + (dist * dist) / (light.range * light.range));
 
     // Result
-    // return attenuation * (ambient + diffuse + specular);
-    return attenuation * (diffuse + specular);
+    // return attenuation * (ambient + diffuse);
+    return attenuation * (diffuse);
 }
 
 vec3 CalculateSpotLight(SpotLight light, vec3 bumpNormalWS, vec3 toCameraWS)
@@ -215,6 +215,6 @@ vec3 CalculateSpotLight(SpotLight light, vec3 bumpNormalWS, vec3 toCameraWS)
     float spotlightIntensity = clamp((cosToPosition - outerCosine) / (innerCosine - outerCosine), 0, 1);
 
     // Result
-    // return spotlightIntensity * attenuation * (ambient + diffuse + specular);
-    return spotlightIntensity * attenuation * (diffuse + specular);
+    // return spotlightIntensity * attenuation * (ambient + diffuse);
+    return spotlightIntensity * attenuation * (diffuse);
 }

@@ -104,6 +104,8 @@ class VulkanCommandBuffer final : public CommandBuffer {
   VulkanRenderDevice& device_;
   VkCommandBuffer     vk_command_buffer_{VK_NULL_HANDLE};
   bool                temporary_{false};
+
+  friend class VulkanImGuiImplementation;
 };
 
 }  // namespace vulture

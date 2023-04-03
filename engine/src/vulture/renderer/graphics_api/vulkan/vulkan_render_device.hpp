@@ -367,7 +367,8 @@ class VulkanRenderDevice final : public RenderDevice {
   std::map<ShaderModuleHandle, VulkanShaderModule>               shader_modules_;
   std::map<PipelineHandle, VulkanPipeline>                       pipelines_;
 
-  friend class VulkanCommandBuffer;
+  friend class VulkanCommandBuffer;  // FIXME: (tralf-strues)
+  friend class VulkanImGuiImplementation;  // FIXME: (tralf-strues)
 };
 
 }  // namespace vulture

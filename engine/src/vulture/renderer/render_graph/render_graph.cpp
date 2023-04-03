@@ -49,9 +49,9 @@ DynamicTextureSpecification::DynamicTextureSpecification(const TextureSpecificat
 Blackboard& RenderGraph::GetBlackboard() { return blackboard_; }
 
 TextureVersionId RenderGraph::ImportTexture(const std::string_view name, SharedPtr<Texture> texture,
-                                            const TextureSpecification& specification, TextureLayout final_layout) {
+                                            TextureLayout final_layout) {
   assert(texture);
-  return NewEntry(name, texture, DynamicTextureSpecification(specification), true, final_layout);
+  return NewEntry(name, texture, DynamicTextureSpecification(texture->GetSpecification()), true, final_layout);
 }
 
 void RenderGraph::Setup() {
@@ -113,6 +113,13 @@ void RenderGraph::Execute(RenderDevice& device, CommandBuffer& command_buffer) {
     viewport.height    = -static_cast<float>(height);
     viewport.min_depth = 0.0f;
     viewport.max_depth = 1.0f;
+    // Viewport viewport{};
+    // viewport.x         = 0;
+    // viewport.y         = 0;
+    // viewport.width     = static_cast<float>(width);
+    // viewport.height    = static_cast<float>(height);
+    // viewport.min_depth = 0.0f;
+    // viewport.max_depth = 1.0f;
     command_buffer.CmdSetViewports(1, &viewport);
 
     pass_node.render_pass->Execute(command_buffer, blackboard_, pass_node.render_pass_id, built_pass.pass_handle);
@@ -121,10 +128,11 @@ void RenderGraph::Execute(RenderDevice& device, CommandBuffer& command_buffer) {
   }
 }
 
-void RenderGraph::ReimportTexture(TextureVersionId version, SharedPtr<Texture> texture,
-                                  const TextureSpecification& specification) {
+void RenderGraph::ReimportTexture(TextureVersionId version, SharedPtr<Texture> texture) {
   assert(version != kInvalidTextureVersionId);
   assert(texture);
+
+  const TextureSpecification& specification = texture->GetSpecification();
 
   detail::TextureEntry& entry = GetTextureEntry(version);
   entry.dirty |= entry.specification.format.Get()  != specification.format ||
@@ -140,8 +148,8 @@ void RenderGraph::ReimportTexture(TextureVersionId version, SharedPtr<Texture> t
     textures_dirty_ = true;
   }
 
-  entry.specification = DynamicTextureSpecification{specification};
-  entry.texture       = texture;
+  entry.specification = DynamicTextureSpecification{texture->GetSpecification()};
+  entry.texture      = texture;
 }
 
 void RenderGraph::UpdateDependentTextureValues() {

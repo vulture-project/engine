@@ -33,7 +33,7 @@ namespace vulture {
 namespace detail {
 
 bool ReadBinaryFile(const StringView filename, Vector<uint32_t>& output) {
-  std::ifstream file(filename, std::ios::ate | std::ios::binary);
+  std::ifstream file(filename.data(), std::ios::ate | std::ios::binary);
   if (!file.is_open()) {
     return false;
   }

@@ -4,6 +4,7 @@
 #include <vulture/asset/asset_loader.hpp>
 #include <vulture/asset/detail/extension.hpp>
 #include <vulture/core/core.hpp>
+#include <filesystem>
 
 namespace vulture {
 

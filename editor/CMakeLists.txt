@@ -1,12 +1,13 @@
+include("${CMAKE_HOME_DIRECTORY}/cmake/compile_options.cmake")
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/../")
 add_subdirectory(src)
-add_subdirectory(third_party)
 
 target_link_libraries(veditor
   PUBLIC
     vulture
     fennecs
     fmt
-    glad
     glfw
     glm
     stb_image

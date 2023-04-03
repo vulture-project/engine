@@ -1,3 +1,5 @@
+set(CMAKE_CXX_STANDARD 17)
+
 add_subdirectory(third_party)
 
 include("${CMAKE_HOME_DIRECTORY}/cmake/compile_options.cmake")
@@ -10,6 +12,7 @@ target_link_libraries(vulture
     fmt
     glfw
     glm
+    imgui
     spirv-cross-core
     spirv-cross-glsl
     stb_image

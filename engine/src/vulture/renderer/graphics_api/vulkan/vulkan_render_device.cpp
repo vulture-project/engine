@@ -37,11 +37,8 @@
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #include <vk_mem_alloc.h>
-#pragma GCC diagnostic pop
-#undef VMA_IMPLEMENTATION
 
 #include <array>
-#include <iostream>  // FIXME: Get rid of
 #include <set>
 
 using namespace vulture;
@@ -162,7 +159,7 @@ void VulkanRenderDevice::EndSingleTimeCommands(VkCommandBuffer command_buffer) {
   vkFreeCommandBuffers(device_, transient_command_pool_, /*commandBufferCount*/1, &command_buffer);
 }
 
-VulkanRenderDevice::VulkanRenderDevice() {}
+VulkanRenderDevice::VulkanRenderDevice() : RenderDevice(DeviceFamily::kVulkan) {}
 
 VulkanRenderDevice::~VulkanRenderDevice() {
   vkDestroyFence(device_, fence_swapchain_image_available_, /*allocator=*/nullptr);
@@ -615,8 +612,6 @@ SwapchainHandle VulkanRenderDevice::CreateSwapchain(TextureUsageFlags usage) {
   VkExtent2D         extent          = VkExtent2D{window_->GetFramebufferWidth(), window_->GetFramebufferHeight()};
   uint32_t           min_image_count = swap_chain_support.capabilities.minImageCount + 1;  // FIXME: clamp!
 
-  LOG_DEBUG("present_mode = {0}", present_mode);
-
   VkSwapchainCreateInfoKHR create_info{};
   create_info.sType            = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
   create_info.surface          = window_surface_;
@@ -821,7 +816,7 @@ VkPresentModeKHR VulkanRenderDevice::ChooseSwapPresentMode(const VulkanSwapChain
     }
   }
 
-  return VK_PRESENT_MODE_IMMEDIATE_KHR;  // Guaranteed to be always available
+  return VK_PRESENT_MODE_FIFO_KHR;  // Guaranteed to be always available
 }
 
 /************************************************************************************************

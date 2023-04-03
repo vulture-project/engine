@@ -6,4 +6,4 @@ project(vulture-engine)
 set(CMAKE_CXX_FLAGS "-DGLFW_INCLUDE_NONE")
 
 add_subdirectory(engine)
-# add_subdirectory(editor)
+add_subdirectory(editor)
