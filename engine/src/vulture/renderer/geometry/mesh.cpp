@@ -128,8 +128,9 @@ Material& Submesh::GetMaterial() const {
 /************************************************************************************************
  * MESH
  ************************************************************************************************/
-Mesh::Mesh(const Geometry& geometry, SharedPtr<Material> material, bool dynamic) {
-  submeshes_.emplace_back(geometry, material, dynamic);
+Mesh::Mesh(RenderDevice& device, const Geometry& geometry, SharedPtr<Material> material, bool dynamic) {
+  Submesh& submesh = submeshes_.emplace_back(geometry, material, dynamic);
+  submesh.UpdateDeviceBuffers(device);
 }
 
 Vector<Submesh>& Mesh::GetSubmeshes() { return submeshes_; }

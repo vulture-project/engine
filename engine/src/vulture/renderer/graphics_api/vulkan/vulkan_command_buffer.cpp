@@ -60,13 +60,11 @@ void VulkanCommandBuffer::Begin() {
   vk_command_buffer_begin_info.flags             = 0;
   vk_command_buffer_begin_info.pInheritanceInfo = nullptr;  // For secondary command buffers
 
-  VkResult result = vkBeginCommandBuffer(vk_command_buffer_, &vk_command_buffer_begin_info);
-  assert(result == VK_SUCCESS);
+  VULKAN_CALL(vkBeginCommandBuffer(vk_command_buffer_, &vk_command_buffer_begin_info));
 }
 
 void VulkanCommandBuffer::End() {
-  VkResult result = vkEndCommandBuffer(vk_command_buffer_);
-  assert(result == VK_SUCCESS);
+  VULKAN_CALL(vkEndCommandBuffer(vk_command_buffer_));
 }
 
 void VulkanCommandBuffer::Submit(FenceHandle signal_fence, SemaphoreHandle signal_semaphore) {
@@ -93,15 +91,12 @@ void VulkanCommandBuffer::Submit(FenceHandle signal_fence, SemaphoreHandle signa
     default:                           { assert(!"Invalid CommandBufferType"); break; }
   }
 
-  VkResult result = vkQueueSubmit(vk_queue, /*submitCount=*/1, &submit_info, /*fence=*/vk_fence);
-  assert(result == VK_SUCCESS);
+  VULKAN_CALL(vkQueueSubmit(vk_queue, /*submitCount=*/1, &submit_info, /*fence=*/vk_fence));
 }
 
 void VulkanCommandBuffer::Reset() {
   assert(!temporary_);
-
-  VkResult result = vkResetCommandBuffer(vk_command_buffer_, /*flags=*/0);
-  assert(result == VK_SUCCESS);
+  VULKAN_CALL(vkResetCommandBuffer(vk_command_buffer_, /*flags=*/0));
 }
 
 void VulkanCommandBuffer::GenerateMipmaps(TextureHandle handle, TextureLayout final_layout) {
@@ -123,7 +118,7 @@ void VulkanCommandBuffer::GenerateMipmaps(TextureHandle handle, TextureLayout fi
   barrier.dstQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
   barrier.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
   barrier.subresourceRange.baseArrayLayer = 0;
-  barrier.subresourceRange.layerCount     = 1;
+  barrier.subresourceRange.layerCount     = GetLayerCountFromTextureType(texture.specification.type);
   barrier.subresourceRange.levelCount     = 1;
 
   uint32_t mip_width  = texture.specification.width;
@@ -157,14 +152,14 @@ void VulkanCommandBuffer::GenerateMipmaps(TextureHandle handle, TextureLayout fi
     blit.srcSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
     blit.srcSubresource.mipLevel       = i - 1;
     blit.srcSubresource.baseArrayLayer = 0;
-    blit.srcSubresource.layerCount     = 1;
+    blit.srcSubresource.layerCount     = GetLayerCountFromTextureType(texture.specification.type);
 
     blit.dstOffsets[0]                 = {0, 0, 0};
     blit.dstOffsets[1]                 = {dst_offset_x, dst_offset_y, 1};
     blit.dstSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
     blit.dstSubresource.mipLevel       = i;
     blit.dstSubresource.baseArrayLayer = 0;
-    blit.dstSubresource.layerCount     = 1;
+    blit.dstSubresource.layerCount     = GetLayerCountFromTextureType(texture.specification.type);
 
     // Should be submitted to a queue with graphics capabilities!
     vkCmdBlitImage(vk_command_buffer_, /*srcImage=*/texture.vk_image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
@@ -251,7 +246,7 @@ void VulkanCommandBuffer::TransitionLayout(TextureHandle handle, TextureLayout o
   barrier.subresourceRange.baseMipLevel   = 0;
   barrier.subresourceRange.levelCount     = texture.specification.mip_levels;
   barrier.subresourceRange.baseArrayLayer = 0;
-  barrier.subresourceRange.layerCount     = 1;
+  barrier.subresourceRange.layerCount     = GetLayerCountFromTextureType(texture.specification.type);
   barrier.srcAccessMask                   = src_access_mask;
   barrier.dstAccessMask                   = dst_access_mask;
 
@@ -276,7 +271,7 @@ void VulkanCommandBuffer::CopyBuffer(BufferHandle src_buffer_handle, BufferHandl
 }
 
 void VulkanCommandBuffer::CopyBufferToTexture(BufferHandle buffer_handle, TextureHandle texture_handle, uint32_t width,
-                                              uint32_t height) {
+                                              uint32_t height, uint32_t layer, uint32_t layers_count) {
   VulkanBuffer&  buffer  = device_.GetVulkanBuffer(buffer_handle);
   VulkanTexture& texture = device_.GetVulkanTexture(texture_handle);
 
@@ -287,8 +282,8 @@ void VulkanCommandBuffer::CopyBufferToTexture(BufferHandle buffer_handle, Textur
 
   region.imageSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;  // FIXME: Add depth buffers support
   region.imageSubresource.mipLevel       = 0;
-  region.imageSubresource.baseArrayLayer = 0;
-  region.imageSubresource.layerCount     = 1;
+  region.imageSubresource.baseArrayLayer = layer;
+  region.imageSubresource.layerCount     = layers_count;
 
   region.imageOffset = {0, 0, 0};
   region.imageExtent = {width, height, 1};
@@ -298,7 +293,7 @@ void VulkanCommandBuffer::CopyBufferToTexture(BufferHandle buffer_handle, Textur
 }
 
 void VulkanCommandBuffer::CopyTextureToBuffer(TextureHandle texture_handle, BufferHandle buffer_handle, uint32_t width,
-                                              uint32_t height) {
+                                              uint32_t height, uint32_t layer, uint32_t layers_count) {
   VulkanTexture& texture = device_.GetVulkanTexture(texture_handle);
   VulkanBuffer&  buffer  = device_.GetVulkanBuffer(buffer_handle);
 
@@ -309,8 +304,8 @@ void VulkanCommandBuffer::CopyTextureToBuffer(TextureHandle texture_handle, Buff
 
   region.imageSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;  // FIXME: Add depth buffers support
   region.imageSubresource.mipLevel       = 0;
-  region.imageSubresource.baseArrayLayer = 0;
-  region.imageSubresource.layerCount     = 1;
+  region.imageSubresource.baseArrayLayer = layer;
+  region.imageSubresource.layerCount     = layers_count;
 
   region.imageOffset = {0, 0, 0};
   region.imageExtent = {width, height, 1};

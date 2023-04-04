@@ -86,10 +86,13 @@ class CommandBuffer {
    * @param texture 
    * @param width 
    * @param height
+   * @param start_layer Start layer to write to (for regular 2D images it is always 0, for cube maps can be 0..5)
+   * @param layers_count How many layers to copy
    * 
    * @warning Texture must be in either @ref{TextureLayout::kTransferDst} or @ref{TextureLayout::kGeneral} layouts.
    */
-  virtual void CopyBufferToTexture(BufferHandle buffer, TextureHandle texture, uint32_t width, uint32_t height) = 0;
+  virtual void CopyBufferToTexture(BufferHandle buffer, TextureHandle texture, uint32_t width, uint32_t height,
+                                   uint32_t start_layer = 0, uint32_t layers_count = 1) = 0;
 
   /**
    * @brief Copy data from the texture to the buffer.
@@ -98,10 +101,13 @@ class CommandBuffer {
    * @param buffer 
    * @param width 
    * @param height
+   * @param start_layer Layer to write to (for regular 2D images it is always 0, for cube maps can be from 0 to 5)
+   * @param layers_count How many layers to copy
    * 
    * @warning Texture must be in either @ref{TextureLayout::kTransferSrc} or @ref{TextureLayout::kGeneral} layouts.
    */
-  virtual void CopyTextureToBuffer(TextureHandle texture, BufferHandle buffer, uint32_t width, uint32_t height) = 0;
+  virtual void CopyTextureToBuffer(TextureHandle texture, BufferHandle buffer, uint32_t width, uint32_t height,
+                                   uint32_t start_layer = 0, uint32_t layers_count = 1) = 0;
 
   /**
    * @brief Copy data from the src to the dst texture.

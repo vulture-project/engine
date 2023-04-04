@@ -50,8 +50,8 @@ class Sampler : public IAsset {
   void Recreate(const SamplerSpecification& specification);
 
  private:
-  RenderDevice&        device_;
-  SamplerHandle        handle_{kInvalidRenderResourceHandle};
+  RenderDevice&       device_;
+  SamplerHandle       handle_{kInvalidRenderResourceHandle};
   SamplerSpecification specification_;
 };
 

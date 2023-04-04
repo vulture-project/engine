@@ -80,7 +80,7 @@ private:
 class Mesh : public IAsset {
 public:
   Mesh() = default;
-  Mesh(const Geometry& geometry, SharedPtr<Material> material, bool dynamic = false);
+  Mesh(RenderDevice& device, const Geometry& geometry, SharedPtr<Material> material, bool dynamic = false);
 
   Vector<Submesh>& GetSubmeshes();
   const Vector<Submesh>& GetSubmeshes() const;

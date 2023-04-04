@@ -29,7 +29,24 @@
 
 #include <vulture/renderer/graphics_api/vulkan/vulkan_render_device.hpp>
 
+#define VULKAN_CALL(Call)         \
+  {                               \
+    VkResult result = Call;       \
+    assert(result == VK_SUCCESS); \
+  }
+
 namespace vulture {
+
+inline uint32_t GetLayerCountFromTextureType(TextureType type) {
+  switch (type) {
+    case (TextureType::kTexture2D):   { return 1; }
+    case (TextureType::kTextureCube): { return 6; }
+
+    default: { assert(!"Invalid TextureType"); }
+  }
+
+  return 0;
+}
 
 inline VkFormat GetVKFormat(DataFormat format) {
   switch (format) {
@@ -92,6 +109,15 @@ inline DataFormat GetDataFormatFromVk(VkFormat vk_format) {
     case (VK_FORMAT_R32G32B32A32_SFLOAT): { return DataFormat::kR32G32B32A32_SFLOAT; }
 
     default: { assert(!"Invalid VkFormat!"); }
+  }
+}
+
+inline VkImageViewType GetVKImageViewType(TextureType type) {
+  switch (type) {
+    case TextureType::kTexture2D:   { return VK_IMAGE_VIEW_TYPE_2D; }
+    case TextureType::kTextureCube: { return VK_IMAGE_VIEW_TYPE_CUBE; }
+
+    default: { assert(!"Invalid TextureType!"); }
   }
 }
 

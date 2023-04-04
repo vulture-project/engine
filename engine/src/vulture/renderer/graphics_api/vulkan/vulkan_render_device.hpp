@@ -313,15 +313,6 @@ class VulkanRenderDevice final : public RenderDevice {
   void CreateLogicalDevice();
 
   /************************************************************************************************
-   * TEXTURE AND SAMPLER
-   ************************************************************************************************/
-  void CreateImage(uint32_t width, uint32_t height, uint32_t mip_levels, VkSampleCountFlagBits samples, VkFormat format,
-                   VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage* image,
-                   VkDeviceMemory* image_memory);
-
-  VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspect_flags, uint32_t mip_levels);
-
-  /************************************************************************************************
    * SWAP CHAIN
    ************************************************************************************************/
   VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const VulkanSwapChainSupportDetails& support_details);

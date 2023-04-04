@@ -82,9 +82,9 @@ void InspectorPanel::RenderCameraComponent(CameraComponent& camera_component) {
     ImGui::Checkbox("Main", &camera_component.is_main);
     ImGui::Checkbox("Fixed aspect ratio", &camera_component.fixed_aspect);
 
-    ImGui::SliderFloat("FOV", &camera_component.specs.fov, 1.0f, 90.0f, "%.1f");
-    ImGui::SliderFloat("Near", &camera_component.specs.near, 0.001f, 10.0f, "%.3f");
-    ImGui::SliderFloat("Far", &camera_component.specs.far, 10.0f, 1000.0f, "%.1f");
+    ImGui::DragFloat("FOV", &camera_component.specs.fov, 0.1f, 1.0f, 90.0f, "%.1f");
+    ImGui::DragFloat("Near", &camera_component.specs.near, 0.001f, 0.001f, 10.0f, "%.3f");
+    ImGui::DragFloat("Far", &camera_component.specs.far, 0.1f, 10.0f, 1000.0f, "%.1f");
 
     ImGui::TreePop();
   }

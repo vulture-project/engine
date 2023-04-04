@@ -38,6 +38,17 @@ enum class TextureType : uint32_t {
   kTextureCube
 };
 
+enum class CubeMapFaceLayer : uint32_t {
+  kRightPositiveX  = 0,
+  kLeftNegativeX   = 1,
+
+  kTopPositiveY    = 2,
+  kBottomNegativeY = 3,
+
+  kFrontPositiveZ   = 4,
+  kBackNegativeZ    = 5
+};
+
 enum TextureUsageBit : uint32_t {
   kTextureUsageBitNone            = 0x0000'0000,
   kTextureUsageBitTransferSrc     = 0x0000'0001,
@@ -67,7 +78,7 @@ DECLARE_ENUM_TO_STR(TextureLayout,
 
 struct TextureSpecification {
   DataFormat        format       {DataFormat::kInvalid};
-  TextureType       type         {TextureType::kInvalid};
+  TextureType       type         {TextureType::kTexture2D};
   TextureUsageFlags usage        {kTextureUsageBitNone};
   bool              cpu_readable {false};  ///< Allows CPU to read texels from it (may affect performance).
 

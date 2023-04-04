@@ -64,9 +64,8 @@ VulkanBuffer VulkanRenderDevice::CreateStagingBuffer(VkDeviceSize size) {
   staging_alloc_info.usage = VMA_MEMORY_USAGE_AUTO;
   staging_alloc_info.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
 
-  VkResult result = vmaCreateBuffer(allocator_, &staging_buffer_info, &staging_alloc_info, &staging_buffer.vk_buffer,
-                                    &staging_buffer.vma_allocation, nullptr);
-  assert(result == VK_SUCCESS);
+  VULKAN_CALL(vmaCreateBuffer(allocator_, &staging_buffer_info, &staging_alloc_info, &staging_buffer.vk_buffer,
+                              &staging_buffer.vma_allocation, nullptr));
 
   return staging_buffer;
 }
@@ -102,8 +101,7 @@ VkCommandPool VulkanRenderDevice::CreateCommandPool(VkCommandPoolCreateFlags fla
   pool_create_info.queueFamilyIndex = queue_family_indices_.graphics_family.value();
 
   VkCommandPool command_pool{VK_NULL_HANDLE};
-  VkResult result = vkCreateCommandPool(device_, &pool_create_info, /*allocator=*/nullptr, &command_pool);
-  assert(result == VK_SUCCESS);
+  VULKAN_CALL(vkCreateCommandPool(device_, &pool_create_info, /*allocator=*/nullptr, &command_pool));
 
   return command_pool;
 }
@@ -117,8 +115,7 @@ VkCommandBuffer VulkanRenderDevice::CreateCommandBuffer(VkCommandPool command_po
   command_buffer_alloc_info.commandBufferCount = 1;
   // Can be submitted to a queue for execution, can't be called from other command buffers
   command_buffer_alloc_info.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-  VkResult result = vkAllocateCommandBuffers(device_, &command_buffer_alloc_info, &command_buffer);
-  assert(result == VK_SUCCESS);
+  VULKAN_CALL(vkAllocateCommandBuffers(device_, &command_buffer_alloc_info, &command_buffer));
 
   return command_buffer;
 }
@@ -132,20 +129,19 @@ VkCommandBuffer VulkanRenderDevice::BeginSingleTimeCommands() {
   alloc_info.commandBufferCount = 1;
 
   VkCommandBuffer command_buffer{VK_NULL_HANDLE};
-  VkResult result = vkAllocateCommandBuffers(device_, &alloc_info, &command_buffer);
-  assert(result == VK_SUCCESS);
+  VULKAN_CALL(vkAllocateCommandBuffers(device_, &alloc_info, &command_buffer));
 
   VkCommandBufferBeginInfo begin_info{};
   begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-  vkBeginCommandBuffer(command_buffer, &begin_info);
+  VULKAN_CALL(vkBeginCommandBuffer(command_buffer, &begin_info));
 
   return command_buffer;
 }
 
 void VulkanRenderDevice::EndSingleTimeCommands(VkCommandBuffer command_buffer) {
-  vkEndCommandBuffer(command_buffer);
+  VULKAN_CALL(vkEndCommandBuffer(command_buffer));
 
   VkSubmitInfo submit_info{};
   submit_info.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -153,8 +149,8 @@ void VulkanRenderDevice::EndSingleTimeCommands(VkCommandBuffer command_buffer) {
   submit_info.pCommandBuffers    = &command_buffer;
 
   // Could use a fence and wait with vkWaitForFences to allow multiple transfers simultaneously
-  vkQueueSubmit(graphics_queue_, /*submitCount=*/1, &submit_info, /*fence=*/VK_NULL_HANDLE);
-  vkQueueWaitIdle(graphics_queue_);
+  VULKAN_CALL(vkQueueSubmit(graphics_queue_, /*submitCount=*/1, &submit_info, /*fence=*/VK_NULL_HANDLE));
+  VULKAN_CALL(vkQueueWaitIdle(graphics_queue_));
 
   vkFreeCommandBuffers(device_, transient_command_pool_, /*commandBufferCount*/1, &command_buffer);
 }
@@ -176,7 +172,7 @@ VulkanRenderDevice::~VulkanRenderDevice() {
 }
 
 void VulkanRenderDevice::WaitIdle() {
-  vkDeviceWaitIdle(device_);
+  VULKAN_CALL(vkDeviceWaitIdle(device_));
 }
 
 uint32_t VulkanRenderDevice::CurrentFrame() const {
@@ -216,8 +212,7 @@ void VulkanRenderDevice::Init(Window* window, const DeviceFeatures* required_fea
   allocator_info.physicalDevice = physical_device_;
   allocator_info.device         = device_;
   allocator_info.instance       = instance_;
-  VkResult result = vmaCreateAllocator(&allocator_info, &allocator_);
-  assert(result == VK_SUCCESS);
+  VULKAN_CALL(vmaCreateAllocator(&allocator_info, &allocator_));
 
   transient_command_pool_ = CreateCommandPool(VK_COMMAND_POOL_CREATE_TRANSIENT_BIT);
   main_command_pool_      = CreateCommandPool(VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
@@ -225,10 +220,8 @@ void VulkanRenderDevice::Init(Window* window, const DeviceFeatures* required_fea
   VkFenceCreateInfo fence_info = {};
   fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
   fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-  result = vkCreateFence(device_, &fence_info, /*allocator=*/nullptr, &fence_swapchain_image_available_);
-  assert(result == VK_SUCCESS);
-  result = vkResetFences(device_, 1, &fence_swapchain_image_available_);
-  assert(result == VK_SUCCESS);
+  VULKAN_CALL(vkCreateFence(device_, &fence_info, /*allocator=*/nullptr, &fence_swapchain_image_available_));
+  VULKAN_CALL(vkResetFences(device_, 1, &fence_swapchain_image_available_));
 }
 
 DeviceFeatures VulkanRenderDevice::GetDeviceFeatures() {
@@ -285,16 +278,15 @@ void VulkanRenderDevice::CreateInstance(bool enable_validation) {
     create_info.enabledLayerCount = 0;
   }
 
-  VkResult result = vkCreateInstance(&create_info, /*allocator=*/nullptr, &instance_);
-  assert(result == VK_SUCCESS);  // TODO: Handle errors
+  VULKAN_CALL(vkCreateInstance(&create_info, /*allocator=*/nullptr, &instance_));  // TODO: Handle errors
 }
 
 bool VulkanRenderDevice::CheckValidationLayersSupport() {
   uint32_t layer_count = 0;
-  vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
+  VULKAN_CALL(vkEnumerateInstanceLayerProperties(&layer_count, nullptr));
 
   std::vector<VkLayerProperties> available_layers(layer_count);
-  vkEnumerateInstanceLayerProperties(&layer_count, available_layers.data());
+  VULKAN_CALL(vkEnumerateInstanceLayerProperties(&layer_count, available_layers.data()));
 
   for (const char* layer_name : kValidationLayers) {
     bool layer_found = false;
@@ -316,19 +308,17 @@ bool VulkanRenderDevice::CheckValidationLayersSupport() {
 }
 
 void VulkanRenderDevice::CreateWindowSurface() {
-  VkResult result =
-      glfwCreateWindowSurface(instance_, window_->GetNativeWindow(), /*allocator=*/nullptr, &window_surface_);
-  assert(result == VK_SUCCESS);
+  VULKAN_CALL(glfwCreateWindowSurface(instance_, window_->GetNativeWindow(), /*allocator=*/nullptr, &window_surface_));
 }
 
 void VulkanRenderDevice::PickPhysicalDevice(const DeviceFeatures* required_features,
                                             const DeviceProperties* required_properties) {
   uint32_t device_count = 0;
-  vkEnumeratePhysicalDevices(instance_, &device_count, nullptr);
+  VULKAN_CALL(vkEnumeratePhysicalDevices(instance_, &device_count, nullptr));
   assert(device_count != 0);
 
   std::vector<VkPhysicalDevice> physical_devices(device_count);
-  vkEnumeratePhysicalDevices(instance_, &device_count, physical_devices.data());
+  VULKAN_CALL(vkEnumeratePhysicalDevices(instance_, &device_count, physical_devices.data()));
 
   for (const auto& physical_device : physical_devices) {
     if (IsPhysicalDeviceSuitable(physical_device, required_features, required_properties)) {
@@ -366,11 +356,12 @@ bool VulkanRenderDevice::IsPhysicalDeviceSuitable(VkPhysicalDevice physical_devi
   }
 
   uint32_t extensions_count = 0;
-  vkEnumerateDeviceExtensionProperties(physical_device, /*pLayerName=*/nullptr, &extensions_count, nullptr);
+  VULKAN_CALL(
+      vkEnumerateDeviceExtensionProperties(physical_device, /*pLayerName=*/nullptr, &extensions_count, nullptr));
 
   std::vector<VkExtensionProperties> available_extensions{extensions_count};
-  vkEnumerateDeviceExtensionProperties(physical_device, /*pLayerName=*/nullptr, &extensions_count,
-                                        available_extensions.data());
+  VULKAN_CALL(vkEnumerateDeviceExtensionProperties(physical_device, /*pLayerName=*/nullptr, &extensions_count,
+                                                   available_extensions.data()));
 
   for (const auto& required_extension : kRequiredDeviceExtensions) {
     bool found_extension = false;
@@ -435,7 +426,7 @@ VulkanRenderDevice::QueueFamilyIndices VulkanRenderDevice::FindQueueFamilies(VkP
     }
     
     VkBool32 present_support = false;
-    vkGetPhysicalDeviceSurfaceSupportKHR(physical_device, i, window_surface_, &present_support);
+    VULKAN_CALL(vkGetPhysicalDeviceSurfaceSupportKHR(physical_device, i, window_surface_, &present_support));
     if (present_support) {
       indices.present_family = i;
     }
@@ -454,25 +445,27 @@ VulkanSwapChainSupportDetails VulkanRenderDevice::QuerySwapChainSupport(VkPhysic
   VulkanSwapChainSupportDetails details;
 
   /* Surface capabilities */
-  vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, window_surface_, &details.capabilities);
+  VULKAN_CALL(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, window_surface_, &details.capabilities));
 
   /* Surface formats */
   uint32_t format_count = 0;
-  vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, window_surface_, &format_count, nullptr);
+  VULKAN_CALL(vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, window_surface_, &format_count, nullptr));
 
   if (format_count != 0) {
     details.formats.resize(format_count);
-    vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, window_surface_, &format_count, details.formats.data());
+    VULKAN_CALL(vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, window_surface_, &format_count,
+                                                     details.formats.data()));
   }
 
   /* Present modes */
   uint32_t present_mode_count;
-  vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, window_surface_, &present_mode_count, nullptr);
+  VULKAN_CALL(vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, window_surface_, &present_mode_count,
+                                                        nullptr));
 
   if (present_mode_count != 0) {
       details.present_modes.resize(present_mode_count);
-      vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, window_surface_, &present_mode_count,
-                                                details.present_modes.data());
+      VULKAN_CALL(vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, window_surface_, &present_mode_count,
+                                                            details.present_modes.data()));
   }
 
   return details;
@@ -521,8 +514,7 @@ void VulkanRenderDevice::CreateLogicalDevice() {
   create_info.enabledExtensionCount   = extensions.size();
   create_info.ppEnabledExtensionNames = extensions.data();
 
-  VkResult result = vkCreateDevice(physical_device_, &create_info, nullptr, &device_);
-  assert(result == VK_SUCCESS);
+  VULKAN_CALL(vkCreateDevice(physical_device_, &create_info, nullptr, &device_));
 
   queue_family_indices_ = indices;
   vkGetDeviceQueue(device_, indices.graphics_family.value(), /*queueIndex=*/0, &graphics_queue_);
@@ -538,8 +530,7 @@ FenceHandle VulkanRenderDevice::CreateFence() {
   VkFenceCreateInfo fence_info = {};
   fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
   fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-  VkResult result = vkCreateFence(device_, &fence_info, /*allocator=*/nullptr, &vk_fence);
-  assert(result == VK_SUCCESS);
+  VULKAN_CALL(vkCreateFence(device_, &fence_info, /*allocator=*/nullptr, &vk_fence));
 
   VulkanFence fence{};
   fence.vk_fence = vk_fence;
@@ -567,12 +558,12 @@ void VulkanRenderDevice::WaitForFences(uint32_t count, const FenceHandle* handle
     vk_fences[i] = GetVulkanFence(handles[i]).vk_fence;
   }
 
-  vkWaitForFences(device_, count, vk_fences.data(), /*waitAll=*/true, /*timeout=*/UINT64_MAX);
+  VULKAN_CALL(vkWaitForFences(device_, count, vk_fences.data(), /*waitAll=*/true, /*timeout=*/UINT64_MAX));
 }
 
 void VulkanRenderDevice::ResetFence(FenceHandle handle) {
   VulkanFence& fence = GetVulkanFence(handle);
-  vkResetFences(device_, 1, &fence.vk_fence);
+  VULKAN_CALL(vkResetFences(device_, 1, &fence.vk_fence));
 }
 
 SemaphoreHandle VulkanRenderDevice::CreateSemaphore() {
@@ -580,8 +571,7 @@ SemaphoreHandle VulkanRenderDevice::CreateSemaphore() {
 
   VkSemaphoreCreateInfo semaphore_info = {};
   semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-  VkResult result = vkCreateSemaphore(device_, &semaphore_info, /*allocator=*/nullptr, &vk_semaphore);
-  assert(result == VK_SUCCESS);
+  VULKAN_CALL(vkCreateSemaphore(device_, &semaphore_info, /*allocator=*/nullptr, &vk_semaphore));
 
   VulkanSemaphore semaphore{};
   semaphore.vk_semaphore = vk_semaphore;
@@ -642,8 +632,7 @@ SwapchainHandle VulkanRenderDevice::CreateSwapchain(TextureUsageFlags usage) {
 
   VkSwapchainKHR vk_swapchain{VK_NULL_HANDLE};
 
-  VkResult result = vkCreateSwapchainKHR(device_, &create_info, /*allocator=*/nullptr, &vk_swapchain);
-  assert(result == VK_SUCCESS);
+  VULKAN_CALL(vkCreateSwapchainKHR(device_, &create_info, /*allocator=*/nullptr, &vk_swapchain));
 
   VulkanSwapchain swapchain{};
   swapchain.vk_swapchain = vk_swapchain;
@@ -653,18 +642,33 @@ SwapchainHandle VulkanRenderDevice::CreateSwapchain(TextureUsageFlags usage) {
 
   /* Retrieving the images */
   uint32_t image_count = 0;
-  static VkImage vk_images[32];
+  static VkImage vk_images[8];
 
-  vkGetSwapchainImagesKHR(device_, vk_swapchain, &image_count, nullptr);
+  VULKAN_CALL(vkGetSwapchainImagesKHR(device_, vk_swapchain, &image_count, nullptr));
   assert(image_count > 0);
   
-  vkGetSwapchainImagesKHR(device_, vk_swapchain, &image_count, vk_images);
+  VULKAN_CALL(vkGetSwapchainImagesKHR(device_, vk_swapchain, &image_count, vk_images));
 
   /* Creating image views */
-  static VkImageView vk_image_views[32];
+  static VkImageView vk_image_views[8];
 
   for (uint32_t i = 0; i < image_count; ++i) {
-    vk_image_views[i] = CreateImageView(vk_images[i], surface_format.format, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+    VkImageViewCreateInfo view_info{};
+    view_info.sType                           = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    view_info.image                           = vk_images[i];
+    view_info.viewType                        = VK_IMAGE_VIEW_TYPE_2D;
+    view_info.format                          = surface_format.format;
+    view_info.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+    view_info.subresourceRange.baseMipLevel   = 0;
+    view_info.subresourceRange.levelCount     = 1;
+    view_info.subresourceRange.baseArrayLayer = 0;
+    view_info.subresourceRange.layerCount     = 1;
+    view_info.components.r                    = VK_COMPONENT_SWIZZLE_IDENTITY;
+    view_info.components.g                    = VK_COMPONENT_SWIZZLE_IDENTITY;
+    view_info.components.b                    = VK_COMPONENT_SWIZZLE_IDENTITY;
+    view_info.components.a                    = VK_COMPONENT_SWIZZLE_IDENTITY;
+
+    VULKAN_CALL(vkCreateImageView(device_, &view_info, /*allocator=*/nullptr, &vk_image_views[i]));
   }
 
   /* Creating textures */
@@ -750,8 +754,8 @@ bool VulkanRenderDevice::AcquireNextTexture(SwapchainHandle swapchain_handle, ui
   current_swapchain_texture_idx_ = tmp_texture_idx;
 
   // FIXME: Don't wait on image acquiring
-  vkWaitForFences(device_, 1, &fence_swapchain_image_available_, true, /*timeout=*/UINT64_MAX);
-  vkResetFences(device_, 1, &fence_swapchain_image_available_);
+  VULKAN_CALL(vkWaitForFences(device_, 1, &fence_swapchain_image_available_, true, /*timeout=*/UINT64_MAX));
+  VULKAN_CALL(vkResetFences(device_, 1, &fence_swapchain_image_available_));
 
   return true;
 }
@@ -790,7 +794,7 @@ bool VulkanRenderDevice::Present(SwapchainHandle swapchain_handle, SemaphoreHand
 }
 
 SwapchainHandle VulkanRenderDevice::RecreateSwapchain(SwapchainHandle handle) {
-  vkDeviceWaitIdle(device_);
+  VULKAN_CALL(vkDeviceWaitIdle(device_));
 
   TextureUsageFlags usage = GetVulkanSwapchain(handle).usage;
 
@@ -844,6 +848,11 @@ TextureHandle VulkanRenderDevice::CreateTexture(const TextureSpecification& spec
     vk_usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
   }
 
+  VkImageCreateFlags vk_image_flags = 0;
+  if (specification.type == TextureType::kTextureCube) {
+    vk_image_flags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+  }
+
   /* Create image */
   VkImageCreateInfo image_info{};
   image_info.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -852,7 +861,7 @@ TextureHandle VulkanRenderDevice::CreateTexture(const TextureSpecification& spec
   image_info.extent.height = height;
   image_info.extent.depth  = 1;
   image_info.mipLevels     = specification.mip_levels;
-  image_info.arrayLayers   = 1;
+  image_info.arrayLayers   = GetLayerCountFromTextureType(specification.type);
   image_info.format        = vk_format;
   // If want to directly access texels in memory, then should use VK_IMAGE_TILING_LINEAR
   // VK_IMAGE_TILING_OPTIMAL - Implementation-based tiling (not necessarily row-major)
@@ -861,14 +870,13 @@ TextureHandle VulkanRenderDevice::CreateTexture(const TextureSpecification& spec
   image_info.usage         = vk_usage;
   image_info.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
   image_info.samples       = static_cast<VkSampleCountFlagBits>(specification.samples);
-  image_info.flags         = 0;
+  image_info.flags          = vk_image_flags;
 
   VmaAllocationCreateInfo vma_alloc_info = {};
   vma_alloc_info.usage  = (specification.cpu_readable ? VMA_MEMORY_USAGE_AUTO : VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
   vma_alloc_info.flags |= (specification.cpu_readable ? VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT : 0);
   
-  VkResult result = vmaCreateImage(allocator_, &image_info, &vma_alloc_info, &vk_image, &vma_allocation, nullptr);
-  assert(result == VK_SUCCESS);
+  VULKAN_CALL(vmaCreateImage(allocator_, &image_info, &vma_alloc_info, &vk_image, &vma_allocation, nullptr));
 
   /* Create image view */
   VkImageAspectFlags vk_aspect_flags = VK_IMAGE_ASPECT_NONE;
@@ -880,7 +888,23 @@ TextureHandle VulkanRenderDevice::CreateTexture(const TextureSpecification& spec
     vk_aspect_flags |= VK_IMAGE_ASPECT_COLOR_BIT;
   }
 
-  VkImageView vk_image_view = CreateImageView(vk_image, vk_format, vk_aspect_flags, specification.mip_levels);
+  VkImageViewCreateInfo view_info{};
+  view_info.sType                           = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+  view_info.image                           = vk_image;
+  view_info.viewType                        = GetVKImageViewType(specification.type);
+  view_info.format                          = vk_format;
+  view_info.subresourceRange.aspectMask     = vk_aspect_flags;
+  view_info.subresourceRange.baseMipLevel   = 0;
+  view_info.subresourceRange.levelCount     = specification.mip_levels;
+  view_info.subresourceRange.baseArrayLayer = 0;
+  view_info.subresourceRange.layerCount     = GetLayerCountFromTextureType(specification.type);
+  view_info.components.r                    = VK_COMPONENT_SWIZZLE_IDENTITY;
+  view_info.components.g                    = VK_COMPONENT_SWIZZLE_IDENTITY;
+  view_info.components.b                    = VK_COMPONENT_SWIZZLE_IDENTITY;
+  view_info.components.a                    = VK_COMPONENT_SWIZZLE_IDENTITY;
+
+  VkImageView vk_image_view{VK_NULL_HANDLE};
+  VULKAN_CALL(vkCreateImageView(device_, &view_info, /*allocator=*/nullptr, &vk_image_view));
 
   /* Create texture object */
   VulkanTexture texture{specification};
@@ -934,8 +958,7 @@ SamplerHandle VulkanRenderDevice::CreateSampler(const SamplerSpecification& spec
   sampler_create_info.minLod                  = specification.min_lod;
   sampler_create_info.maxLod                  = specification.max_lod;
 
-  VkResult result = vkCreateSampler(device_, &sampler_create_info, /*allocator=*/nullptr, &vk_sampler);
-  assert(result == VK_SUCCESS);
+  VULKAN_CALL(vkCreateSampler(device_, &sampler_create_info, /*allocator=*/nullptr, &vk_sampler));
 
   /* Create sampler object */
   VulkanSampler sampler{specification};
@@ -960,71 +983,6 @@ const SamplerSpecification& VulkanRenderDevice::GetSamplerSpecification(SamplerH
   return sampler.specification;
 }
 
-void VulkanRenderDevice::CreateImage(uint32_t width, uint32_t height, uint32_t mip_levels,
-                                     VkSampleCountFlagBits samples, VkFormat format, VkImageTiling tiling,
-                                     VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage* image,
-                                     VkDeviceMemory* image_memory) {
-  /* Create image */
-  VkImageCreateInfo image_create_info{};
-  image_create_info.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-  image_create_info.imageType     = VK_IMAGE_TYPE_2D;
-  image_create_info.extent.width  = width;
-  image_create_info.extent.height = height;
-  image_create_info.extent.depth  = 1;
-  image_create_info.mipLevels     = mip_levels;
-  image_create_info.arrayLayers   = 1;
-  image_create_info.format        = format;
-  // If want to directly access texels in memory, then should use VK_IMAGE_TILING_LINEAR
-  // VK_IMAGE_TILING_OPTIMAL - Implementation-based tiling (not necessarily row-major)
-  image_create_info.tiling        = tiling;
-  image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-  image_create_info.usage         = usage;
-  image_create_info.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
-  image_create_info.samples       = samples;
-  image_create_info.flags         = 0;
-  
-  VkResult result = vkCreateImage(device_, &image_create_info, /*allocator=*/nullptr, image);
-  assert(result == VK_SUCCESS);
-
-  /* Image memory */
-  VkMemoryRequirements mem_requirements;
-  vkGetImageMemoryRequirements(device_, *image, &mem_requirements);
-
-  VkMemoryAllocateInfo alloc_info{};
-  alloc_info.sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-  alloc_info.allocationSize  = mem_requirements.size;
-  alloc_info.memoryTypeIndex = FindMemoryType(mem_requirements.memoryTypeBits, properties);
-
-  result = vkAllocateMemory(device_, &alloc_info, /*allocator=*/nullptr, image_memory);
-  assert(result == VK_SUCCESS);
-
-  vkBindImageMemory(device_, *image, *image_memory, /*memoryOffset=*/0);
-}
-
-VkImageView VulkanRenderDevice::CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspect_flags,
-                                                uint32_t mip_levels) {
-  VkImageViewCreateInfo view_create_info{};
-  view_create_info.sType                           = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-  view_create_info.image                           = image;
-  view_create_info.viewType                        = VK_IMAGE_VIEW_TYPE_2D;
-  view_create_info.format                          = format;
-  view_create_info.subresourceRange.aspectMask     = aspect_flags;
-  view_create_info.subresourceRange.baseMipLevel   = 0;
-  view_create_info.subresourceRange.levelCount     = mip_levels;
-  view_create_info.subresourceRange.baseArrayLayer = 0;
-  view_create_info.subresourceRange.layerCount     = 1;
-  view_create_info.components.r                    = VK_COMPONENT_SWIZZLE_IDENTITY;
-  view_create_info.components.g                    = VK_COMPONENT_SWIZZLE_IDENTITY;
-  view_create_info.components.b                    = VK_COMPONENT_SWIZZLE_IDENTITY;
-  view_create_info.components.a                    = VK_COMPONENT_SWIZZLE_IDENTITY;
-
-  VkImageView image_view{VK_NULL_HANDLE};
-  VkResult result = vkCreateImageView(device_, &view_create_info, /*allocator=*/nullptr, &image_view);
-  assert(result == VK_SUCCESS);
-
-  return image_view;
-}
-
 /************************************************************************************************
  * BUFFER
  ************************************************************************************************/
@@ -1045,12 +1003,11 @@ BufferHandle VulkanRenderDevice::CreateBuffer(uint32_t size, BufferUsageFlags us
   vma_alloc_info.usage = (dynamic_memory ? VMA_MEMORY_USAGE_AUTO : VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
   vma_alloc_info.flags |= (dynamic_memory ? VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT : 0);
 
-  VkResult result =
-      vmaCreateBuffer(allocator_, &buffer_info, &vma_alloc_info, &buffer.vk_buffer, &buffer.vma_allocation, nullptr);
-  assert(result == VK_SUCCESS);
+  VULKAN_CALL(vmaCreateBuffer(allocator_, &buffer_info, &vma_alloc_info, &buffer.vk_buffer, &buffer.vma_allocation,
+                              nullptr));
 
   if (dynamic_memory) {
-    vmaMapMemory(allocator_, buffer.vma_allocation, &buffer.map_data);
+    VULKAN_CALL(vmaMapMemory(allocator_, buffer.vma_allocation, &buffer.map_data));
     if (map_data != nullptr) {
       *map_data = buffer.map_data;
     }
@@ -1086,7 +1043,7 @@ void VulkanRenderDevice::LoadBufferData(BufferHandle handle, uint32_t offset, ui
 
     /* Fill the staging buffer */
     void* map_data = nullptr;
-    vmaMapMemory(allocator_, staging_buffer.vma_allocation, &map_data);
+    VULKAN_CALL(vmaMapMemory(allocator_, staging_buffer.vma_allocation, &map_data));
     std::memcpy(map_data, data, size);
     vmaUnmapMemory(allocator_, staging_buffer.vma_allocation);
 
@@ -1105,8 +1062,7 @@ void VulkanRenderDevice::InvalidateBufferMemory(BufferHandle handle, uint32_t of
 
   assert(buffer.dynamic_memory);
 
-  VkResult result = vmaInvalidateAllocation(allocator_, buffer.vma_allocation, offset, size);
-  assert(result == VK_SUCCESS);
+  VULKAN_CALL(vmaInvalidateAllocation(allocator_, buffer.vma_allocation, offset, size));
 }
 
 void VulkanRenderDevice::FlushBufferMemory(BufferHandle handle, uint32_t offset, uint32_t size) {
@@ -1114,8 +1070,7 @@ void VulkanRenderDevice::FlushBufferMemory(BufferHandle handle, uint32_t offset,
  
   assert(buffer.dynamic_memory);
 
-  VkResult result = vmaFlushAllocation(allocator_, buffer.vma_allocation, offset, size);
-  assert(result == VK_SUCCESS);
+  VULKAN_CALL(vmaFlushAllocation(allocator_, buffer.vma_allocation, offset, size));
 }
 
 /************************************************************************************************
@@ -1141,8 +1096,7 @@ DescriptorSetLayoutHandle VulkanRenderDevice::CreateDescriptorSetLayout(const De
   layout_create_info.bindingCount = static_cast<uint32_t>(vk_bindings.size());
   layout_create_info.pBindings    = vk_bindings.data();
 
-  VkResult result = vkCreateDescriptorSetLayout(device_, &layout_create_info, /*allocator=*/nullptr, &vk_layout);
-  assert(result == VK_SUCCESS);
+  VULKAN_CALL(vkCreateDescriptorSetLayout(device_, &layout_create_info, /*allocator=*/nullptr, &vk_layout));
 
   DescriptorSetLayoutHandle handle = GenNextHandle();
   VulkanDescriptorSetLayout layout{layout_info};
@@ -1194,8 +1148,7 @@ DescriptorSetHandle VulkanRenderDevice::CreateDescriptorSet(DescriptorSetLayoutH
   pool_create_info.pPoolSizes    = vk_pool_sizes.data();
   pool_create_info.maxSets       = 1;
 
-  VkResult result = vkCreateDescriptorPool(device_, &pool_create_info, /*allocator=*/nullptr, &vk_pool);
-  assert(result == VK_SUCCESS);
+  VULKAN_CALL(vkCreateDescriptorPool(device_, &pool_create_info, /*allocator=*/nullptr, &vk_pool));
 
   /* Allocate Descriptor Set */
   VkDescriptorSet vk_set{VK_NULL_HANDLE};
@@ -1206,8 +1159,7 @@ DescriptorSetHandle VulkanRenderDevice::CreateDescriptorSet(DescriptorSetLayoutH
   alloc_info.descriptorSetCount = 1;
   alloc_info.pSetLayouts        = &layout.vk_layout;
 
-  result = vkAllocateDescriptorSets(device_, &alloc_info, &vk_set);
-  assert(result == VK_SUCCESS);
+  VULKAN_CALL(vkAllocateDescriptorSets(device_, &alloc_info, &vk_set));
 
   /* Create Descriptor Set */
   VulkanDescriptorSet descriptor_set{};
@@ -1446,8 +1398,7 @@ RenderPassHandle VulkanRenderDevice::CreateRenderPass(const RenderPassDescriptio
   render_pass_create_info.dependencyCount = static_cast<uint32_t>(vk_dependencies.size());
   render_pass_create_info.pDependencies   = vk_dependencies.data();
 
-  VkResult result = vkCreateRenderPass(device_, &render_pass_create_info, /*allocator=*/nullptr, &vk_render_pass);
-  assert(result == VK_SUCCESS);
+  VULKAN_CALL(vkCreateRenderPass(device_, &render_pass_create_info, /*allocator=*/nullptr, &vk_render_pass));
 
   VulkanRenderPass render_pass{render_pass_description};
   render_pass.vk_render_pass = vk_render_pass;
@@ -1492,8 +1443,7 @@ FramebufferHandle VulkanRenderDevice::CreateFramebuffer(const std::vector<Textur
   framebuffer_create_info.height          = height;
   framebuffer_create_info.layers          = 1;  // TODO:
 
-  VkResult result = vkCreateFramebuffer(device_, &framebuffer_create_info, /*allocator=*/nullptr, &vk_framebuffer);
-  assert(result == VK_SUCCESS);
+  VULKAN_CALL(vkCreateFramebuffer(device_, &framebuffer_create_info, /*allocator=*/nullptr, &vk_framebuffer));
 
   VulkanFramebuffer framebuffer{};
   framebuffer.vk_framebuffer = vk_framebuffer;
@@ -1522,8 +1472,7 @@ ShaderModuleHandle VulkanRenderDevice::CreateShaderModule(ShaderModuleType type,
   create_info.pCode    = binary;
   
   VkShaderModule vk_module{};
-  VkResult result = vkCreateShaderModule(device_, &create_info, /*allocator=*/nullptr, &vk_module);
-  assert(result == VK_SUCCESS);
+  VULKAN_CALL(vkCreateShaderModule(device_, &create_info, /*allocator=*/nullptr, &vk_module));
 
   VulkanShaderModule shader_module{type};
   shader_module.vk_module = vk_module;
@@ -1728,9 +1677,7 @@ PipelineHandle VulkanRenderDevice::CreatePipeline(const PipelineDescription& des
   vk_pipeline_layout_info.pushConstantRangeCount = static_cast<uint32_t>(vk_push_constant_ranges.size());
   vk_pipeline_layout_info.pPushConstantRanges    = vk_push_constant_ranges.data();
 
-  VkResult result =
-      vkCreatePipelineLayout(device_, &vk_pipeline_layout_info, /*allocator=*/nullptr, &vk_pipeline_layout);
-  assert(result == VK_SUCCESS);
+  VULKAN_CALL(vkCreatePipelineLayout(device_, &vk_pipeline_layout_info, /*allocator=*/nullptr, &vk_pipeline_layout));
 
   /* Graphics pipeline */
   VkPipeline vk_pipeline{VK_NULL_HANDLE};
@@ -1759,9 +1706,8 @@ PipelineHandle VulkanRenderDevice::CreatePipeline(const PipelineDescription& des
   vk_pipeline_info.basePipelineHandle  = VK_NULL_HANDLE;
   vk_pipeline_info.basePipelineIndex   = -1;
 
-  result = vkCreateGraphicsPipelines(device_, /*pipelineCache=*/VK_NULL_HANDLE, 1, &vk_pipeline_info,
-                                     /*allocator=*/nullptr, &vk_pipeline);
-  assert(result == VK_SUCCESS);
+  VULKAN_CALL(vkCreateGraphicsPipelines(device_, /*pipelineCache=*/VK_NULL_HANDLE, 1, &vk_pipeline_info,
+                                        /*allocator=*/nullptr, &vk_pipeline));
 
   PipelineHandle handle = GenNextHandle();
   VulkanPipeline pipeline{description};

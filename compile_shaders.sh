@@ -1,2 +1,15 @@
-glslc assets/.vulture/shaders/BuiltIn.Forward.vert -o assets/.vulture/shaders/BuiltIn.Forward.vert.spv
-glslc assets/.vulture/shaders/BuiltIn.Forward.frag -o assets/.vulture/shaders/BuiltIn.Forward.frag.spv
+for shader in assets/.vulture/shaders/*.vert
+do
+  binary_file="${shader}.spv"
+  
+  echo "glslc ${shader} -o ${binary_file}"
+  glslc ${shader} -o ${binary_file}
+done
+
+for shader in assets/.vulture/shaders/*.frag
+do
+  binary_file="${shader}.spv"
+  
+  echo "glslc ${shader} -o ${binary_file}"
+  glslc ${shader} -o ${binary_file}
+done

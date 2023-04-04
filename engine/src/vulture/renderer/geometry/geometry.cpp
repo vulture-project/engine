@@ -55,3 +55,51 @@ void Geometry::CalculateBoundingBox() {
 }
 
 const AABB& Geometry::GetBoundingBox() const { return bounding_box_; }
+
+Geometry Geometry::CreateCube() {
+  static const glm::vec3 kCubeVertexPositions[] = {
+    // front
+    glm::vec3(-1.0, -1.0,  1.0),
+    glm::vec3( 1.0, -1.0,  1.0),
+    glm::vec3( 1.0,  1.0,  1.0),
+    glm::vec3(-1.0,  1.0,  1.0),
+    // back
+    glm::vec3(-1.0, -1.0, -1.0),
+    glm::vec3( 1.0, -1.0, -1.0),
+    glm::vec3( 1.0,  1.0, -1.0),
+    glm::vec3(-1.0,  1.0, -1.0)
+  };
+
+  static const uint32_t kCubeIndices[] = {
+		// front
+		0, 1, 2,
+		2, 3, 0,
+		// right
+		1, 5, 6,
+		6, 2, 1,
+		// back
+		7, 6, 5,
+		5, 4, 7,
+		// left
+		4, 0, 3,
+		3, 7, 4,
+		// bottom
+		4, 5, 1,
+		1, 0, 4,
+		// top
+		3, 2, 6,
+		6, 7, 3
+  };
+
+  Geometry cube(8, 36);
+
+  for (uint32_t i = 0; i < 8; ++i) {
+    cube.GetVertices()[i].position = kCubeVertexPositions[i];
+  }
+
+  for (uint32_t i = 0; i < 36; ++i) {
+    cube.GetIndices()[i] = kCubeIndices[i];
+  }
+
+  return cube;
+}

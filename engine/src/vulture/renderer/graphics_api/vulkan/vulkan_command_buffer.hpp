@@ -59,8 +59,10 @@ class VulkanCommandBuffer final : public CommandBuffer {
   void CopyBuffer(BufferHandle src_buffer, BufferHandle dst_buffer, uint32_t size, uint32_t src_offset,
                   uint32_t dst_offset) override;
 
-  void CopyBufferToTexture(BufferHandle buffer, TextureHandle texture, uint32_t width, uint32_t height) override;
-  void CopyTextureToBuffer(TextureHandle texture, BufferHandle buffer, uint32_t width, uint32_t height) override;
+  void CopyBufferToTexture(BufferHandle buffer, TextureHandle texture, uint32_t width, uint32_t height,
+                           uint32_t layer, uint32_t layers_count) override;
+  void CopyTextureToBuffer(TextureHandle texture, BufferHandle buffer, uint32_t width, uint32_t height,
+                           uint32_t layer, uint32_t layers_count) override;
   void CopyTexture(TextureHandle src_texture, TextureHandle dst_texture, uint32_t width, uint32_t height) override;
 
   /************************************************************************************************
