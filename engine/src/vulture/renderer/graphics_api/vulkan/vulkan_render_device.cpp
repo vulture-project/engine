@@ -1557,7 +1557,7 @@ PipelineHandle VulkanRenderDevice::CreatePipeline(const PipelineDescription& des
   vk_input_assembly_info.primitiveRestartEnable = VK_FALSE;
 
   /* Dynamic states */
-  const std::vector<VkDynamicState> vk_dynamic_states = {VK_DYNAMIC_STATE_VIEWPORT};
+  const std::vector<VkDynamicState> vk_dynamic_states = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
 
   VkPipelineDynamicStateCreateInfo vk_dynamic_state_info{};
   vk_dynamic_state_info.sType             = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
