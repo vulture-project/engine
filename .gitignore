@@ -2,9 +2,11 @@
 *.DS_Store
 
 # build directory
-build_editor/
-build_sandbox/
-build/
+/build_editor/
+/build_sandbox/
+/build/
+/build_Debug/
+/build_Release/
 
 # Visual Studio Code directory
 .vscode/

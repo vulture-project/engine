@@ -359,6 +359,11 @@ void VulkanCommandBuffer::RenderPassBegin(const RenderPassBeginInfo& begin_info)
   
   // No secondary command buffers
   vkCmdBeginRenderPass(vk_command_buffer_, &vk_render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE);
+
+  VkRect2D vk_scissor{};
+  vk_scissor.offset = vk_render_pass_begin_info.renderArea.offset;
+  vk_scissor.extent = vk_render_pass_begin_info.renderArea.extent;
+  vkCmdSetScissor(vk_command_buffer_, 0, 1, &vk_scissor);
 }
 void VulkanCommandBuffer::RenderPassEnd() {
   vkCmdEndRenderPass(vk_command_buffer_);
@@ -403,13 +408,6 @@ void VulkanCommandBuffer::CmdBindGraphicsPipeline(PipelineHandle pipeline_handle
 
 void VulkanCommandBuffer::CmdSetViewports(uint32_t viewports_count, const Viewport* viewports) {
   vkCmdSetViewport(vk_command_buffer_, 0, viewports_count, reinterpret_cast<const VkViewport*>(viewports));
-
-  VkRect2D vk_scissor{};
-  vk_scissor.offset.x = 0;
-  vk_scissor.offset.y = 0;
-  vk_scissor.extent.width  = (uint32_t)std::fabsf(viewports[0].width);
-  vk_scissor.extent.height = (uint32_t)std::fabsf(viewports[0].height);
-  vkCmdSetScissor(vk_command_buffer_, 0, 1, &vk_scissor);
 }
 
 void VulkanCommandBuffer::CmdBindVertexBuffers(uint32_t first_binding, uint32_t count,

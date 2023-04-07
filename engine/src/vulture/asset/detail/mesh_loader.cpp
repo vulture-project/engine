@@ -25,6 +25,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#include <assimp/GltfMaterial.h>
 #include <assimp/postprocess.h>
 
 #include <assimp/Importer.hpp>
@@ -136,10 +137,10 @@ void LoadMaterials(RenderDevice& device, const aiScene* scene, Vector<SharedPtr<
   SharedPtr<Texture> default_texture        = asset_registry->Load<Texture>(".vulture/textures/blank.png");
   SharedPtr<Texture> default_texture_normal = asset_registry->Load<Texture>(".vulture/textures/blank_normal.png");
 
-  SharedPtr<Shader> forward_shader = asset_registry->Load<Shader>(".vulture/shaders/BuiltIn.Forward.shader");
+  SharedPtr<Shader> forward_shader = asset_registry->Load<Shader>(".vulture/shaders/BuiltIn.PBR.shader");
 
-  LOG_DEBUG("Shader reflection ({}):", ".vulture/shaders/BuiltIn.Forward.shader");
-  forward_shader->GetReflection().PrintData();  // FIXME: Debug only
+  // LOG_DEBUG("Shader reflection ({}):", ".vulture/shaders/BuiltIn.PBR.shader");
+  // forward_shader->GetReflection().PrintData();  // FIXME: Debug only
 
   for (uint32_t material_idx = 0; material_idx < scene->mNumMaterials; ++material_idx) {
     SharedPtr<Material> material = CreateShared<Material>(device);
@@ -150,45 +151,65 @@ void LoadMaterials(RenderDevice& device, const aiScene* scene, Vector<SharedPtr<
     aiMaterial* assimp_material = scene->mMaterials[material_idx];
     
     /* Color values */
-    aiColor4D ambient_color{0, 0, 0, 1};
-    aiGetMaterialColor(assimp_material, AI_MATKEY_COLOR_AMBIENT, &ambient_color);
-    material_pass.GetProperty<glm::vec3>("ambientColor") = {ambient_color.r, ambient_color.g, ambient_color.b};
+    // aiColor4D ambient_color{0, 0, 0, 1};
+    // aiGetMaterialColor(assimp_material, AI_MATKEY_COLOR_AMBIENT, &ambient_color);
+    // material_pass.GetProperty<glm::vec3>("ambientColor") = {ambient_color.r, ambient_color.g, ambient_color.b};
 
-    aiColor4D diffuse_color{0, 0, 0, 1};
-    aiGetMaterialColor(assimp_material, AI_MATKEY_COLOR_DIFFUSE, &diffuse_color);
-    material_pass.GetProperty<glm::vec3>("diffuseColor") = {diffuse_color.r, diffuse_color.g, diffuse_color.b};
+    aiColor4D albedo_color{1, 1, 1, 1};
+    if (aiGetMaterialColor(assimp_material, AI_MATKEY_BASE_COLOR, &albedo_color) == aiReturn_SUCCESS) {
+      material_pass.GetProperty<glm::vec3>("albedo_color") = {albedo_color.r, albedo_color.g, albedo_color.b};
+    } else if (aiGetMaterialColor(assimp_material, AI_MATKEY_COLOR_DIFFUSE, &albedo_color) == aiReturn_SUCCESS) {
+      material_pass.GetProperty<glm::vec3>("albedo_color") = {albedo_color.r, albedo_color.g, albedo_color.b};
+    }
 
-    aiColor4D specular_color{0, 0, 0, 1};
-    aiGetMaterialColor(assimp_material, AI_MATKEY_COLOR_SPECULAR, &specular_color);
-    material_pass.GetProperty<glm::vec3>("specularColor") = {specular_color.r, specular_color.g, specular_color.b};
+    // aiColor4D specular_color{0, 0, 0, 1};
+    // aiGetMaterialColor(assimp_material, AI_MATKEY_COLOR_SPECULAR, &specular_color);
+    // material_pass.GetProperty<glm::vec3>("specularColor") = {specular_color.r, specular_color.g, specular_color.b};
 
     /* Scalar values */
-    float specular_exponent{1};
-    aiGetMaterialFloat(assimp_material, AI_MATKEY_SPECULAR_FACTOR, &specular_exponent);
-    material_pass.GetProperty<float>("specularExponent") = specular_exponent;
+    float metallic{0.0f};
+    if (aiGetMaterialFloat(assimp_material, AI_MATKEY_METALLIC_FACTOR, &metallic) == aiReturn_SUCCESS) {
+      LOG_DEBUG("Found metallic value = {}", metallic);
+    }
+    material_pass.GetProperty<float>("metallic") = metallic;
 
-    float normal_strength{1.0};
-    aiGetMaterialFloat(assimp_material, AI_MATKEY_BUMPSCALING, &normal_strength);
-    material_pass.GetProperty<float>("normalStrength") = normal_strength;
+    float roughness{0.907};
+    if (aiGetMaterialFloat(assimp_material, AI_MATKEY_ROUGHNESS_FACTOR, &roughness) == aiReturn_SUCCESS) {
+      LOG_DEBUG("Found roughness value = {}", roughness);
+    }
+    material_pass.GetProperty<float>("roughness") = roughness;
+
+    // float specular_exponent{1};
+    // aiGetMaterialFloat(assimp_material, AI_MATKEY_SPECULAR_FACTOR, &specular_exponent);
+    // material_pass.GetProperty<float>("specularExponent") = specular_exponent;
+
+    // float normal_strength{1.0};
+    // aiGetMaterialFloat(assimp_material, AI_MATKEY_BUMPSCALING, &normal_strength);
+    // material_pass.GetProperty<float>("normalStrength") = normal_strength;
 
     /* Texture maps */
-    auto& diffuse_map = material_pass.GetTextureSampler("uDiffuseMap");
-    diffuse_map.sampler = default_sampler;
+    /* Albedo Map */
+    auto& albedo_map = material_pass.GetTextureSampler("uAlbedoMap");
+    albedo_map.sampler = default_sampler;
 
-    bool diffuse_map_found = false;
-    aiString diffuse_map_path;
-    if (assimp_material->GetTexture(aiTextureType_DIFFUSE, 0, &diffuse_map_path) == aiReturn_SUCCESS) {
-      diffuse_map.texture = asset_registry->Load<Texture>(diffuse_map_path.C_Str());
+    bool albedo_map_found = false;
+    aiString albedo_map_path;
+    if (assimp_material->GetTexture(AI_MATKEY_BASE_COLOR_TEXTURE, &albedo_map_path) == aiReturn_SUCCESS ||
+        assimp_material->GetTexture(aiTextureType_DIFFUSE, 0, &albedo_map_path) == aiReturn_SUCCESS) {
+      LOG_DEBUG("Albedo map found {}", albedo_map_path.C_Str());
+      albedo_map.texture = asset_registry->Load<Texture>(albedo_map_path.C_Str());
 
-      if (diffuse_map.texture) {
-        diffuse_map_found = true;
+      if (albedo_map.texture) {
+        albedo_map_found = true;
       }
     }
 
-    if (!diffuse_map_found) {
-      diffuse_map.texture = default_texture;
+    material_pass.GetProperty<uint32_t>("useAlbedoMap") = albedo_map_found;
+    if (!albedo_map_found) {
+      albedo_map.texture = default_texture;
     }
 
+    /* Normal Map */
     auto& normal_map = material_pass.GetTextureSampler("uNormalMap");
     normal_map.sampler = default_sampler;
 
@@ -203,8 +224,72 @@ void LoadMaterials(RenderDevice& device, const aiScene* scene, Vector<SharedPtr<
       }
     }
 
+    material_pass.GetProperty<uint32_t>("useNormalMap") = normal_map_found;
     if (!normal_map_found) {
       normal_map.texture = default_texture_normal;
+    }
+
+    /* Metallic Map */
+    auto& metallic_map = material_pass.GetTextureSampler("uMetallicMap");
+    metallic_map.sampler = default_sampler;
+
+    bool metallic_map_found = false;
+    aiString metallic_map_path;
+    if (assimp_material->GetTexture(aiTextureType_DIFFUSE_ROUGHNESS, 0, &metallic_map_path) == aiReturn_SUCCESS) {
+      LOG_DEBUG("Metallic map found {}", metallic_map_path.C_Str());
+
+      metallic_map.texture = asset_registry->Load<Texture>(metallic_map_path.C_Str());
+
+      if (metallic_map.texture) {
+        metallic_map_found = true;
+      }
+    }
+
+    material_pass.GetProperty<uint32_t>("useMetallicMap") = metallic_map_found;
+    if (!metallic_map_found) {
+      metallic_map.texture = default_texture;
+    }
+
+    /* Roughness Map */
+    auto& roughness_map = material_pass.GetTextureSampler("uRoughnessMap");
+    roughness_map.sampler = default_sampler;
+
+    bool roughness_map_found = false;
+    aiString roughness_map_path;
+    if (assimp_material->GetTexture(aiTextureType_DIFFUSE_ROUGHNESS, 0, &roughness_map_path) == aiReturn_SUCCESS) {
+      LOG_DEBUG("Roughness map found {}", roughness_map_path.C_Str());
+
+      roughness_map.texture = asset_registry->Load<Texture>(roughness_map_path.C_Str());
+
+      if (roughness_map.texture) {
+        roughness_map_found = true;
+      }
+    }
+
+    material_pass.GetProperty<uint32_t>("useRoughnessMap") = roughness_map_found;
+    if (!roughness_map_found) {
+      roughness_map.texture = default_texture;
+    }
+
+    /* Combined Metallic-Roughness Map */
+    auto& metallic_roughness_map = material_pass.GetTextureSampler("uCombinedMetallicRoughnessMap");
+    metallic_roughness_map.sampler = default_sampler;
+
+    bool metallic_roughness_map_found = false;
+    aiString metallic_roughness_map_path;
+    if (assimp_material->GetTexture(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLICROUGHNESS_TEXTURE, &metallic_roughness_map_path) == aiReturn_SUCCESS) {
+      LOG_DEBUG("Combined Metallic-Roughness map found {}", metallic_roughness_map_path.C_Str());
+
+      metallic_roughness_map.texture = asset_registry->Load<Texture>(metallic_roughness_map_path.C_Str());
+
+      if (metallic_roughness_map.texture) {
+        metallic_roughness_map_found = true;
+      }
+    }
+
+    material_pass.GetProperty<uint32_t>("useCombinedMetallicRoughnessMap") = metallic_roughness_map_found;
+    if (!metallic_roughness_map_found) {
+      metallic_roughness_map.texture = default_texture;
     }
 
     material->WriteMaterialPassDescriptors();

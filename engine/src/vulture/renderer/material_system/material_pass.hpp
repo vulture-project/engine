@@ -64,6 +64,8 @@ class MaterialPass {
 
   TextureSampler& GetTextureSampler(const StringView name);
 
+  void SetTextureSampler(const StringView name, SharedPtr<Texture> texture, SharedPtr<Sampler> sampler = nullptr);
+
   // TODO: (tralf-strues) come up with some sort of caching system to only update if changed
   DescriptorSetHandle WriteDescriptorSet();
   DescriptorSetHandle GetDescriptorSet() const;

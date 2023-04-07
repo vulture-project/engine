@@ -97,6 +97,19 @@ MaterialPass::TextureSampler& MaterialPass::GetTextureSampler(const StringView n
   return it->second;
 }
 
+void MaterialPass::SetTextureSampler(const StringView name, SharedPtr<Texture> texture, SharedPtr<Sampler> sampler) {
+  assert(texture);
+
+  auto& texture_sampler = GetTextureSampler(name);
+  texture_sampler.texture = texture;
+
+  if (sampler) {
+    texture_sampler.sampler = sampler;
+  } else {
+    texture_sampler.sampler = CreateShared<Sampler>(device_, SamplerSpecification{});
+  }
+}
+
 DescriptorSetHandle MaterialPass::WriteDescriptorSet() {
   if (descriptor_set_ == kInvalidRenderResourceHandle) {
     CreateDescriptorSet();

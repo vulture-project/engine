@@ -28,7 +28,9 @@
 #include <veditor/camera_movement.hpp>
 #include <veditor/editor_app.hpp>
 #include <vulture/asset/asset_registry.hpp>
+#include <vulture/asset/loaders/dae_loader.hpp>
 #include <vulture/asset/loaders/fbx_loader.hpp>
+#include <vulture/asset/loaders/glb_loader.hpp>
 #include <vulture/asset/loaders/jpg_loader.hpp>
 #include <vulture/asset/loaders/obj_loader.hpp>
 #include <vulture/asset/loaders/png_loader.hpp>
@@ -60,7 +62,9 @@ int EditorApp::Init() {
 
   /* Register loaders FIXME: (tralf-strues) move somewhere else */
   AssetRegistry::Instance()->RegisterLoader(CreateShared<OBJLoader>(device_));
+  AssetRegistry::Instance()->RegisterLoader(CreateShared<DAELoader>(device_));
   AssetRegistry::Instance()->RegisterLoader(CreateShared<FBXLoader>(device_));
+  AssetRegistry::Instance()->RegisterLoader(CreateShared<GLBLoader>(device_));
   AssetRegistry::Instance()->RegisterLoader(CreateShared<TGALoader>(device_));
   AssetRegistry::Instance()->RegisterLoader(CreateShared<JPGLoader>(device_));
   AssetRegistry::Instance()->RegisterLoader(CreateShared<PNGLoader>(device_));
@@ -151,39 +155,92 @@ void EditorApp::CreateRenderer() {
  * RUN
  ************************************************************************************************/
 void EditorApp::Run() {
+  AssetRegistry& asset_registry = *AssetRegistry::Instance();
+
   fennecs::EntityHandle camera = scene_.CreateEntity("Editor camera");
   camera = scene_.GetEntityWorld().Attach<CameraComponent>(camera, PerspectiveCameraSpecs(1600.0f / 900.0f), true);
   camera = scene_.GetEntityWorld().Attach<TransformComponent>(camera, glm::vec3(0, 3, 15));
   camera = scene_.GetEntityWorld().Attach<ScriptComponent>(camera, new CameraMovementScript());
 
   fennecs::EntityHandle sponza = scene_.CreateEntity("Sponza");
-  sponza = scene_.GetEntityWorld().Attach<MeshComponent>(sponza, AssetRegistry::Instance()->Load<Mesh>("meshes/sponza.obj"));
+  // sponza = scene_.GetEntityWorld().Attach<MeshComponent>(sponza, asset_registry.Load<Mesh>("meshes/sponza.obj"));
+  sponza = scene_.GetEntityWorld().Attach<MeshComponent>(sponza, asset_registry.Load<Mesh>("meshes/sponza_pbr_new/sponza_pbr_new.gltf"));
   sponza = scene_.GetEntityWorld().Attach<TransformComponent>(sponza);
-  sponza.Get<TransformComponent>().transform.scale = glm::vec3(0.02);
-  sponza.Get<TransformComponent>().transform.Rotate(M_PI_2, kUp);
+  // sponza.Get<TransformComponent>().transform.scale = glm::vec3(0.02);
+  sponza.Get<TransformComponent>().transform.scale = glm::vec3(2);
+  sponza.Get<TransformComponent>().transform.rotation = glm::quat(glm::vec3(0.0f, M_PI + M_PI_2, 0.0f));
+  // sponza.Get<TransformComponent>().transform.rotation = glm::quat(glm::vec3(0.0f, M_PI_2, M_PI_2));
+
+  // sponza.Get<TransformComponent>().transform.scale = glm::vec3(1);
+  // sponza.Get<TransformComponent>().transform.Rotate(M_PI_2, kUp);
+
+
+
+
+
+
+  SharedPtr<Shader> pbr_shader = asset_registry.Load<Shader>(".vulture/shaders/BuiltIn.PBR.shader");
+
+  SharedPtr<Material> material = CreateShared<Material>(device_);
+  material->AddShader(pbr_shader);
+
+  MaterialPass& material_pass = material->GetMaterialPass(pbr_shader->GetTargetPassId());
+  material_pass.GetProperty<uint32_t>("useAlbedoMap") = 1;
+  material_pass.SetTextureSampler("uAlbedoMap", asset_registry.Load<Texture>("textures/rusted-steel-ue/rusted-steel_albedo.png"));
+  material_pass.GetProperty<uint32_t>("useNormalMap") = 1;
+  material_pass.SetTextureSampler("uNormalMap", asset_registry.Load<Texture>("textures/rusted-steel-ue/rusted-steel_normal-dx.png"));
+  material_pass.GetProperty<uint32_t>("useMetallicMap") = 1;
+  material_pass.SetTextureSampler("uMetallicMap", asset_registry.Load<Texture>("textures/rusted-steel-ue/rusted-steel_metallic.png"));
+  material_pass.GetProperty<uint32_t>("useRoughnessMap") = 1;
+  material_pass.SetTextureSampler("uRoughnessMap", asset_registry.Load<Texture>("textures/rusted-steel-ue/rusted-steel_roughness.png"));
+  material_pass.GetProperty<uint32_t>("useCombinedMetallicRoughnessMap") = 0;
+  material_pass.SetTextureSampler("uCombinedMetallicRoughnessMap", asset_registry.Load<Texture>(".vulture/textures/blank.png"));
+
+  material->WriteMaterialPassDescriptors();
+
+  SharedPtr<Mesh> sphere_mesh = asset_registry.Load<Mesh>("meshes/sphere.fbx");
+  Submesh& sphere_submesh = sphere_mesh->GetSubmeshes()[0];
+  sphere_submesh.SetMaterial(material);
+
+  fennecs::EntityHandle sphere = scene_.CreateEntity("Sphere");
+  sphere = scene_.GetEntityWorld().Attach<MeshComponent>(sphere, sphere_mesh);
+  sphere = scene_.GetEntityWorld().Attach<TransformComponent>(sphere, Transform(glm::vec3(-2.0f, 2.0f, 0.0f)));
+  sphere.Get<TransformComponent>().transform.rotation = glm::quat(glm::vec3(M_PI_2, 0.0f, 0.0f));
+
+
+
+
 
   fennecs::EntityHandle dir_light = scene_.CreateEntity("Sky light");
-  dir_light = scene_.GetEntityWorld().Attach<DirectionalLightSpecification>(dir_light, glm::vec3{1.0, 0.517, 0.152}, 0.01);
+  dir_light = scene_.GetEntityWorld().Attach<DirectionalLightSpecification>(dir_light, glm::vec3{1.0, 1.0, 1.0}, 0.5);
   dir_light = scene_.GetEntityWorld().Attach<TransformComponent>(dir_light, Transform(glm::vec3(0), glm::vec3(-0.5, 0, 0)));
 
   fennecs::EntityHandle point_light1 = scene_.CreateEntity("Point light1");
-  point_light1 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light1, glm::vec3{1.0, 0.5, 0.1}, 2, 4);
-  point_light1 = scene_.GetEntityWorld().Attach<TransformComponent>(point_light1, Transform(glm::vec3(-8.9, 2.5, 24)));
+  point_light1 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light1, glm::vec3{1.0, 0.5, 0.1}, 7.5, 3);
+  point_light1 = scene_.GetEntityWorld().Attach<TransformComponent>(point_light1, Transform(glm::vec3(-9.583, 8.256, 19.639)));
 
   fennecs::EntityHandle point_light2 = scene_.CreateEntity("Point light2");
-  point_light2 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light2, glm::vec3{1.0, 0.5, 0.1}, 2, 4);
-  point_light2 = scene_.GetEntityWorld().Attach<TransformComponent>(point_light2, Transform(glm::vec3(-8.9, 2.5, -22)));
+  point_light2 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light2, glm::vec3{1.0, 0.5, 0.1}, 7.5, 3);
+  point_light2 = scene_.GetEntityWorld().Attach<TransformComponent>(point_light2, Transform(glm::vec3(-9.616, 8.256, -20.075)));
 
   fennecs::EntityHandle point_light3 = scene_.CreateEntity("Point light3");
-  point_light3 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light3, glm::vec3{1.0, 0.5, 0.1}, 2, 4);
-  point_light3 = scene_.GetEntityWorld().Attach<TransformComponent>(point_light3, Transform(glm::vec3(8.5, 2.5, 24)));
+  point_light3 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light3, glm::vec3{1.0, 0.5, 0.1}, 7.5, 3);
+  point_light3 = scene_.GetEntityWorld().Attach<TransformComponent>(point_light3, Transform(glm::vec3(9.479, 8.256, 19.635)));
 
   fennecs::EntityHandle point_light4 = scene_.CreateEntity("Point light4");
-  point_light4 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light4, glm::vec3{1.0, 0.5, 0.1}, 2, 4);
-  point_light4 = scene_.GetEntityWorld().Attach<TransformComponent>(point_light4, Transform(glm::vec3(8.5, 2.5, -22)));
+  point_light4 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light4, glm::vec3{1.0, 0.5, 0.1}, 7.5, 3);
+  point_light4 = scene_.GetEntityWorld().Attach<TransformComponent>(point_light4, Transform(glm::vec3(9.509, 8.256, -20.320)));
+
+  fennecs::EntityHandle point_light5 = scene_.CreateEntity("Point light5");
+  point_light5 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light5, glm::vec3{1.0, 0.5, 0.1}, 7.5, 3);
+  point_light5 = scene_.GetEntityWorld().Attach<TransformComponent>(point_light5, Transform(glm::vec3(1.845, 6.067, 31.221)));
+
+  fennecs::EntityHandle point_light6 = scene_.CreateEntity("Point light6");
+  point_light6 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light6, glm::vec3{1.0, 0.5, 0.1}, 7.5, 3);
+  point_light6 = scene_.GetEntityWorld().Attach<TransformComponent>(point_light6, Transform(glm::vec3(-0.129, 7.713, -27.196)));
 
   fennecs::EntityHandle skybox = scene_.CreateEntity("Skybox");
-  skybox = scene_.GetEntityWorld().Attach<MeshComponent>(skybox, AssetRegistry::Instance()->Load<Mesh>("textures/skybox_morning_field/morning_field.skybox"));
+  skybox = scene_.GetEntityWorld().Attach<MeshComponent>(skybox, asset_registry.Load<Mesh>("textures/skybox_morning_field/morning_field.skybox"));
   skybox = scene_.GetEntityWorld().Attach<TransformComponent>(skybox);
 
   // fennecs::EntityHandle dir_light = scene_.CreateEntity("Directional light");
@@ -191,9 +248,9 @@ void EditorApp::Run() {
   //     DirectionalLightSpecs(LightColorSpecs(glm::vec3(0.5), glm::vec3(0.9), glm::vec3(0.01))));
   // dir_light = scene_.GetEntityWorld().Attach<TransformComponent>(dir_light, Transform(glm::vec3(0), glm::vec3(-0.5, 0, 0)));
 
-  fennecs::EntityHandle street_lamp = scene_.CreateEntity("Street lamp");
-  street_lamp = scene_.GetEntityWorld().Attach<TransformComponent>(street_lamp);
-  street_lamp = scene_.GetEntityWorld().Attach<MeshComponent>(street_lamp, AssetRegistry::Instance()->Load<Mesh>("meshes/street_lamp.obj"));
+  // fennecs::EntityHandle street_lamp = scene_.CreateEntity("Street lamp");
+  // street_lamp = scene_.GetEntityWorld().Attach<TransformComponent>(street_lamp);
+  // street_lamp = scene_.GetEntityWorld().Attach<MeshComponent>(street_lamp, asset_registry.Load<Mesh>("meshes/street_lamp.obj"));
 
   scene_.OnStart(event_dispatcher_);
 
