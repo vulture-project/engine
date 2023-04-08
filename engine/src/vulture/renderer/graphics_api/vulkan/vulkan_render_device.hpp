@@ -191,7 +191,8 @@ class VulkanRenderDevice final : public RenderDevice {
 
   void GetSwapchainTextures(SwapchainHandle swapchain, uint32_t* textures_count, TextureHandle* textures) override;
 
-  bool AcquireNextTexture(SwapchainHandle swapchain, uint32_t* texture_idx) override;
+  bool AcquireNextTexture(SwapchainHandle swapchain, uint32_t* texture_idx, SemaphoreHandle signal_semaphore,
+                          FenceHandle signal_fence) override;
 
   bool Present(SwapchainHandle swapchain, SemaphoreHandle wait_semaphore) override;
 

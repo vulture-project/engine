@@ -67,10 +67,13 @@ void VulkanCommandBuffer::End() {
   VULKAN_CALL(vkEndCommandBuffer(vk_command_buffer_));
 }
 
-void VulkanCommandBuffer::Submit(FenceHandle signal_fence, SemaphoreHandle signal_semaphore) {
+void VulkanCommandBuffer::Submit(FenceHandle signal_fence, SemaphoreHandle signal_semaphore,
+                                 SemaphoreHandle wait_semaphore) {
   VkFence vk_fence = ValidRenderHandle(signal_fence) ? device_.GetVulkanFence(signal_fence).vk_fence : VK_NULL_HANDLE;
-  VkSemaphore vk_semaphore =
+  VkSemaphore vk_signal_semaphore =
       ValidRenderHandle(signal_semaphore) ? device_.GetVulkanSemaphore(signal_semaphore).vk_semaphore : VK_NULL_HANDLE;
+  VkSemaphore vk_wait_semaphore =
+      ValidRenderHandle(wait_semaphore) ? device_.GetVulkanSemaphore(wait_semaphore).vk_semaphore : VK_NULL_HANDLE;
 
   VkSubmitInfo submit_info{};
   submit_info.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -79,10 +82,20 @@ void VulkanCommandBuffer::Submit(FenceHandle signal_fence, SemaphoreHandle signa
 
   if (ValidRenderHandle(signal_semaphore)) {
     submit_info.signalSemaphoreCount = 1;
-    submit_info.pSignalSemaphores    = &vk_semaphore;
+    submit_info.pSignalSemaphores    = &vk_signal_semaphore;
   } else {
     submit_info.signalSemaphoreCount = 0;
     submit_info.pSignalSemaphores    = nullptr;
+  }
+
+  VkPipelineStageFlags wait_stages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};  // FIXME: (tralf-strues)
+  if (ValidRenderHandle(wait_semaphore)) {
+    submit_info.waitSemaphoreCount = 1;
+    submit_info.pWaitSemaphores    = &vk_wait_semaphore;
+    submit_info.pWaitDstStageMask  = wait_stages;
+  } else {
+    submit_info.waitSemaphoreCount = 0;
+    submit_info.pWaitSemaphores    = nullptr;
   }
 
   VkQueue vk_queue{VK_NULL_HANDLE};

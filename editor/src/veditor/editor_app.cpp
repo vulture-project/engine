@@ -108,9 +108,10 @@ void EditorApp::DestroySwapchain() {
 
 void EditorApp::CreateFrameData() {
   for (auto& frame : frames_) {
-    frame.command_buffer           = device_.CreateCommandBuffer(CommandBufferType::kGraphics);
-    frame.fence_render_finished     = device_.CreateFence();
-    frame.semaphore_render_finished = device_.CreateSemaphore();
+    frame.command_buffer                    = device_.CreateCommandBuffer(CommandBufferType::kGraphics);
+    frame.fence_render_finished              = device_.CreateFence();
+    frame.semaphore_render_finished          = device_.CreateSemaphore();
+    frame.semaphore_swapchain_texture_ready = device_.CreateSemaphore();
   }
 }
 
@@ -126,6 +127,10 @@ void EditorApp::DestroyFrameData() {
 
     if (ValidRenderHandle(frame.semaphore_render_finished)) {
       device_.DeleteSemaphore(frame.semaphore_render_finished);
+    }
+
+    if (ValidRenderHandle(frame.semaphore_swapchain_texture_ready)) {
+      device_.DeleteSemaphore(frame.semaphore_swapchain_texture_ready);
     }
   }
 }
@@ -292,21 +297,23 @@ void EditorApp::Run() {
 void EditorApp::Render() {
   device_.FrameBegin();
 
+  uint32_t current_frame_idx = device_.CurrentFrame();
+  Frame& current_frame = frames_[current_frame_idx];
+
   uint32_t texture_idx = 0;
-  if (!device_.AcquireNextTexture(swapchain_, &texture_idx)) {
+  if (!device_.AcquireNextTexture(swapchain_, &texture_idx, current_frame.semaphore_swapchain_texture_ready)) {
     OnResize();
     return;
   }
 
-  uint32_t current_frame = device_.CurrentFrame();
   // LOG_DEBUG("Current frame = {0}", current_frame);
   {
     ScopedTimer trace_timer{"WaitForFences()"};
-    device_.WaitForFences(1, &frames_[current_frame].fence_render_finished);
-    device_.ResetFence(frames_[current_frame].fence_render_finished);
+    device_.WaitForFences(1, &current_frame.fence_render_finished);
+    device_.ResetFence(current_frame.fence_render_finished);
   }
 
-  CommandBuffer& command_buffer = *frames_[current_frame].command_buffer;
+  CommandBuffer& command_buffer = *current_frame.command_buffer;
   {
     ScopedTimer trace_timer{"command_buffer.Reset() and Begin()"};
     command_buffer.Reset();
@@ -315,7 +322,7 @@ void EditorApp::Render() {
 
   {
     ScopedTimer trace_timer{"scene.Render()"};
-    scene_.Render(*renderer_, command_buffer, current_frame, timer_.Elapsed());
+    scene_.Render(*renderer_, command_buffer, current_frame_idx, timer_.Elapsed());
   }
 
   RenderUI(command_buffer, texture_idx);
@@ -323,14 +330,15 @@ void EditorApp::Render() {
   {
     ScopedTimer trace_timer{"command_buffer.End() and Submit()"};
     command_buffer.End();
-    command_buffer.Submit(frames_[current_frame].fence_render_finished, frames_[current_frame].semaphore_render_finished);
+    command_buffer.Submit(current_frame.fence_render_finished, current_frame.semaphore_render_finished,
+                          current_frame.semaphore_swapchain_texture_ready);
   }
 
   device_.FrameEnd();
 
   {
     ScopedTimer trace_timer{"Present()"};
-    if (!device_.Present(swapchain_, frames_[current_frame].semaphore_render_finished)) {
+    if (!device_.Present(swapchain_, current_frame.semaphore_render_finished)) {
       OnResize();
     }
   }

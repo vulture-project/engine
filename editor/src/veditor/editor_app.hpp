@@ -81,6 +81,7 @@ class EditorApp : public Application {
     CommandBuffer* command_buffer{nullptr};
     FenceHandle fence_render_finished{kInvalidRenderResourceHandle};
     SemaphoreHandle semaphore_render_finished{kInvalidRenderResourceHandle};
+    SemaphoreHandle semaphore_swapchain_texture_ready{kInvalidRenderResourceHandle};
   };
 
  private:

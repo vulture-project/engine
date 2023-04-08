@@ -108,7 +108,9 @@ class RenderDevice {
    */
   virtual void GetSwapchainTextures(SwapchainHandle swapchain, uint32_t* textures_count, TextureHandle* textures) = 0;
 
-  virtual bool AcquireNextTexture(SwapchainHandle swapchain, uint32_t* texture_idx) = 0;
+  virtual bool AcquireNextTexture(SwapchainHandle swapchain, uint32_t* texture_idx,
+                                  SemaphoreHandle signal_semaphore = kInvalidRenderResourceHandle,
+                                  FenceHandle signal_fence = kInvalidRenderResourceHandle) = 0;
 
   /**
    * @brief Present rendered window surface.

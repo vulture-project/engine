@@ -737,13 +737,18 @@ void VulkanRenderDevice::GetSwapchainTextures(SwapchainHandle swapchain_handle, 
   }
 }
 
-bool VulkanRenderDevice::AcquireNextTexture(SwapchainHandle swapchain_handle, uint32_t* texture_idx) {
+bool VulkanRenderDevice::AcquireNextTexture(SwapchainHandle swapchain_handle, uint32_t* texture_idx,
+                                            SemaphoreHandle signal_semaphore, FenceHandle signal_fence) {
   VulkanSwapchain& swapchain = GetVulkanSwapchain(swapchain_handle);
 
+  VkSemaphore vk_semaphore =
+      ValidRenderHandle(signal_semaphore) ? GetVulkanSemaphore(signal_semaphore).vk_semaphore : VK_NULL_HANDLE;
+
+  VkFence vk_fence = ValidRenderHandle(signal_fence) ? GetVulkanFence(signal_fence).vk_fence : VK_NULL_HANDLE;
+
   uint32_t tmp_texture_idx = 0;
-  VkResult result = vkAcquireNextImageKHR(device_, swapchain.vk_swapchain, /*timeout=*/UINT64_MAX,
-                                          /*semaphore=*/VK_NULL_HANDLE,
-                                          /*fence=*/fence_swapchain_image_available_, &tmp_texture_idx);
+  VkResult result = vkAcquireNextImageKHR(device_, swapchain.vk_swapchain, /*timeout=*/UINT64_MAX, vk_semaphore,
+                                          vk_fence, &tmp_texture_idx);
   if (result == VK_ERROR_OUT_OF_DATE_KHR) {
     return false;
   }
@@ -754,8 +759,8 @@ bool VulkanRenderDevice::AcquireNextTexture(SwapchainHandle swapchain_handle, ui
   current_swapchain_texture_idx_ = tmp_texture_idx;
 
   // FIXME: Don't wait on image acquiring
-  VULKAN_CALL(vkWaitForFences(device_, 1, &fence_swapchain_image_available_, true, /*timeout=*/UINT64_MAX));
-  VULKAN_CALL(vkResetFences(device_, 1, &fence_swapchain_image_available_));
+  // VULKAN_CALL(vkWaitForFences(device_, 1, &fence_swapchain_image_available_, true, /*timeout=*/UINT64_MAX));
+  // VULKAN_CALL(vkResetFences(device_, 1, &fence_swapchain_image_available_));
 
   return true;
 }

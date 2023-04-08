@@ -69,7 +69,8 @@ class CommandBuffer {
   virtual void Begin() = 0;
   virtual void End() = 0;
   virtual void Submit(FenceHandle signal_fence = kInvalidRenderResourceHandle,
-                      SemaphoreHandle signal_semaphore = kInvalidRenderResourceHandle) = 0;
+                      SemaphoreHandle signal_semaphore = kInvalidRenderResourceHandle,
+                      SemaphoreHandle wait_semaphore = kInvalidRenderResourceHandle) = 0;
 
   virtual void Reset() = 0;
 

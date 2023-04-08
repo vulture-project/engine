@@ -49,7 +49,7 @@ class VulkanCommandBuffer final : public CommandBuffer {
 
   void Begin() override;
   void End() override;
-  void Submit(FenceHandle signal_fence, SemaphoreHandle signal_semaphore) override;
+  void Submit(FenceHandle signal_fence, SemaphoreHandle signal_semaphore, SemaphoreHandle wait_semaphore) override;
 
   void Reset() override;
 
