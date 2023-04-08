@@ -322,6 +322,9 @@ void VulkanRenderDevice::PickPhysicalDevice(const DeviceFeatures* required_featu
 
   for (const auto& physical_device : physical_devices) {
     if (IsPhysicalDeviceSuitable(physical_device, required_features, required_properties)) {
+      DeviceProperties picked_properties = GetDeviceProperties(physical_device);
+      LOG_INFO("VULKAN: Using physical device {0}", picked_properties.name);
+      
       physical_device_ = physical_device;
       break;
     }
@@ -405,6 +408,7 @@ DeviceProperties VulkanRenderDevice::GetDeviceProperties(VkPhysicalDevice physic
   DeviceProperties properties{};
   properties.max_msaa_samples       = GetMaxMSAASamples(device_properties);
   properties.max_sampler_anisotropy = device_properties.limits.maxSamplerAnisotropy;
+  properties.name                   = device_properties.deviceName;
   // TODO:
 
   return properties;

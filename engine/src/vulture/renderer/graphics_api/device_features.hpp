@@ -28,6 +28,7 @@
 #pragma once
 
 #include <cstdint>
+#include <vulture/core/core.hpp>
 
 namespace vulture {
 
@@ -37,7 +38,8 @@ struct DeviceFeatures {
 
 struct DeviceProperties {
   uint32_t max_msaa_samples{0};
-  float    max_sampler_anisotropy{0};
+  float     max_sampler_anisotropy{0};
+  String   name{"unknown"};
 };
 
 }  // namespace vulture
