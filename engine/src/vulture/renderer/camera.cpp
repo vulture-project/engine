@@ -29,8 +29,76 @@
 
 using namespace vulture;
 
-PerspectiveCameraSpecs::PerspectiveCameraSpecs(float aspect) : aspect(aspect) {}
+PerspectiveCameraSpecification::PerspectiveCameraSpecification(float aspect) : aspect(aspect) {}
 
-glm::mat4 PerspectiveCameraSpecs::CalculateProjectionMatrix() const {
-  return glm::perspective(glm::radians(fov), aspect, near, far);
+glm::mat4 PerspectiveCameraSpecification::CalculateProjectionMatrix() const {
+  return glm::perspective(glm::radians(fov), aspect, near_plane, far_plane);
+}
+
+OrthographicCameraSpecification::OrthographicCameraSpecification(float size, float aspect)
+    : size(size), aspect(aspect) {}
+
+glm::mat4 OrthographicCameraSpecification::CalculateProjectionMatrix() const {
+  return glm::orthoRH(-size * aspect, size * aspect, -size, size, near_plane, far_plane);
+}
+
+Camera::Camera(const PerspectiveCameraSpecification& specs, SharedPtr<Texture> render_texture)
+    : projection_type(CameraProjectionType::kPerspective),
+      perspective_specification(specs),
+      render_texture(render_texture) {}
+
+Camera::Camera(const OrthographicCameraSpecification& specs, SharedPtr<Texture> render_texture)
+    : projection_type(CameraProjectionType::kOrthographic),
+      orthographic_specification(specs),
+      render_texture(render_texture) {}
+
+const glm::mat4& Camera::ViewMatrix() const { return view_; }
+const glm::mat4& Camera::ProjMatrix() const { return proj_; }
+const glm::mat4& Camera::TransformMatrix() const { return transform_matrix_; }
+const glm::vec3& Camera::Position() const { return position_; }
+
+float Camera::NearPlane() const {
+  switch (projection_type) {
+    case CameraProjectionType::kPerspective:  { return perspective_specification.near_plane; }
+    case CameraProjectionType::kOrthographic: { return orthographic_specification.near_plane; }
+
+    default: { VULTURE_ASSERT(false, "Invalid CameraProjectionType"); }
+  }
+
+  return 0.0f;
+}
+
+float Camera::FarPlane() const {
+  switch (projection_type) {
+    case CameraProjectionType::kPerspective:  { return perspective_specification.far_plane; }
+    case CameraProjectionType::kOrthographic: { return orthographic_specification.far_plane; }
+
+    default: { VULTURE_ASSERT(false, "Invalid CameraProjectionType"); }
+  }
+
+  return 0.0f;
+}
+
+void Camera::CalculateFrustumCorners(Array<glm::vec3, 8>& out_corners) const {
+  VULTURE_ASSERT(false, "Not implemented!");
+}
+
+void Camera::OnUpdateAspect(float aspect) {
+  perspective_specification.aspect  = aspect;
+  orthographic_specification.aspect = aspect;
+}
+
+void Camera::OnUpdateTransform(const Transform& transform) {
+  view_             = transform.CalculateInverseMatrix();
+  transform_matrix_ = transform.CalculateMatrix();
+  position_         = transform.position;
+}
+
+void Camera::OnUpdateProjection() {
+  switch (projection_type) {
+    case CameraProjectionType::kPerspective:  { proj_ = perspective_specification.CalculateProjectionMatrix(); break; }
+    case CameraProjectionType::kOrthographic: { proj_ = orthographic_specification.CalculateProjectionMatrix(); break; }
+
+    default: { VULTURE_ASSERT(false, "Invalid CameraProjectionType"); }
+  };
 }

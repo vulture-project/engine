@@ -40,14 +40,14 @@ constexpr glm::vec3 kUp{0, 1, 0};
 constexpr glm::vec3 kRight{1, 0, 0};
 
 struct Transform {
-  glm::vec3 translation;
+  glm::vec3 position;
   glm::quat rotation;
   glm::vec3 scale;
 
-  Transform(const glm::vec3& translation = glm::vec3{0.0f},
+  Transform(const glm::vec3& position = glm::vec3{0.0f},
             const glm::quat& rotation = glm::angleAxis(0.0f, glm::vec3(0, 0, 1)),
             const glm::vec3& scale = glm::vec3{1.0f, 1.0f, 1.0f})
-      : translation(translation), rotation(rotation), scale(scale) {}
+      : position(position), rotation(rotation), scale(scale) {}
 
   /**
    * @warning Prone to precision errors! Should be avoided when possible.
@@ -56,13 +56,13 @@ struct Transform {
   Transform(const glm::mat4& matrix) {
     glm::vec3 decomposed_scale;
     glm::quat decomposed_rotation;
-    glm::vec3 decomposed_translation;
+    glm::vec3 decomposed_position;
     glm::vec3 decomposed_skew;
     glm::vec4 decomposed_perspective;
-    glm::decompose(matrix, decomposed_scale, decomposed_rotation, decomposed_translation, decomposed_skew,
+    glm::decompose(matrix, decomposed_scale, decomposed_rotation, decomposed_position, decomposed_skew,
                    decomposed_perspective);
 
-    translation = decomposed_translation;
+    position = decomposed_position;
     rotation = glm::eulerAngles(decomposed_rotation);
     scale = decomposed_scale;
   }
@@ -90,10 +90,10 @@ struct Transform {
    */
   glm::mat4 CalculateInverseMatrix() const {
     return glm::scale(glm::identity<glm::mat4>(), glm::vec3{1 / scale.x, 1 / scale.y, 1 / scale.z}) *
-           glm::transpose(CalculateRotationMatrix()) * glm::translate(glm::identity<glm::mat4>(), -translation);
+           glm::transpose(CalculateRotationMatrix()) * glm::translate(glm::identity<glm::mat4>(), -position);
   }
 
-  glm::mat4 CalculateTranslationMatrix() const { return glm::translate(glm::identity<glm::mat4>(), translation); }
+  glm::mat4 CalculateTranslationMatrix() const { return glm::translate(glm::identity<glm::mat4>(), position); }
   glm::mat4 CalculateRotationMatrix() const { return glm::mat4_cast(rotation); }
   glm::mat4 CalculateScaleMatrix() const { return glm::scale(glm::identity<glm::mat4>(), scale); }
 

@@ -31,7 +31,7 @@
 #include <vulture/core/core.hpp>
 #include <vulture/renderer/camera.hpp>
 #include <vulture/renderer/geometry/mesh.hpp>
-#include <vulture/renderer/geometry/transform.hpp>
+#include <vulture/renderer/transform.hpp>
 #include <vulture/scene/script.hpp>
 
 namespace vulture {
@@ -63,12 +63,14 @@ struct TransformComponent {
 };
 
 struct CameraComponent {
-  PerspectiveCameraSpecs specs;
+  Camera camera;
   bool is_main{false};
   bool fixed_aspect{false};
 
   CameraComponent() = default;
-  CameraComponent(const PerspectiveCameraSpecs& specs, bool is_main = false) : specs(specs), is_main(is_main) {}
+  CameraComponent(const PerspectiveCameraSpecification& specs, bool is_main = false) : camera(specs), is_main(is_main) {
+    camera.orthographic_specification.aspect = specs.aspect;
+  }
 };
 
 struct MeshComponent {

@@ -55,19 +55,19 @@ void CameraMovementScript::OnUpdate(float timestep) {
 
   if (!button_mod) {
     if (Keyboard::Pressed(Keys::kWKey)) {
-      transform->translation += disp * forward;
+      transform->position += disp * forward;
     } else if (Keyboard::Pressed(Keys::kSKey)) {
-      transform->translation -= disp * forward;
+      transform->position -= disp * forward;
     }
 
     if (Keyboard::Pressed(Keys::kDKey)) {
-      transform->translation += disp * right;
+      transform->position += disp * right;
     } else if (Keyboard::Pressed(Keys::kAKey)) {
-      transform->translation -= disp * right;
+      transform->position -= disp * right;
     }
   }
 
-  transform->translation.y = std::max(2.5f, transform->translation.y);
+  transform->position.y = std::max(2.5f, transform->position.y);
 }
 
 void CameraMovementScript::OnMouseMove(const MouseMoveEvent& event) {

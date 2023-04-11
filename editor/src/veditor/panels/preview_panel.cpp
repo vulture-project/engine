@@ -86,8 +86,8 @@ void PreviewPanel::OnRender(Scene& scene, fennecs::EntityHandle selected_entity)
         fennecs::EntityHandle main_camera = scene.GetMainCamera();
         if (!main_camera.IsNull()) {
           // Camera Info
-          glm::mat4 view = scene.ComputeWorldSpaceTransform(main_camera).CalculateInverseMatrix();
-          glm::mat4 proj = main_camera.Get<CameraComponent>().specs.CalculateProjectionMatrix();
+          glm::mat4 view = main_camera.Get<CameraComponent>().camera.ViewMatrix();
+          glm::mat4 proj = main_camera.Get<CameraComponent>().camera.ProjMatrix();
 
           // Entity Transform
           TransformComponent& transform_component = selected_entity.Get<TransformComponent>();
@@ -104,8 +104,8 @@ void PreviewPanel::OnRender(Scene& scene, fennecs::EntityHandle selected_entity)
             ImGuizmo::DecomposeMatrixToComponents(glm::value_ptr(transform), glm::value_ptr(new_translation),
                                                   glm::value_ptr(new_rotation_deg), glm::value_ptr(new_scale));
 
-            transform_component.transform.translation = new_translation;
-            transform_component.transform.scale = new_scale;
+            transform_component.transform.position = new_translation;
+            transform_component.transform.scale    = new_scale;
             transform_component.transform.rotation = glm::quat(new_rotation_deg * ((float)M_PI / 180.0f));
           }
         }

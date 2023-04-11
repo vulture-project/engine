@@ -29,18 +29,69 @@
 
 #include <glm/glm.hpp>
 #include <vulture/core/core.hpp>
+#include <vulture/renderer/texture.hpp>
+#include <vulture/renderer/transform.hpp>
 
 namespace vulture {
 
-struct PerspectiveCameraSpecs {
-  float fov = 45.0f;
-  float near = 0.5f;
-  float far = 1000.0f;
-  float aspect = 0.0f;
+enum class CameraProjectionType : uint32_t {
+  kPerspective,
+  kOrthographic
+};
 
-  PerspectiveCameraSpecs(float aspect = 0.0f);
+struct PerspectiveCameraSpecification {
+  float fov        {45.0f};
+  float near_plane {0.5f};
+  float far_plane  {1000.0f};
+  float aspect     {0.0f};
+
+  PerspectiveCameraSpecification(float aspect = 0.0f);
 
   glm::mat4 CalculateProjectionMatrix() const;
+};
+
+struct OrthographicCameraSpecification {
+  float size       {100.0f};
+  float near_plane {0.1f};
+  float far_plane  {100.0f};
+  float aspect     {0.0f};
+
+  OrthographicCameraSpecification(float size = 100.0f, float aspect = 0.0f);
+
+  glm::mat4 CalculateProjectionMatrix() const;
+};
+
+struct Camera {
+ public:
+  CameraProjectionType           projection_type{CameraProjectionType::kPerspective};
+  PerspectiveCameraSpecification  perspective_specification{};
+  OrthographicCameraSpecification orthographic_specification{};
+
+  SharedPtr<Texture> render_texture{nullptr};
+
+ public:
+  Camera() = default;
+  Camera(const PerspectiveCameraSpecification& specs, SharedPtr<Texture> render_texture = nullptr);
+  Camera(const OrthographicCameraSpecification& specs, SharedPtr<Texture> render_texture = nullptr);
+
+  const glm::mat4& ViewMatrix()      const;
+  const glm::mat4& ProjMatrix()      const;
+  const glm::mat4& TransformMatrix() const;
+  const glm::vec3& Position()        const;
+  float             NearPlane()       const;
+  float             FarPlane()        const;
+
+  void CalculateFrustumCorners(Array<glm::vec3, 8>& out_corners) const;
+
+  void OnUpdateAspect(float aspect);
+  void OnUpdateTransform(const Transform& transform);
+  void OnUpdateProjection();
+
+ private:
+  glm::mat4 view_{};
+  glm::mat4 proj_{};
+  glm::mat4 transform_matrix_{};
+  glm::vec3 position_{};
 };
 
 }  // namespace vulture

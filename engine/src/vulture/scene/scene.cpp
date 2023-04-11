@@ -50,7 +50,7 @@ void Scene::OnViewportResize(uint32_t width, uint32_t height) {
   for (fennecs::EntityHandle entity = stream.Next(); !entity.IsNull(); entity = stream.Next()) {
     CameraComponent& camera = entity.Get<CameraComponent>();
     if (!camera.fixed_aspect) {
-      camera.specs.aspect = aspect;
+      camera.camera.OnUpdateAspect(aspect);
     }
   }
 }
@@ -70,6 +70,13 @@ fennecs::EntityHandle Scene::GetMainCamera() {
 }
 
 void Scene::OnUpdate(float timestep) {
+  fennecs::EntityStream camera_stream = world_.Query<CameraComponent>();
+  for (fennecs::EntityHandle entity = camera_stream.Next(); !entity.IsNull(); entity = camera_stream.Next()) {
+    CameraComponent& camera_component = entity.Get<CameraComponent>();
+    camera_component.camera.OnUpdateProjection();
+    camera_component.camera.OnUpdateTransform(ComputeWorldSpaceTransform(entity));
+  }
+
   fennecs::EntityStream stream = world_.Query<ScriptComponent>();  
   for (fennecs::EntityHandle entity = stream.Next(); !entity.IsNull(); entity = stream.Next()) {
     ScriptComponent& script = entity.Get<ScriptComponent>();
@@ -91,10 +98,8 @@ void Scene::Render(Renderer& renderer, SharedPtr<Texture> color_output, CommandB
 
     if (camera.is_main) {
       if (!main_camera_found) {
-        Transform transform = entity.Get<TransformComponent>().transform;
-        renderer.UpdateViewData(ComputeWorldSpaceTransform(entity).CalculateInverseMatrix(),
-                                camera.specs.CalculateProjectionMatrix(), transform.translation, camera.specs.near,
-                                camera.specs.far);
+        renderer.UpdateViewData(camera.camera.ViewMatrix(), camera.camera.ProjMatrix(), camera.camera.Position(),
+                                camera.camera.NearPlane(), camera.camera.FarPlane());
 
         main_camera_found = true;
       } else {
@@ -121,7 +126,7 @@ void Scene::Render(Renderer& renderer, SharedPtr<Texture> color_output, CommandB
     const auto& specs     = entity.Get<PointLightSpecification>();
     const auto& transform = entity.Get<TransformComponent>().transform;
 
-    lights.point_lights.emplace_back(specs, transform.translation);
+    lights.point_lights.emplace_back(specs, transform.position);
   }
 
   lights.spot_lights.clear();
@@ -130,7 +135,7 @@ void Scene::Render(Renderer& renderer, SharedPtr<Texture> color_output, CommandB
     const auto& specs     = entity.Get<SpotLightSpecification>();
     const auto& transform = entity.Get<TransformComponent>().transform;
 
-    lights.spot_lights.emplace_back(specs, transform.translation, transform.CalculateForward());
+    lights.spot_lights.emplace_back(specs, transform.position, transform.CalculateForward());
   }
 
   /* Meshes */
@@ -183,10 +188,10 @@ Transform Scene::ComputeWorldSpaceTransform(fennecs::EntityHandle entity) {
   auto parent = entity.Get<HierarchyComponent>().parent;
   if (parent.has_value()) {
     const Transform& parent_transform = ComputeWorldSpaceTransform(parent.value());
-    glm::vec4 local_translation = glm::vec4(parent_transform.scale * local_transform.translation, 1.0f);
+    glm::vec4 local_position = glm::vec4(parent_transform.scale * local_transform.position, 1.0f);
 
     return Transform(
-        parent_transform.translation + glm::vec3(parent_transform.CalculateRotationMatrix() * local_translation),
+        parent_transform.position + glm::vec3(parent_transform.CalculateRotationMatrix() * local_position),
         parent_transform.rotation * local_transform.rotation, parent_transform.scale * local_transform.scale);
   }
 

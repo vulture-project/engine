@@ -26,6 +26,7 @@
  */
 
 #include <imgui.h>
+#include <imgui_internal.h>
 
 #include <veditor/panels/inspector_panel.hpp>
 
@@ -70,8 +71,14 @@ void InspectorPanel::OnRender(fennecs::EntityHandle entity) {
 
 void InspectorPanel::RenderTransformComponent(TransformComponent& transform_component) {
   if (ImGui::TreeNodeEx((void*)typeid(TransformComponent).hash_code(), kComponentNodeBaseFlags, "Transform")) {
-    ImGui::DragFloat3("Translation", reinterpret_cast<float*>(&transform_component.transform.translation));
+    ImGui::DragFloat3("Translation", reinterpret_cast<float*>(&transform_component.transform.position));
     ImGui::DragFloat3("Scale", reinterpret_cast<float*>(&transform_component.transform.scale));
+
+    static glm::vec3 rotation;
+    rotation = glm::degrees(glm::eulerAngles(transform_component.transform.rotation));
+    if (ImGui::DragFloat3("Rotation", reinterpret_cast<float*>(&rotation))) {
+      transform_component.transform.rotation = glm::quat(glm::radians(rotation));
+    }
 
     ImGui::TreePop();
   }
@@ -82,9 +89,32 @@ void InspectorPanel::RenderCameraComponent(CameraComponent& camera_component) {
     ImGui::Checkbox("Main", &camera_component.is_main);
     ImGui::Checkbox("Fixed aspect ratio", &camera_component.fixed_aspect);
 
-    ImGui::DragFloat("FOV", &camera_component.specs.fov, 0.1f, 1.0f, 90.0f, "%.1f");
-    ImGui::DragFloat("Near", &camera_component.specs.near, 0.001f, 0.001f, 10.0f, "%.3f");
-    ImGui::DragFloat("Far", &camera_component.specs.far, 0.1f, 10.0f, 1000.0f, "%.1f");
+    const char* type_names[] = {"Perspective", "Orthographic"};
+    ImGui::Combo("Projection", reinterpret_cast<int*>(&camera_component.camera.projection_type), type_names,
+                 IM_ARRAYSIZE(type_names), IM_ARRAYSIZE(type_names));
+
+    switch (camera_component.camera.projection_type) {
+      case CameraProjectionType::kPerspective: {
+        auto& specification = camera_component.camera.perspective_specification;
+        ImGui::DragFloat("FOV", &specification.fov, 0.1f, 1.0f, 90.0f, "%.1f");
+        ImGui::DragFloat("Near", &specification.near_plane, 0.001f, 0.001f, 10.0f, "%.3f");
+        ImGui::DragFloat("Far", &specification.far_plane, 0.1f, 10.0f, 1000.0f, "%.1f");
+        break;
+      }
+
+      case CameraProjectionType::kOrthographic: {
+        auto& specification = camera_component.camera.orthographic_specification;
+        ImGui::DragFloat("Size", &specification.size, 0.1f, 10.0f, 1000.0f, "%.1f");
+        ImGui::DragFloat("Near", &specification.near_plane, 0.001f, 0.001f, 10.0f, "%.3f");
+        ImGui::DragFloat("Far", &specification.far_plane, 0.1f, 10.0f, 1000.0f, "%.1f");
+        break;
+      }
+
+      default: {
+        VULTURE_ASSERT(false, "Invalid CameraProjectionType");
+        break;
+      }
+    }
 
     ImGui::TreePop();
   }

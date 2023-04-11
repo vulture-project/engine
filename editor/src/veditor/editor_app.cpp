@@ -146,7 +146,7 @@ void EditorApp::Run() {
   AssetRegistry& asset_registry = *AssetRegistry::Instance();
 
   fennecs::EntityHandle camera = scene_.CreateEntity("Editor camera");
-  camera = scene_.GetEntityWorld().Attach<CameraComponent>(camera, PerspectiveCameraSpecs(1600.0f / 900.0f), true);
+  camera = scene_.GetEntityWorld().Attach<CameraComponent>(camera, PerspectiveCameraSpecification(1600.0f / 900.0f), true);
   camera = scene_.GetEntityWorld().Attach<TransformComponent>(camera, glm::vec3(0, 3, 15));
   camera = scene_.GetEntityWorld().Attach<ScriptComponent>(camera, new CameraMovementScript());
 
