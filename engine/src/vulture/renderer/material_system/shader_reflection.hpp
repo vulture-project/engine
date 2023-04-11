@@ -81,6 +81,7 @@ class ShaderReflection {
   struct Sampler2D {
     ShaderStageFlags shader_stages{0};
     String           name;
+    bool             arrayed;  ///< Whether it is sampler2DArray
     uint32_t         array_size{1};
     uint32_t         set{0};
     uint32_t         binding{0};

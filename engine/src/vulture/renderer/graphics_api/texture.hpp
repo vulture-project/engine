@@ -35,7 +35,8 @@ namespace vulture {
 enum class TextureType : uint32_t {
   kInvalid,
   kTexture2D,
-  kTextureCube
+  kTextureCube,
+  kTexture2DArray
 };
 
 enum class CubeMapFaceLayer : uint32_t {
@@ -76,6 +77,8 @@ DECLARE_ENUM_TO_STR(TextureLayout,
                     kTransferSrc,
                     kTransferDst);
 
+constexpr uint32_t kTextureMaxLayers = 8;
+
 struct TextureSpecification {
   DataFormat        format       {DataFormat::kInvalid};
   TextureType       type         {TextureType::kTexture2D};
@@ -86,6 +89,9 @@ struct TextureSpecification {
   uint32_t          height       {0};
   uint32_t          mip_levels   {1};
   uint32_t          samples      {1};
+
+  uint32_t          array_layers {1};  ///< Used if type is TextureType::kTexture2DArray
+  bool              individual_layers_accessible{false};
 };
 
 /* Texture sampler */

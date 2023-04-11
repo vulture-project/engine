@@ -51,7 +51,8 @@ class Scene {
    */
   void OnUpdate(float timestep);
 
-  void Render(Renderer& renderer, CommandBuffer& command_buffer, uint32_t current_frame, float time);
+  void Render(Renderer& renderer, SharedPtr<Texture> color_output, CommandBuffer& command_buffer,
+              uint32_t current_frame, float time);
 
   /**
    * @brief Create a parentless entity.

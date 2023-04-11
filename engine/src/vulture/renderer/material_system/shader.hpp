@@ -44,6 +44,8 @@ namespace vulture {
  *     name: ForwardPBR
  *     target_render_pass: ForwardPass
  * 
+ *     descriptor_sets: [Frame, View, Scene, Material]
+ * 
  *     vert_shader: ["forward_shader_pbr.vert", "forward_shader_pbr.vert.spv"]
  *     frag_shader: ["forward_shader_pbr.frag", "forward_shader_pbr.frag.spv"]
  * 
@@ -73,7 +75,17 @@ namespace vulture {
  *     blend_alpha_operation: Add        # default: Add
  */
 class Shader : public IAsset {
-public:
+ public:
+  enum DescriptorSetBit : uint32_t {
+    kFrameSetBit    = 0x0000'0001,
+    kViewSetBit     = 0x0000'0002,
+    kSceneSetBit    = 0x0000'0004,
+    kMaterialSetBit = 0x0000'0008,
+  };
+
+  using DescriptorSetUsage = uint32_t;
+
+ public:
   Shader(RenderDevice& device);
   ~Shader() override;
 
@@ -83,22 +95,32 @@ public:
   bool IsBuilt() const;
   void Build(RenderPassHandle compatible_render_pass, uint32_t subpass_idx = 0);
 
+  void BindDescriptorSetIfUsed(CommandBuffer& command_buffer, DescriptorSetBit set_bit, DescriptorSetHandle handle);
+
   RenderPassId GetTargetPassId() const;
+  DescriptorSetUsage GetDescriptorSetUsage() const;
+
+  bool DescriptorSetUsed(DescriptorSetBit set_bit) const;
+  uint32_t GetDescriptorSetIdx(DescriptorSetBit set_bit) const;
+
   const ShaderReflection& GetReflection() const;
   const PipelineDescription& GetPipelineDescription() const;
 
-private:
+ private:
+  bool ParseDescriptorSetUsage(YAML::Node& root);
   bool ParsePipelineDescription(YAML::Node& root);
   bool ParseShaderSources(YAML::Node& root);
   bool ParseShaderModule(YAML::Node& root, const String& name, ShaderModuleType module_type);
   bool DeclarePushConstants();
   bool CreateDescriptorSetLayouts();
 
-private:
+ private:
   RenderDevice&       device_;
 
   String              name_;
   RenderPassId        target_pass_id_;
+  DescriptorSetUsage  set_usage_{0};
+
   ShaderReflection     reflection_;
   PipelineDescription pipeline_description_;
   PipelineHandle      pipeline_{kInvalidRenderResourceHandle};

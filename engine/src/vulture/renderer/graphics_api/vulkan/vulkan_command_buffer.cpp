@@ -131,7 +131,7 @@ void VulkanCommandBuffer::GenerateMipmaps(TextureHandle handle, TextureLayout fi
   barrier.dstQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
   barrier.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
   barrier.subresourceRange.baseArrayLayer = 0;
-  barrier.subresourceRange.layerCount     = GetLayerCountFromTextureType(texture.specification.type);
+  barrier.subresourceRange.layerCount     = GetLayerCountFromTextureType(texture.specification);
   barrier.subresourceRange.levelCount     = 1;
 
   uint32_t mip_width  = texture.specification.width;
@@ -165,14 +165,14 @@ void VulkanCommandBuffer::GenerateMipmaps(TextureHandle handle, TextureLayout fi
     blit.srcSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
     blit.srcSubresource.mipLevel       = i - 1;
     blit.srcSubresource.baseArrayLayer = 0;
-    blit.srcSubresource.layerCount     = GetLayerCountFromTextureType(texture.specification.type);
+    blit.srcSubresource.layerCount     = GetLayerCountFromTextureType(texture.specification);
 
     blit.dstOffsets[0]                 = {0, 0, 0};
     blit.dstOffsets[1]                 = {dst_offset_x, dst_offset_y, 1};
     blit.dstSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
     blit.dstSubresource.mipLevel       = i;
     blit.dstSubresource.baseArrayLayer = 0;
-    blit.dstSubresource.layerCount     = GetLayerCountFromTextureType(texture.specification.type);
+    blit.dstSubresource.layerCount     = GetLayerCountFromTextureType(texture.specification);
 
     // Should be submitted to a queue with graphics capabilities!
     vkCmdBlitImage(vk_command_buffer_, /*srcImage=*/texture.vk_image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
@@ -259,7 +259,7 @@ void VulkanCommandBuffer::TransitionLayout(TextureHandle handle, TextureLayout o
   barrier.subresourceRange.baseMipLevel   = 0;
   barrier.subresourceRange.levelCount     = texture.specification.mip_levels;
   barrier.subresourceRange.baseArrayLayer = 0;
-  barrier.subresourceRange.layerCount     = GetLayerCountFromTextureType(texture.specification.type);
+  barrier.subresourceRange.layerCount     = GetLayerCountFromTextureType(texture.specification);
   barrier.srcAccessMask                   = src_access_mask;
   barrier.dstAccessMask                   = dst_access_mask;
 

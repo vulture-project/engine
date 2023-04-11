@@ -33,30 +33,48 @@
 
 namespace vulture {
 
+struct UBFrameData {
+  float time{0};
+};
+
+struct UBViewData {
+  glm::mat4 view;
+  glm::mat4 proj;
+  alignas(16) glm::vec3 position;
+  alignas(4)  float      near_plane; 
+  alignas(4)  float      far_plane;
+};
+
+struct UBLightEnvironmentData {
+  int directional_lights_count{0};
+  int point_lights_count{0};
+  int spot_lights_count{0};
+};
+
 class Renderer {
  public:
-  static constexpr uint32_t kMaxDirectionalLights = 16;
+  static constexpr uint32_t kMaxDirectionalLights = 8;
   static constexpr uint32_t kMaxPointLights       = 128;
   static constexpr uint32_t kMaxSpotLights        = 128;
 
  public:
-  Renderer(RenderDevice& device, UniquePtr<rg::RenderGraph> render_graph);
+  Renderer(RenderDevice& device, SharedPtr<Texture> color_output);
   ~Renderer();
 
   void Render(CommandBuffer& command_buffer, uint32_t current_frame);
 
   RenderDevice& GetDevice();
 
-  rg::RenderGraph& GetRenderGraph();
   rg::Blackboard& GetBlackboard();
+  rg::RenderGraph& GetRenderGraph();
 
   void UpdateFrameData(float time);
-  void UpdateViewData(const glm::mat4& view, const glm::mat4& proj, glm::vec3 position);
+  void UpdateViewData(const glm::mat4& view, const glm::mat4& proj, glm::vec3 position, float near, float far);
 
   LightEnvironment& GetLightEnvironment();
 
  private:
-  // void CreateCommandBuffers();
+  void CreateRenderGraph(SharedPtr<Texture> color_output);
   void CreateDescriptorSets();
   void CreateBuffers();
   void InitLightBuffers();
@@ -69,41 +87,32 @@ class Renderer {
   RenderDevice& device_;
 
   /* Render Graph */
+  rg::Blackboard blackboard_;
   UniquePtr<rg::RenderGraph> render_graph_;
 
   /* Frame data */
-  Array<DescriptorSet, kFramesInFlight> frame_set_;
+  PerFrameData<DescriptorSet> frame_set_;
 
-  Array<BufferHandle, kFramesInFlight> ub_frame_{kInvalidRenderResourceHandle};
-  struct UBFrameData {
-    float time{0};
-  } ub_frame_data_;
+  PerFrameData<BufferHandle> ub_frame_{kInvalidRenderResourceHandle};
+  UBFrameData ub_frame_data_;
 
   /* View data */
-  Array<DescriptorSet, kFramesInFlight> view_set_;
+  PerFrameData<DescriptorSet> view_set_;
 
-  Array<BufferHandle, kFramesInFlight> ub_view_{kInvalidRenderResourceHandle};
-  struct UBViewData {
-    glm::mat4 view;
-    glm::mat4 proj;
-    glm::vec3 position;
-  } ub_view_data_;
+  PerFrameData<BufferHandle> ub_view_{kInvalidRenderResourceHandle};
+  UBViewData ub_view_data_;
 
   /* Light */
-  Array<DescriptorSet, kFramesInFlight> scene_set_;
+  PerFrameData<DescriptorSet> scene_set_;
 
   LightEnvironment light_environment_;
 
-  Array<BufferHandle, kFramesInFlight> sb_directional_lights_{kInvalidRenderResourceHandle};
-  Array<BufferHandle, kFramesInFlight> sb_point_lights_{kInvalidRenderResourceHandle};
-  Array<BufferHandle, kFramesInFlight> sb_spot_lights_{kInvalidRenderResourceHandle};
+  PerFrameData<BufferHandle> sb_directional_lights_{kInvalidRenderResourceHandle};
+  PerFrameData<BufferHandle> sb_point_lights_{kInvalidRenderResourceHandle};
+  PerFrameData<BufferHandle> sb_spot_lights_{kInvalidRenderResourceHandle};
 
-  Array<BufferHandle, kFramesInFlight> ub_light_{kInvalidRenderResourceHandle};
-  struct UBLightEnvironmentData {
-    int directional_lights_count{0};
-    int point_lights_count{0};
-    int spot_lights_count{0};
-  } ub_light_data_;
+  PerFrameData<BufferHandle> ub_light_{kInvalidRenderResourceHandle};
+  UBLightEnvironmentData ub_light_data_;
 };
 
 }  // namespace vulture

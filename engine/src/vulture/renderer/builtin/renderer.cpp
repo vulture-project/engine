@@ -25,23 +25,23 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#include <vulture/renderer/builtin/forward_pass.hpp>
 #include <vulture/renderer/builtin/renderer.hpp>
 
 using namespace vulture;
 
-Renderer::Renderer(RenderDevice& device, UniquePtr<rg::RenderGraph> render_graph)
-    : device_(device), render_graph_(std::move(render_graph)) {
-  // CreateCommandBuffers();
+Renderer::Renderer(RenderDevice& device, SharedPtr<Texture> color_output) : device_(device) {
+  blackboard_.Add<ColorOutput>();
+  blackboard_.Add<FrameData>();
+  blackboard_.Add<ViewData>();
+  blackboard_.Add<LightEnvironmentData>();
+  blackboard_.Add<RenderQueue<MainQueueTag>>();
+  
+  CreateRenderGraph(color_output);
+
   CreateDescriptorSets();
   CreateBuffers();
   InitLightBuffers();
-
-  auto& blackboard = GetBlackboard();
-  blackboard.Add<ColorOutput>();
-  blackboard.Add<FrameData>();
-  blackboard.Add<ViewData>();
-  blackboard.Add<LightEnvironmentData>();
-  blackboard.Add<RenderQueue<MainQueueTag>>();
 }
 
 Renderer::~Renderer() {
@@ -78,38 +78,45 @@ void Renderer::Render(CommandBuffer& command_buffer, uint32_t current_frame) {
 
   {
     ScopedTimer trace_timer{"render_graph.Execute()"};
-
-    // command_buffer.Reset();
-    // command_buffer.Begin();
-
     render_graph_->Execute(device_, command_buffer);
-
-    // command_buffer.End();
-    // command_buffer.Submit();
   }
 }
 
 RenderDevice& Renderer::GetDevice() { return device_; }
+rg::Blackboard& Renderer::GetBlackboard() { return blackboard_; }
 rg::RenderGraph& Renderer::GetRenderGraph() { return *render_graph_; }
-rg::Blackboard& Renderer::GetBlackboard() { return render_graph_->GetBlackboard(); }
 
 void Renderer::UpdateFrameData(float time) {
   ub_frame_data_.time = time;
 }
 
-void Renderer::UpdateViewData(const glm::mat4& view, const glm::mat4& proj, glm::vec3 position) {
-  ub_view_data_.view     = view;
-  ub_view_data_.proj     = proj;
-  ub_view_data_.position = position;
+void Renderer::UpdateViewData(const glm::mat4& view, const glm::mat4& proj, glm::vec3 position, float near, float far) {
+  ub_view_data_.view       = view;
+  ub_view_data_.proj       = proj;
+  ub_view_data_.position   = position;
+  ub_view_data_.near_plane = near;
+  ub_view_data_.far_plane  = far;
 }
 
 LightEnvironment& Renderer::GetLightEnvironment() { return light_environment_; }
 
-// void Renderer::CreateCommandBuffers() {
-//   for (auto& command_buffer : command_buffer_) {
-//     command_buffer = device_.CreateCommandBuffer(CommandBufferType::kGraphics, false);
-//   }
-// }
+void Renderer::CreateRenderGraph(SharedPtr<Texture> color_output) {
+  render_graph_ = CreateUnique<rg::RenderGraph>(blackboard_);
+
+  blackboard_.Get<ColorOutput>().texture_id =
+      render_graph_->ImportTexture("color", color_output, TextureLayout::kShaderReadOnly);
+
+  render_graph_->AddPass<ForwardPass>(ForwardPass::GetName());
+
+  render_graph_->Setup();
+  render_graph_->Compile(device_);
+
+  // FIXME: (tralf-strues) get rid of
+  std::ofstream output_file("log/render_graph.dot", std::ios::trunc);
+  assert(output_file.is_open());
+  render_graph_->ExportGraphviz(output_file);
+  system("dot -Tpng log/render_graph.dot > log/render_graph.png");
+}
 
 void Renderer::CreateDescriptorSets() {
   for (uint32_t i = 0; i < kFramesInFlight; ++i) {
@@ -123,10 +130,10 @@ void Renderer::CreateDescriptorSets() {
 
     /* Scene Set */
     scene_set_[i].SetRenderDevice(&device_);
-    scene_set_[i].AddBinding(DescriptorType::kUniformBuffer, kShaderStageBitFragment)
-                 .AddBinding(DescriptorType::kStorageBuffer, kShaderStageBitFragment)
-                 .AddBinding(DescriptorType::kStorageBuffer, kShaderStageBitFragment)
-                 .AddBinding(DescriptorType::kStorageBuffer, kShaderStageBitFragment)
+    scene_set_[i].AddBinding(DescriptorType::kUniformBuffer,  kShaderStageBitVertex | kShaderStageBitFragment)
+                 .AddBinding(DescriptorType::kStorageBuffer,  kShaderStageBitVertex | kShaderStageBitFragment)
+                 .AddBinding(DescriptorType::kStorageBuffer,  kShaderStageBitVertex | kShaderStageBitFragment)
+                 .AddBinding(DescriptorType::kStorageBuffer,  kShaderStageBitVertex | kShaderStageBitFragment)
                  .Build();
   }
 }
@@ -195,16 +202,10 @@ void Renderer::WriteDescriptors(uint32_t current_frame) {
   device_.LoadBufferData<DirectionalLight>(sb_directional_lights_[current_frame], 0,
                                            light_environment_.directional_lights.size(),
                                            light_environment_.directional_lights.data());
-  // device_.WriteDescriptorStorageBuffer(scene_set_[current_frame].GetHandle(), 1, sb_directional_lights_[current_frame],
-                                      //  0, light_environment_.directional_lights.size() * sizeof(DirectionalLight));
 
   device_.LoadBufferData<PointLight>(sb_point_lights_[current_frame], 0, light_environment_.point_lights.size(),
                                      light_environment_.point_lights.data());
-  // device_.WriteDescriptorStorageBuffer(scene_set_[current_frame].GetHandle(), 2, sb_point_lights_[current_frame], 0,
-                                      //  light_environment_.point_lights.size() * sizeof(PointLight));
 
   device_.LoadBufferData<SpotLight>(sb_spot_lights_[current_frame], 0, light_environment_.spot_lights.size(),
                                     light_environment_.spot_lights.data());
-  // device_.WriteDescriptorStorageBuffer(scene_set_[current_frame].GetHandle(), 3, sb_spot_lights_[current_frame], 0,
-                                      //  light_environment_.spot_lights.size() * sizeof(SpotLight));
 }

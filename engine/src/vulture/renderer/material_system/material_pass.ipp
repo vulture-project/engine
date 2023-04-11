@@ -47,7 +47,7 @@ T& MaterialPass::GetProperty(const StringView name) {
     }
   }
 
-  VULTURE_ASSERT(result, "No property with this name found!");
+  VULTURE_ASSERT(result, "No property with name {0} found!", name);
 
   return *result;
 }

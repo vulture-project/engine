@@ -1,17 +1,8 @@
 #version 450
 
-/* Descriptor Sets */
-layout(set = 0, binding = 0) uniform FrameData
-{
-    float uTime;
-};
-
-layout(set = 1, binding = 0) uniform ViewData
-{
-    mat4 uView;
-    mat4 uProj;
-    vec3 uCameraWS;
-};
+#include "include/BuiltIn.Common.glsl"
+#include "include/BuiltIn.FrameData.glsl"
+#include "include/BuiltIn.ViewData.glsl"
 
 /* Push constants */
 layout(push_constant) uniform ModelConstant

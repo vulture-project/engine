@@ -1,17 +1,17 @@
-name: "BuiltIn.Forward"
-target_render_pass: "Forward Pass"
+name: "BuiltIn.DirShadow"
+target_render_pass: "Shadow Pass"
 
-descriptor_sets: [Frame, View, Scene, Material]
+descriptor_sets: [Frame, View]
 
-vert_shader: ["assets/.vulture/shaders/BuiltIn.Forward.vert", "assets/.vulture/shaders/BuiltIn.Forward.vert.spv"]
-frag_shader: ["assets/.vulture/shaders/BuiltIn.Forward.frag", "assets/.vulture/shaders/BuiltIn.Forward.frag.spv"]
+vert_shader: ["assets/.vulture/shaders/BuiltIn.DirShadow.vert", "assets/.vulture/shaders/BuiltIn.DirShadow.vert.spv"]
+frag_shader: ["assets/.vulture/shaders/BuiltIn.DirShadow.frag", "assets/.vulture/shaders/BuiltIn.DirShadow.frag.spv"]
 
 # Vertex Format
 vertex_format: Vertex3D           # default: Vertex3D
 topology: TriangleList            # default: TriangleList
 
 # Rasterization
-cull: BackOnly                    # default: BackOnly
+cull: FrontOnly                   # default: BackOnly
 front_face: CounterClockwise      # default: CounterClockwise
 polygon_mode: Fill                # default: Fill
 

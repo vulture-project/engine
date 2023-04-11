@@ -123,4 +123,13 @@ struct RenderPassDescription {
   std::vector<SubpassDependency>     subpass_dependencies;
 };
 
+/* Framebuffer */
+struct FramebufferAttachment {
+  TextureHandle texture{kInvalidRenderResourceHandle};
+  uint32_t      layer{0};
+
+  FramebufferAttachment() = default;
+  FramebufferAttachment(TextureHandle texture, uint32_t layer = 0) : texture(texture), layer(layer) {}
+};
+
 }  // namespace vulture

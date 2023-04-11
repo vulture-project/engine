@@ -46,6 +46,8 @@ DynamicTextureSpecification::DynamicTextureSpecification(const TextureSpecificat
 /************************************************************************************************
  * Render Graph
  ************************************************************************************************/
+RenderGraph::RenderGraph(Blackboard& blackboard) : blackboard_(blackboard) {}
+
 Blackboard& RenderGraph::GetBlackboard() { return blackboard_; }
 
 TextureVersionId RenderGraph::ImportTexture(const std::string_view name, SharedPtr<Texture> texture,
@@ -243,15 +245,16 @@ void RenderGraph::RecreateRenderPasses(RenderDevice& device) {
                                  pass_node.color_attachment_usages.size() + pass_node.resolve_attachment_usages.size();
 
     built_pass.description.attachments.resize(attachments_count);
-    built_pass.framebuffer_textures.resize(attachments_count);
+    built_pass.framebuffer_attachments.resize(attachments_count);
     built_pass.clear_values.resize(attachments_count);
 
     uint32_t attachment = 0;
     if (pass_node.depth_stencil_usage.has_value()) {
       const detail::TextureEntry& entry = GetTextureEntry(pass_node.depth_stencil_usage->in);
 
-      built_pass.framebuffer_textures[attachment] = entry.texture->GetHandle();
-      built_pass.clear_values[attachment]         = pass_node.depth_stencil_usage->clear_value;
+      built_pass.framebuffer_attachments[attachment] = {entry.texture->GetHandle(),
+                                                        pass_node.depth_stencil_usage->layer};
+      built_pass.clear_values[attachment] = pass_node.depth_stencil_usage->clear_value;
 
       TextureLayout initial_layout = TextureLayout::kUndefined;
       if (pass_node.depth_stencil_usage->load == AttachmentLoad::kLoad) {
@@ -287,8 +290,8 @@ void RenderGraph::RecreateRenderPasses(RenderDevice& device) {
     for (const auto& color_attachment_usage : pass_node.color_attachment_usages) {
       const detail::TextureEntry& entry = GetTextureEntry(color_attachment_usage.in);
 
-      built_pass.framebuffer_textures[attachment] = entry.texture->GetHandle();
-      built_pass.clear_values[attachment]         = color_attachment_usage.clear_value;
+      built_pass.framebuffer_attachments[attachment] = {entry.texture->GetHandle(), color_attachment_usage.layer};
+      built_pass.clear_values[attachment]            = color_attachment_usage.clear_value;
 
       TextureLayout initial_layout = TextureLayout::kUndefined;
       if (color_attachment_usage.load == AttachmentLoad::kLoad) {
@@ -326,8 +329,8 @@ void RenderGraph::RecreateRenderPasses(RenderDevice& device) {
     for (const auto& resolve_attachment_usage : pass_node.resolve_attachment_usages) {
       const detail::TextureEntry& entry = GetTextureEntry(resolve_attachment_usage.in);
 
-      built_pass.framebuffer_textures[attachment] = entry.texture->GetHandle();
-      built_pass.clear_values[attachment]         = resolve_attachment_usage.clear_value;
+      built_pass.framebuffer_attachments[attachment] = {entry.texture->GetHandle(), resolve_attachment_usage.layer};
+      built_pass.clear_values[attachment]            = resolve_attachment_usage.clear_value;
 
       TextureLayout initial_layout = TextureLayout::kUndefined;
       if (resolve_attachment_usage.load == AttachmentLoad::kLoad) {
@@ -375,7 +378,8 @@ void RenderGraph::RecreateFramebuffers(RenderDevice& device) {
       device.DeleteFramebuffer(built_pass.framebuffer_handle);
     }
 
-    built_pass.framebuffer_handle = device.CreateFramebuffer(built_pass.framebuffer_textures, built_pass.pass_handle);
+    built_pass.framebuffer_handle =
+        device.CreateFramebuffer(built_pass.framebuffer_attachments, built_pass.pass_handle);
   }
 }
 
@@ -698,7 +702,8 @@ TextureVersionId RenderGraphBuilder::CreateTexture(const std::string_view name,
 TextureVersionId RenderGraphBuilder::SetDepthStencil(TextureVersionId texture_version_id,
                                                      AttachmentLoad load,
                                                      AttachmentStore store,
-                                                     ClearValue clear_value) {
+                                                     ClearValue clear_value,
+                                                     uint32_t layer) {
   assert(texture_version_id != kInvalidTextureVersionId);
 
   TextureNode& in_texture_node = graph_.texture_nodes_[texture_version_id];
@@ -706,7 +711,7 @@ TextureVersionId RenderGraphBuilder::SetDepthStencil(TextureVersionId texture_ve
       graph_.AddTextureNode(in_texture_node.actual_texture_idx, in_texture_node.version_num + 1);
   out_texture_node.subgraph_idx = graph_.cur_subgraph_idx_;
 
-  pass_node_.depth_stencil_usage = {texture_version_id, out_texture_node.version_id, load, store, clear_value};
+  pass_node_.depth_stencil_usage = {texture_version_id, out_texture_node.version_id, load, store, clear_value, layer};
 
   return out_texture_node.version_id;
 }
@@ -714,7 +719,8 @@ TextureVersionId RenderGraphBuilder::SetDepthStencil(TextureVersionId texture_ve
 TextureVersionId RenderGraphBuilder::AddColorAttachment(TextureVersionId texture_version_id,
                                                         AttachmentLoad load,
                                                         AttachmentStore store,
-                                                        ClearValue clear_value) {
+                                                        ClearValue clear_value,
+                                                        uint32_t layer) {
   assert(texture_version_id != kInvalidTextureVersionId);
 
   TextureNode& in_texture_node = graph_.texture_nodes_[texture_version_id];
@@ -723,7 +729,7 @@ TextureVersionId RenderGraphBuilder::AddColorAttachment(TextureVersionId texture
   out_texture_node.subgraph_idx = graph_.cur_subgraph_idx_;
 
   pass_node_.color_attachment_usages.push_back(
-      {texture_version_id, out_texture_node.version_id, load, store, clear_value});
+      {texture_version_id, out_texture_node.version_id, load, store, clear_value, layer});
 
   return out_texture_node.version_id;
 }

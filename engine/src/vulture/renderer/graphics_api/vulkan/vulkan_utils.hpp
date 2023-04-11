@@ -37,10 +37,11 @@
 
 namespace vulture {
 
-inline uint32_t GetLayerCountFromTextureType(TextureType type) {
-  switch (type) {
-    case (TextureType::kTexture2D):   { return 1; }
-    case (TextureType::kTextureCube): { return 6; }
+inline uint32_t GetLayerCountFromTextureType(const TextureSpecification& specification) {
+  switch (specification.type) {
+    case (TextureType::kTexture2D):      { return 1; }
+    case (TextureType::kTextureCube):    { return 6; }
+    case (TextureType::kTexture2DArray): { return specification.array_layers; }
 
     default: { assert(!"Invalid TextureType"); }
   }
@@ -114,8 +115,9 @@ inline DataFormat GetDataFormatFromVk(VkFormat vk_format) {
 
 inline VkImageViewType GetVKImageViewType(TextureType type) {
   switch (type) {
-    case TextureType::kTexture2D:   { return VK_IMAGE_VIEW_TYPE_2D; }
-    case TextureType::kTextureCube: { return VK_IMAGE_VIEW_TYPE_CUBE; }
+    case TextureType::kTexture2D:      { return VK_IMAGE_VIEW_TYPE_2D; }
+    case TextureType::kTextureCube:    { return VK_IMAGE_VIEW_TYPE_CUBE; }
+    case TextureType::kTexture2DArray: { return VK_IMAGE_VIEW_TYPE_2D_ARRAY; }
 
     default: { assert(!"Invalid TextureType!"); }
   }

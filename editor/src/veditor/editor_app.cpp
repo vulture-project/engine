@@ -37,7 +37,6 @@
 #include <vulture/asset/loaders/shader_loader.hpp>
 #include <vulture/asset/loaders/skybox_loader.hpp>
 #include <vulture/asset/loaders/tga_loader.hpp>
-#include <vulture/renderer/builtin/forward_pass.hpp>
 
 using namespace vulture;
 
@@ -136,24 +135,8 @@ void EditorApp::DestroyFrameData() {
 }
 
 void EditorApp::CreateRenderer() {
-  /* Render Graph */
-  auto render_graph = CreateUnique<rg::RenderGraph>();
-  ColorOutput& color_output_data = render_graph->GetBlackboard().Add<ColorOutput>();
-  color_output_data.texture_id =
-      render_graph->ImportTexture("color", preview_panel_->GetTexture(), TextureLayout::kShaderReadOnly);
-
-  render_graph->AddPass<ForwardPass>(ForwardPass::GetName());
-
-  render_graph->Setup();
-  render_graph->Compile(device_);
-
-  std::ofstream output_file("log/render_graph.dot", std::ios::trunc);
-  assert(output_file.is_open());
-  render_graph->ExportGraphviz(output_file);
-  system("dot -Tpng log/render_graph.dot > log/render_graph.png");
-
   /* Renderer */
-  renderer_ = CreateUnique<Renderer>(device_, std::move(render_graph));
+  renderer_ = CreateUnique<Renderer>(device_, preview_panel_->GetTexture());
 }
 
 /************************************************************************************************
@@ -273,8 +256,8 @@ void EditorApp::Run() {
       const auto& specification = preview_panel_->GetTexture()->GetSpecification();
       scene_.OnViewportResize(specification.width, specification.height);
 
-      ColorOutput& color_output_data = renderer_->GetBlackboard().Get<ColorOutput>();
-      renderer_->GetRenderGraph().ReimportTexture(color_output_data.texture_id, preview_panel_->GetTexture());
+      renderer_->GetRenderGraph().ReimportTexture(renderer_->GetBlackboard().Get<ColorOutput>().texture_id,
+                                                  preview_panel_->GetTexture());
     }
 
     scene_.OnUpdate(current_timestep_);
@@ -322,7 +305,7 @@ void EditorApp::Render() {
 
   {
     ScopedTimer trace_timer{"scene.Render()"};
-    scene_.Render(*renderer_, command_buffer, current_frame_idx, timer_.Elapsed());
+    scene_.Render(*renderer_, preview_panel_->GetTexture(), command_buffer, current_frame_idx, timer_.Elapsed());
   }
 
   RenderUI(command_buffer, texture_idx);

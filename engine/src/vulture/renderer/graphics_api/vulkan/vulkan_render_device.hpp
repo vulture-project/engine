@@ -61,9 +61,12 @@ struct VulkanTexture {
   VulkanTexture() = default;
   VulkanTexture(const TextureSpecification& specification) : specification(specification) {}
 
-  VkImage              vk_image{VK_NULL_HANDLE};
-  VkImageView          vk_image_view{VK_NULL_HANDLE};
-  VmaAllocation        vma_allocation{nullptr};
+  VkImage             vk_image{VK_NULL_HANDLE};
+  VmaAllocation       vma_allocation{nullptr};
+  VkImageView         vk_image_view{VK_NULL_HANDLE};
+
+  VkImageView         vk_image_view_per_layer[kTextureMaxLayers]{VK_NULL_HANDLE};
+
   TextureSpecification specification{};
 };
 
@@ -247,7 +250,7 @@ class VulkanRenderDevice final : public RenderDevice {
   RenderPassHandle CreateRenderPass(const RenderPassDescription& render_pass_description) override;
   void DeleteRenderPass(RenderPassHandle render_pass) override;
 
-  FramebufferHandle CreateFramebuffer(const std::vector<TextureHandle>& attachments,
+  FramebufferHandle CreateFramebuffer(const std::vector<FramebufferAttachment>& attachments,
                                       RenderPassHandle compatible_render_pass) override;
   void DeleteFramebuffer(FramebufferHandle framebuffer) override;
 

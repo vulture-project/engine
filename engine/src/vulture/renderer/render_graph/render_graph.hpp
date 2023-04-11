@@ -111,20 +111,20 @@ struct TextureEntry {
 };
 
 struct BuiltPass {
-  RenderPassHandle           pass_handle{kInvalidRenderResourceHandle};
-  RenderPassDescription      description{};
+  RenderPassHandle                   pass_handle{kInvalidRenderResourceHandle};
+  RenderPassDescription              description{};
 
-  FramebufferHandle          framebuffer_handle{kInvalidRenderResourceHandle};
-  std::vector<TextureHandle> framebuffer_textures;
+  FramebufferHandle                  framebuffer_handle{kInvalidRenderResourceHandle};
+  std::vector<FramebufferAttachment> framebuffer_attachments;
 
-  std::vector<ClearValue>    clear_values{};
+  std::vector<ClearValue>            clear_values{};
 };
 
 }  // namespace detail
 
 class RenderGraph {
  public:
-  RenderGraph() = default;
+  RenderGraph(Blackboard& blackboard);
 
   RenderGraph(const RenderGraph& render_graph) = delete;
   RenderGraph& operator=(const RenderGraph& render_graph) = delete;
@@ -183,7 +183,7 @@ class RenderGraph {
   void ExportGraphvizSubgraph(std::ostream& os, int32_t subgraph_idx) const;
 
  private:
-  Blackboard                        blackboard_;
+  Blackboard&                       blackboard_;
   std::vector<PassNode>             pass_nodes_;
   std::vector<detail::BuiltPass>    built_passes_;
 
@@ -210,12 +210,14 @@ class RenderGraphBuilder {
   TextureVersionId SetDepthStencil(TextureVersionId texture,
                                    AttachmentLoad load = AttachmentLoad::kLoad,
                                    AttachmentStore store = AttachmentStore::kStore,
-                                   ClearValue clear_value = ClearValue{1.0f, 0});
+                                   ClearValue clear_value = ClearValue{1.0f, 0},
+                                   uint32_t layer = 0);
 
   TextureVersionId AddColorAttachment(TextureVersionId texture,
                                       AttachmentLoad load = AttachmentLoad::kLoad,
                                       AttachmentStore store = AttachmentStore::kStore,
-                                      ClearValue clear_value = ClearValue{0, 0, 0, 0});
+                                      ClearValue clear_value = ClearValue{0, 0, 0, 0},
+                                      uint32_t layer = 0);
 
   TextureVersionId AddResolveAttachment(TextureVersionId texture,
                                         AttachmentLoad load = AttachmentLoad::kDontCare,

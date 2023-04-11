@@ -839,6 +839,11 @@ TextureHandle VulkanRenderDevice::CreateTexture(const TextureSpecification& spec
   uint32_t width  = specification.width;
   uint32_t height = specification.height;
 
+  uint32_t layers = GetLayerCountFromTextureType(specification);
+  VULTURE_ASSERT(layers < kTextureMaxLayers,
+                 "Texture cannot contain more than kTextureMaxLayers={0}, trying to create a texture with {1} layers",
+                 kTextureMaxLayers, layers);
+
   /* Create image */
   VkImage           vk_image        = VK_NULL_HANDLE;
   VmaAllocation     vma_allocation  = VK_NULL_HANDLE;
@@ -870,7 +875,7 @@ TextureHandle VulkanRenderDevice::CreateTexture(const TextureSpecification& spec
   image_info.extent.height = height;
   image_info.extent.depth  = 1;
   image_info.mipLevels     = specification.mip_levels;
-  image_info.arrayLayers   = GetLayerCountFromTextureType(specification.type);
+  image_info.arrayLayers   = layers;
   image_info.format        = vk_format;
   // If want to directly access texels in memory, then should use VK_IMAGE_TILING_LINEAR
   // VK_IMAGE_TILING_OPTIMAL - Implementation-based tiling (not necessarily row-major)
@@ -906,7 +911,7 @@ TextureHandle VulkanRenderDevice::CreateTexture(const TextureSpecification& spec
   view_info.subresourceRange.baseMipLevel   = 0;
   view_info.subresourceRange.levelCount     = specification.mip_levels;
   view_info.subresourceRange.baseArrayLayer = 0;
-  view_info.subresourceRange.layerCount     = GetLayerCountFromTextureType(specification.type);
+  view_info.subresourceRange.layerCount     = layers;
   view_info.components.r                    = VK_COMPONENT_SWIZZLE_IDENTITY;
   view_info.components.g                    = VK_COMPONENT_SWIZZLE_IDENTITY;
   view_info.components.b                    = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -921,6 +926,16 @@ TextureHandle VulkanRenderDevice::CreateTexture(const TextureSpecification& spec
   texture.vk_image_view  = vk_image_view;
   texture.vma_allocation = vma_allocation;
 
+  /* Individual layer views */
+  if (specification.individual_layers_accessible && layers > 0) {
+    for (uint32_t i = 0; i < layers; ++i) {
+      view_info.subresourceRange.baseArrayLayer = i;
+      view_info.subresourceRange.layerCount     = 1;
+
+      VULKAN_CALL(vkCreateImageView(device_, &view_info, /*allocator=*/nullptr, &texture.vk_image_view_per_layer[i]));
+    }
+  }
+
   TextureHandle handle = GenNextHandle();
   textures_.emplace(handle, std::move(texture));
   return handle;
@@ -929,6 +944,12 @@ TextureHandle VulkanRenderDevice::CreateTexture(const TextureSpecification& spec
 void VulkanRenderDevice::DeleteTexture(TextureHandle handle) {
   auto it = textures_.find(handle);
   if (it != textures_.end()) {
+    if (it->second.specification.individual_layers_accessible) {
+      for (uint32_t i = 0; i < it->second.specification.array_layers; ++i) {
+        vkDestroyImageView(device_, it->second.vk_image_view_per_layer[i], /*allocator=*/nullptr);
+      }
+    }
+
     vkDestroyImageView(device_, it->second.vk_image_view, /*allocator=*/nullptr);
 
     // If not swapchain image
@@ -1272,13 +1293,17 @@ void VulkanRenderDevice::WriteDescriptorInputAttachment(DescriptorSetHandle ds_h
 }
 
 void VulkanRenderDevice::WriteDescriptorSampler(DescriptorSetHandle ds_handle, uint32_t binding_idx,
-                                            TextureHandle texture_handle, SamplerHandle sampler_handle) {
+                                                TextureHandle texture_handle, SamplerHandle sampler_handle) {
   VulkanDescriptorSet& descriptor_set = GetVulkanDescriptorSet(ds_handle);
   VulkanTexture&       texture        = GetVulkanTexture(texture_handle);
   VulkanSampler&       sampler        = GetVulkanSampler(sampler_handle);
 
+  VkImageLayout vk_image_layout = IsDepthContainingDataFormat(texture.specification.format)
+                                      ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
+                                      : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
   VkDescriptorImageInfo image_info{};
-  image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  image_info.imageLayout = vk_image_layout;
   image_info.imageView   = texture.vk_image_view;
   image_info.sampler     = sampler.vk_sampler;
 
@@ -1425,18 +1450,23 @@ void VulkanRenderDevice::DeleteRenderPass(RenderPassHandle handle) {
   }
 }
 
-FramebufferHandle VulkanRenderDevice::CreateFramebuffer(const std::vector<TextureHandle>& attachments,
-                                                    RenderPassHandle compatible_render_pass_handle) {
+FramebufferHandle VulkanRenderDevice::CreateFramebuffer(const std::vector<FramebufferAttachment>& attachments,
+                                                        RenderPassHandle compatible_render_pass_handle) {
   VulkanRenderPass& render_pass = GetVulkanRenderPass(compatible_render_pass_handle);
 
   std::vector<VkImageView> vk_image_views;
   uint32_t width{0};
   uint32_t height{0};
 
-  for (const auto& texture_handle : attachments) {
-    VulkanTexture& texture = GetVulkanTexture(texture_handle);
+  for (const auto& attachment : attachments) {
+    VulkanTexture& texture = GetVulkanTexture(attachment.texture);
 
-    vk_image_views.push_back(texture.vk_image_view);
+    VkImageView vk_image_view = texture.vk_image_view;
+    if (texture.specification.individual_layers_accessible && texture.specification.array_layers > 0) {
+      vk_image_view = texture.vk_image_view_per_layer[attachment.layer];
+    }
+
+    vk_image_views.push_back(vk_image_view);
     width  = texture.specification.width;
     height = texture.specification.height;
   }

@@ -29,7 +29,6 @@
 
 #include <veditor/panels/entities_panel.hpp>
 #include <veditor/panels/inspector_panel.hpp>
-// #include <veditor/panels/renderer_info_panel.hpp>
 #include <veditor/panels/preview_panel.hpp>
 #include <vulture/app/app.hpp>
 #include <vulture/event_system/event_system.hpp>
@@ -68,14 +67,6 @@ class EditorApp : public Application {
 
   void OnUpdateImGuiStyle();
 
-  // void OnGuiRender();
-
-  // void OnInitImGui();
-  // void OnUpdateImGuiStyle();
-  // void OnFrameStartImGui();
-  // void OnFrameFinishImGui();
-  // void OnCloseImGui();
-
  private:
   struct Frame {
     CommandBuffer* command_buffer{nullptr};
@@ -92,7 +83,7 @@ class EditorApp : public Application {
   RenderDevice& device_;
   UniquePtr<Renderer> renderer_;
 
-  Array<Frame, kFramesInFlight> frames_;
+  PerFrameData<Frame> frames_;
 
   /* Swapchain */
   SwapchainHandle swapchain_{kInvalidRenderResourceHandle};
@@ -114,7 +105,6 @@ class EditorApp : public Application {
   UniquePtr<PreviewPanel> preview_panel_;
   UniquePtr<EntitiesPanel> entities_panel_;
   UniquePtr<InspectorPanel> inspector_panel_;
-  // RendererInfoPanel renderer_info_panel_;
 };
 
 }  // namespace vulture

@@ -93,6 +93,10 @@ bool Shader::Load(const StringView filename) {
 
   target_pass_id_ = GeneratePassIdFromString(render_pass_node.as<std::string>());
 
+  if (!ParseDescriptorSetUsage(root)) {
+    return false;
+  }
+
   /* Pipeline Description */
   if (!ParsePipelineDescription(root)) {
     return false;
@@ -108,6 +112,35 @@ bool Shader::Load(const StringView filename) {
 
   if (!CreateDescriptorSetLayouts()) {
     return false;
+  }
+
+  LOG_DEBUG("Shader reflection ({}):", filename);
+  GetReflection().PrintData();  // FIXME: Debug only
+
+  return true;
+}
+
+bool Shader::ParseDescriptorSetUsage(YAML::Node& root) {
+  YAML::Node sets_node = root["descriptor_sets"];
+  if (sets_node) {
+    std::string cur_set_str;
+
+    for (uint32_t i = 0; i < sets_node.size(); ++i) {
+      cur_set_str = sets_node[i].as<std::string>();
+      
+      if (cur_set_str == "Frame") {
+        set_usage_ |= kFrameSetBit;
+      } else if (cur_set_str == "View") {
+        set_usage_ |= kViewSetBit;
+      } else if (cur_set_str == "Scene") {
+        set_usage_ |= kSceneSetBit;
+      } else if (cur_set_str == "Material") {
+        set_usage_ |= kMaterialSetBit;
+      } else {
+        LOG_ERROR("Invalid descriptor set \"{0}\"", cur_set_str);
+        return false;
+      }
+    }
   }
 
   return true;
@@ -194,7 +227,7 @@ bool Shader::ParseShaderModule(YAML::Node& root, const String& name, ShaderModul
       return false;
     }
 
-   reflection_.AddShaderModule(module_type, binary);
+    reflection_.AddShaderModule(module_type, binary);
 
     uint32_t module_idx = pipeline_description_.shader_modules_count;
     pipeline_description_.shader_modules[module_idx] = device_.CreateShaderModule(
@@ -282,7 +315,34 @@ void Shader::Build(RenderPassHandle compatible_render_pass, uint32_t subpass_idx
   pipeline_ = device_.CreatePipeline(pipeline_description_, compatible_render_pass, subpass_idx);
 }
 
+void Shader::BindDescriptorSetIfUsed(CommandBuffer& commands, DescriptorSetBit set_bit, DescriptorSetHandle handle) {
+  if (DescriptorSetUsed(set_bit)) {
+    commands.CmdBindDescriptorSet(pipeline_, GetDescriptorSetIdx(set_bit), handle);
+  }
+}
+
 RenderPassId Shader::GetTargetPassId() const { return target_pass_id_; }
+
+Shader::DescriptorSetUsage Shader::GetDescriptorSetUsage() const { return set_usage_; }
+
+bool Shader::DescriptorSetUsed(DescriptorSetBit set_bit) const {
+  return (set_usage_ & set_bit) != 0;
+}
+
+uint32_t Shader::GetDescriptorSetIdx(DescriptorSetBit set_bit) const {
+  VULTURE_ASSERT(DescriptorSetUsed(set_bit), "Trying to get descriptor set idx which is not used!");
+
+  uint32_t mask = set_bit;
+
+  uint32_t idx = 0;
+  while (mask >>= 1) {
+    if (set_usage_ & mask) {
+      ++idx;
+    }
+  }
+
+  return idx;
+}
 
 const ShaderReflection& Shader::GetReflection() const { return reflection_; }
 

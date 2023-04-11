@@ -1,8 +1,9 @@
 set(CMAKE_CXX_STANDARD 17)
 
+include("${CMAKE_HOME_DIRECTORY}/cmake/compile_options.cmake")
 add_subdirectory(third_party)
 
-include("${CMAKE_HOME_DIRECTORY}/cmake/compile_options.cmake")
+include("${CMAKE_HOME_DIRECTORY}/cmake/compile_warnings_options.cmake")
 add_subdirectory(src)
 
 target_link_libraries(vulture

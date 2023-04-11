@@ -40,6 +40,9 @@ namespace vulture {
 
 constexpr uint32_t kFramesInFlight = 2;
 
+template<typename T>
+using PerFrameData = Array<T, kFramesInFlight>; 
+
 class Window;
 
 /**
@@ -304,7 +307,7 @@ class RenderDevice {
   virtual RenderPassHandle CreateRenderPass(const RenderPassDescription& render_pass_description) = 0;
   virtual void DeleteRenderPass(RenderPassHandle render_pass) = 0;
 
-  virtual FramebufferHandle CreateFramebuffer(const std::vector<TextureHandle>& attachments,
+  virtual FramebufferHandle CreateFramebuffer(const std::vector<FramebufferAttachment>& attachments,
                                               RenderPassHandle compatible_render_pass) = 0;
   virtual void DeleteFramebuffer(FramebufferHandle framebuffer) = 0;
 

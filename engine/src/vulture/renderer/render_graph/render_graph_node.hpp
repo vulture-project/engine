@@ -45,6 +45,7 @@ struct PassNode {
     AttachmentLoad   load        {AttachmentLoad::kDontCare};
     AttachmentStore  store       {AttachmentStore::kDontCare};
     ClearValue       clear_value {0, 0, 0, 0};
+    uint32_t         layer       {0};
   };
 
   PassNode(const std::string_view name, IRenderPass* render_pass) : name(name), render_pass(render_pass) {

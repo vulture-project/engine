@@ -34,11 +34,6 @@
 
 namespace vulture {
 
-constexpr uint32_t kFrameDescriptorSetIdx    = 0;
-constexpr uint32_t kViewDescriptorSetIdx     = 1;
-constexpr uint32_t kSceneDescriptorSetIdx    = 2;
-constexpr uint32_t kMaterialDescriptorSetIdx = 3;
-
 class MaterialPass {
  public:
    struct TextureSampler {
@@ -58,6 +53,8 @@ class MaterialPass {
 
   inline Shader& GetShader() { return *shader_.get(); }
   inline const Shader& GetShader() const { return *shader_.get(); }
+
+  inline bool IsMaterialUsed() const { return material_used_; }
 
   template<typename T>
   T& GetProperty(const StringView name);
@@ -87,6 +84,8 @@ class MaterialPass {
   SharedPtr<Shader> shader_;
 
   DescriptorSetHandle descriptor_set_{kInvalidRenderResourceHandle};
+  const bool material_used_;
+  const uint32_t descriptor_set_idx_;
   
   /* Texture samplers */
   HashMap<StringView, TextureSampler> texture_samplers_;

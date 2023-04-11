@@ -28,6 +28,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <vulture/core/core.hpp>
 
 namespace vulture {
 

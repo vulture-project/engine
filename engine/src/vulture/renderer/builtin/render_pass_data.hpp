@@ -42,6 +42,10 @@ struct DepthBuffer {
   rg::TextureVersionId texture_id;
 };
 
+struct ShadowMaps {
+  Vector<rg::TextureVersionId> texture_ids;
+};
+
 struct FrameData {
   DescriptorSetHandle set_handle{kInvalidRenderResourceHandle};
 };

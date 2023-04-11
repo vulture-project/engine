@@ -29,29 +29,35 @@
 
 using namespace vulture;
 
-MaterialPass::MaterialPass(RenderDevice& device, SharedPtr<Shader> shader) : device_(device), shader_(shader) {
-  for (const auto& uniform_buffer : shader->GetReflection().GetUniformBuffers()) {
-    assert(property_buffers_count_ < kMaxPipelineShaderModules);
+MaterialPass::MaterialPass(RenderDevice& device, SharedPtr<Shader> shader)
+    : device_(device),
+      shader_(shader),
+      material_used_(shader_->DescriptorSetUsed(Shader::kMaterialSetBit)),
+      descriptor_set_idx_(material_used_ ? shader_->GetDescriptorSetIdx(Shader::kMaterialSetBit) : 0) {
+  if (material_used_) {
+    for (const auto& uniform_buffer : shader->GetReflection().GetUniformBuffers()) {
+      assert(property_buffers_count_ < kMaxPipelineShaderModules);
 
-    if (uniform_buffer.set != kMaterialDescriptorSetIdx) {
-      continue;
+      if (uniform_buffer.set != descriptor_set_idx_) {
+        continue;
+      }
+
+      PropertyBuffer& property_buffer = property_buffers_[property_buffers_count_++];
+      property_buffer.reflected_uniform_buffer = &uniform_buffer;
+      property_buffer.handle                  = kInvalidRenderResourceHandle;
+      property_buffer.buffer                  = new char[uniform_buffer.size];
     }
 
-    PropertyBuffer& property_buffer = property_buffers_[property_buffers_count_++];
-    property_buffer.reflected_uniform_buffer = &uniform_buffer;
-    property_buffer.handle                   = kInvalidRenderResourceHandle;
-    property_buffer.buffer                   = new char[uniform_buffer.size];
-  }
+    for (const auto& sampler2d : shader_->GetReflection().GetSampler2Ds()) {
+      if (sampler2d.set != descriptor_set_idx_) {
+        continue;
+      }
 
-  for (const auto& sampler2d : shader_->GetReflection().GetSampler2Ds()) {
-    if (sampler2d.set != kMaterialDescriptorSetIdx) {
-      continue;
+      TextureSampler& texture_sampler = texture_samplers_[sampler2d.name];
+      texture_sampler.texture = nullptr;
+      texture_sampler.sampler = nullptr;
+      texture_sampler.binding = sampler2d.binding;
     }
-
-    TextureSampler& texture_sampler = texture_samplers_[sampler2d.name];
-    texture_sampler.texture = nullptr;
-    texture_sampler.sampler = nullptr;
-    texture_sampler.binding = sampler2d.binding;
   }
 }
 
@@ -73,7 +79,8 @@ MaterialPass::~MaterialPass() {
   }
 }
 
-MaterialPass::MaterialPass(MaterialPass&& other) : device_(other.device_) {
+MaterialPass::MaterialPass(MaterialPass&& other)
+    : device_(other.device_), material_used_(other.material_used_), descriptor_set_idx_(other.descriptor_set_idx_) {
   shader_                 = std::move(other.shader_);
   descriptor_set_         = std::move(other.descriptor_set_);
   texture_samplers_       = std::move(other.texture_samplers_);
@@ -111,6 +118,10 @@ void MaterialPass::SetTextureSampler(const StringView name, SharedPtr<Texture> t
 }
 
 DescriptorSetHandle MaterialPass::WriteDescriptorSet() {
+  if (!material_used_) {
+    return kInvalidRenderResourceHandle;
+  }
+
   if (descriptor_set_ == kInvalidRenderResourceHandle) {
     CreateDescriptorSet();
   }
@@ -149,9 +160,9 @@ DescriptorSetHandle MaterialPass::GetDescriptorSet() const {
 void MaterialPass::CreateDescriptorSet() {
   const PipelineDescription& pipeline_description = shader_->GetPipelineDescription();
 
-  assert(pipeline_description.descriptor_sets_count > kMaterialDescriptorSetIdx);
+  assert(pipeline_description.descriptor_sets_count > descriptor_set_idx_);
 
-  descriptor_set_ = device_.CreateDescriptorSet(pipeline_description.descriptor_set_layouts[kMaterialDescriptorSetIdx]);
+  descriptor_set_ = device_.CreateDescriptorSet(pipeline_description.descriptor_set_layouts[descriptor_set_idx_]);
   VULTURE_ASSERT(ValidRenderHandle(descriptor_set_), "Invalid handle");
 }
 

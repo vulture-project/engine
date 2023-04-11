@@ -61,7 +61,11 @@ class IRenderQueuePass : public rg::IRenderPass {
       glm::mat4& model_matrix = render_object.model_matrix;
 
       for (auto& submesh : mesh.GetSubmeshes()) {
-        Material&     material      = submesh.GetMaterial();
+        Material& material = submesh.GetMaterial();
+        if (!material.Has(id)) {
+          continue;
+        }
+
         MaterialPass& material_pass = material.GetMaterialPass(id);
         Shader&       shader        = material_pass.GetShader();
 
@@ -73,13 +77,14 @@ class IRenderQueuePass : public rg::IRenderPass {
           pipeline = shader.GetPipeline();
 
           command_buffer.CmdBindGraphicsPipeline(pipeline);
-          command_buffer.CmdBindDescriptorSet(pipeline, kFrameDescriptorSetIdx, frame_data.set_handle);
-          command_buffer.CmdBindDescriptorSet(pipeline, kViewDescriptorSetIdx,  view_data.set_handle);
-          command_buffer.CmdBindDescriptorSet(pipeline, kSceneDescriptorSetIdx, light_data.set_handle);
+
+          shader.BindDescriptorSetIfUsed(command_buffer, Shader::kFrameSetBit, frame_data.set_handle);
+          shader.BindDescriptorSetIfUsed(command_buffer, Shader::kViewSetBit, view_data.set_handle);
+          shader.BindDescriptorSetIfUsed(command_buffer, Shader::kSceneSetBit, light_data.set_handle);
         }
 
-        if (prev_material == nullptr || prev_material != &material) {
-          command_buffer.CmdBindDescriptorSet(pipeline, kMaterialDescriptorSetIdx, material_pass.GetDescriptorSet());
+        if ((prev_material == nullptr || prev_material != &material) && material_pass.IsMaterialUsed()) {
+          shader.BindDescriptorSetIfUsed(command_buffer, Shader::kMaterialSetBit, material_pass.GetDescriptorSet());
           prev_material = &material;
         }
 

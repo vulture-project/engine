@@ -220,6 +220,7 @@ void vulture::ShaderReflection::AddShaderModule(ShaderModuleType shader_module, 
       Sampler2D& sampler = sampler2Ds_.emplace_back();
       sampler.shader_stages = stage_bit;
       sampler.name          = resource.name;
+      sampler.arrayed       = type.image.arrayed;
       sampler.array_size    = (type.array[0] > 0) ? type.array[0] : 1;
       sampler.set           = compiler.get_decoration(resource.id, spv::DecorationDescriptorSet);
       sampler.binding       = compiler.get_decoration(resource.id, spv::DecorationBinding);

@@ -115,14 +115,6 @@ SharedPtr<Mesh> LoadMesh(RenderDevice& device, const String& path) {
 
     submesh.UpdateDeviceBuffers(device);
     submesh.SetMaterial(materials[mesh->mMaterialIndex]);
-    
-
-    // result_mesh->vertex_buffer = device->CreateStaticVertexBuffer<Vertex3D>(vertices.size());
-    // device->LoadBufferData<Vertex3D>(result_mesh->vertex_buffer, 0, vertices.size(), vertices.data());
-
-    // result_mesh->indices_count = indices.size();
-    // result_mesh->index_buffer  = device->CreateStaticIndexBuffer(indices.size());
-    // device->LoadBufferData<uint32_t>(result_mesh->index_buffer, 0, indices.size(), indices.data());
   }
 
   return result_mesh;
@@ -138,6 +130,7 @@ void LoadMaterials(RenderDevice& device, const aiScene* scene, Vector<SharedPtr<
   SharedPtr<Texture> default_texture_normal = asset_registry->Load<Texture>(".vulture/textures/blank_normal.png");
 
   SharedPtr<Shader> forward_shader = asset_registry->Load<Shader>(".vulture/shaders/BuiltIn.PBR.shader");
+  SharedPtr<Shader> shadow_shader  = asset_registry->Load<Shader>(".vulture/shaders/BuiltIn.DirShadow.shader");
 
   // LOG_DEBUG("Shader reflection ({}):", ".vulture/shaders/BuiltIn.PBR.shader");
   // forward_shader->GetReflection().PrintData();  // FIXME: Debug only
@@ -145,6 +138,7 @@ void LoadMaterials(RenderDevice& device, const aiScene* scene, Vector<SharedPtr<
   for (uint32_t material_idx = 0; material_idx < scene->mNumMaterials; ++material_idx) {
     SharedPtr<Material> material = CreateShared<Material>(device);
     material->AddShader(forward_shader);
+    material->AddShader(shadow_shader);
 
     MaterialPass& material_pass = material->GetMaterialPass(forward_shader->GetTargetPassId());
 

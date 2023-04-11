@@ -68,8 +68,6 @@ SharedPtr<IAsset> SkyboxLoader::Load(const String& path) {
   AssetRegistry* asset_registry = AssetRegistry::Instance();
 
   SharedPtr<Shader> shader = asset_registry->Load<Shader>(".vulture/shaders/BuiltIn.Skybox.shader");
-  LOG_DEBUG("Shader reflection ({}):", ".vulture/shaders/BuiltIn.Skybox.shader");
-  shader->GetReflection().PrintData();  // FIXME: Debug only
 
   SharedPtr<Material> material = CreateShared<Material>(device_);
   material->AddShader(shader);
