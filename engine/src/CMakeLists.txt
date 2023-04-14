@@ -1,10 +1,19 @@
-target_include_directories(vulture-engine
+add_library(vulture)
+
+file(GLOB_RECURSE VULTURE_INCLUDE *.hpp *.h)
+file(GLOB_RECURSE VULTURE_SOURCE *.cpp *.c)
+
+list(FILTER VULTURE_INCLUDE EXCLUDE REGEX "vulture/audio/*")
+list(FILTER VULTURE_SOURCE EXCLUDE REGEX "vulture/audio/*")
+
+target_include_directories(vulture
   PUBLIC
-    ${ENGINE_DIR}/include/
+    .
   )
 
-add_subdirectory(core)
-add_subdirectory(platform)
-add_subdirectory(renderer)
-add_subdirectory(resource_loaders)
-add_subdirectory(scene)
+target_sources(vulture
+  PUBLIC
+    ${VULTURE_INCLUDE}
+  PRIVATE
+    ${VULTURE_SOURCE}
+  )

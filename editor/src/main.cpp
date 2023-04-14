@@ -1,4 +1,4 @@
-#include "editor_app.hpp"
+#include <veditor/editor_app.hpp>
 
 int main(int, char**) {
   vulture::EditorApp app;

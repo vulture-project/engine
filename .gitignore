@@ -2,29 +2,34 @@
 *.DS_Store
 
 # build directory
-build_editor/
-build_sandbox/
-build/
+/build_editor/
+/build_sandbox/
+/build/
+/build_Debug/
+/build_Release/
 
 # Visual Studio Code directory
 .vscode/
 
 # binary
-vulture-editor
-
-build.sh
-run.sh
+/veditor
+/vulture
+/vulture-editor
 
 # ImGui
-imgui.ini
+/imgui.ini
 
-log/
+/log/
 
 # CLion Cache
 .idea
 
 # CLion CMake cache
-cmake-build-debug
+/cmake-build-debug
+/cmake-build-debug-coverage
 
 # Tests
-fennecs_tests
+/fennecs_tests
+
+# SPIR-V binaries
+*.spv

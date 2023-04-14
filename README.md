@@ -41,10 +41,7 @@ This is a small WIP data-oriented game engine, being developed for mostly educat
 ## Building
 ```
 $ git clone --recursive https://github.com/vulture-project/engine.git
-$ mkdir build
-$ cd build
-$ cmake ..
-$ make -j 8
-$ cd..
-$ ./vulture-editor
+$ git lfs pull
+$ sh ./build.sh {Debug|Release}
+$ ./veditor
 ```
