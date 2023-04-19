@@ -32,7 +32,7 @@
 
 using namespace vulture;
 
-const ImGuiTreeNodeFlags kComponentNodeBaseFlags =
+constexpr ImGuiTreeNodeFlags kComponentNodeBaseFlags =
     ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth |
     ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_FramePadding;
 

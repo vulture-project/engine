@@ -47,7 +47,7 @@ class VulkanImGuiImplementation : public ImGuiImplementation {
   void Render(CommandBuffer& command_buffer, uint32_t swapchain_texture_idx) override;
   void FrameEnd() override;
 
-  ImGuiTextureHandle AddTextureUI(TextureHandle texture) override;
+  ImGuiTextureHandle AddTextureUI(TextureHandle texture, uint32_t layer) override;
   void RemoveTextureUI(ImGuiTextureHandle imgui_texture) override;
 
  private:

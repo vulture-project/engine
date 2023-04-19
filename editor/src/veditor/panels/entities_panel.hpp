@@ -39,6 +39,9 @@ class EntitiesPanel {
   fennecs::EntityHandle GetSelectedEntity() const;
 
  private:
+  fennecs::EntityHandle RenderEntity(fennecs::EntityHandle entity, size_t& entity_counter);
+
+ private:
   fennecs::EntityHandle selected_entity_{fennecs::EntityHandle::Null()};
 };
 

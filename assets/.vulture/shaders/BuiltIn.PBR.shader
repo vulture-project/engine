@@ -1,7 +1,7 @@
 name: "BuiltIn.PBR"
 target_render_pass: "Forward Pass"
 
-descriptor_sets: [Frame, View, Scene, Material]
+descriptor_sets: [Frame, View, Scene, Material, Custom]
 
 vert_shader: ["assets/.vulture/shaders/BuiltIn.PBR.vert", "assets/.vulture/shaders/BuiltIn.PBR.vert.spv"]
 frag_shader: ["assets/.vulture/shaders/BuiltIn.PBR.frag", "assets/.vulture/shaders/BuiltIn.PBR.frag.spv"]

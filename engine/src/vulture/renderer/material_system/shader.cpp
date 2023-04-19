@@ -136,6 +136,8 @@ bool Shader::ParseDescriptorSetUsage(YAML::Node& root) {
         set_usage_ |= kSceneSetBit;
       } else if (cur_set_str == "Material") {
         set_usage_ |= kMaterialSetBit;
+      } else if (cur_set_str == "Custom") {
+        set_usage_ |= kCustomSetBit;
       } else {
         LOG_ERROR("Invalid descriptor set \"{0}\"", cur_set_str);
         return false;

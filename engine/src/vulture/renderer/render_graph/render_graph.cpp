@@ -56,6 +56,15 @@ TextureVersionId RenderGraph::ImportTexture(const std::string_view name, SharedP
   return NewEntry(name, texture, DynamicTextureSpecification(texture->GetSpecification()), true, final_layout);
 }
 
+TextureVersionId RenderGraph::DeclareTexture(const std::string_view name, TextureLayout final_layout) {
+  texture_entries_.emplace_back(name, nullptr, rg::DynamicTextureSpecification{}, true, final_layout, 0, true);
+
+  TextureNode& texture_node = AddTextureNode(texture_entries_.size() - 1, 0);
+  texture_node.subgraph_idx = cur_subgraph_idx_;
+
+  return texture_node.version_id;
+}
+
 void RenderGraph::Setup() {
   for (auto& pass_node : pass_nodes_) {
     RenderGraphBuilder builder{*this, pass_node};
@@ -134,24 +143,28 @@ void RenderGraph::ReimportTexture(TextureVersionId version, SharedPtr<Texture> t
   assert(version != kInvalidTextureVersionId);
   assert(texture);
 
-  const TextureSpecification& specification = texture->GetSpecification();
-
   detail::TextureEntry& entry = GetTextureEntry(version);
-  entry.dirty |= entry.specification.format.Get()  != specification.format ||
-                 entry.specification.type          != specification.type ||
-                 entry.specification.usage         != specification.usage ||
-                 entry.specification.cpu_readable  != specification.cpu_readable ||
-                 entry.specification.width.Get()   != specification.width ||
-                 entry.specification.height.Get()  != specification.height ||
-                 entry.specification.samples.Get() != specification.samples ||
-                 entry.specification.mip_levels    != specification.mip_levels;
+  if (entry.texture == nullptr || entry.texture->GetHandle() != texture->GetHandle() ||
+      entry.prev_texture_handle != texture->GetHandle()) {
+    const TextureSpecification& specification = texture->GetSpecification();
+    entry.dirty |= entry.specification.format.Get()  != specification.format ||
+                   entry.specification.type          != specification.type ||
+                   entry.specification.usage         != specification.usage ||
+                   entry.specification.cpu_readable  != specification.cpu_readable ||
+                   entry.specification.width.Get()   != specification.width ||
+                   entry.specification.height.Get()  != specification.height ||
+                   entry.specification.samples.Get() != specification.samples ||
+                   entry.specification.mip_levels    != specification.mip_levels;
 
-  if (entry.dirty) {
-    textures_dirty_ = true;
+    if (entry.dirty || entry.texture == nullptr) {
+      entry.dirty     = true;
+      textures_dirty_ = true;
+    }
+
+    entry.specification        = DynamicTextureSpecification{texture->GetSpecification()};
+    entry.texture             = texture;
+    entry.prev_texture_handle = texture->GetHandle();
   }
-
-  entry.specification = DynamicTextureSpecification{texture->GetSpecification()};
-  entry.texture      = texture;
 }
 
 void RenderGraph::UpdateDependentTextureValues() {
@@ -242,7 +255,7 @@ void RenderGraph::RecreateRenderPasses(RenderDevice& device) {
 
     /* Attachments */
     uint32_t attachments_count = (pass_node.depth_stencil_usage.has_value() ? 1 : 0) +
-                                 pass_node.color_attachment_usages.size() + pass_node.resolve_attachment_usages.size();
+                                  pass_node.color_attachment_usages.size() + pass_node.resolve_attachment_usages.size();
 
     built_pass.description.attachments.resize(attachments_count);
     built_pass.framebuffer_attachments.resize(attachments_count);
@@ -386,7 +399,8 @@ void RenderGraph::RecreateFramebuffers(RenderDevice& device) {
 TextureVersionId RenderGraph::NewEntry(const std::string_view name, SharedPtr<Texture> texture,
                                        const DynamicTextureSpecification& specification, bool imported,
                                        TextureLayout final_layout) {
-  texture_entries_.emplace_back(name, texture, specification, imported, final_layout, 0, imported ? false : true);
+  texture_entries_.emplace_back(name, texture, specification, imported, final_layout, 0, imported ? false : true,
+                                texture ? texture->GetHandle() : kInvalidRenderResourceHandle);
 
   TextureNode& texture_node = AddTextureNode(texture_entries_.size() - 1, 0);
   texture_node.subgraph_idx = cur_subgraph_idx_;
@@ -692,6 +706,16 @@ void RenderGraph::ExportGraphvizSubgraph(std::ostream& os, int32_t subgraph_idx)
  ************************************************************************************************/
 RenderGraphBuilder::RenderGraphBuilder(RenderGraph& graph, PassNode& pass_node)
     : graph_(graph), pass_node_(pass_node) {}
+
+TextureVersionId RenderGraphBuilder::LastVersion(const std::string_view name) {
+  for (const auto& node : graph_.texture_nodes_) {
+    if (graph_.texture_entries_[node.actual_texture_idx].name == name) {
+      return node.version_id;
+    }
+  }
+
+  return kInvalidTextureVersionId;
+}
 
 TextureVersionId RenderGraphBuilder::CreateTexture(const std::string_view name,
                                                    const DynamicTextureSpecification& specification,

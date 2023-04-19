@@ -33,35 +33,54 @@ using namespace vulture;
 
 void EntitiesPanel::OnRender(Scene& scene) {
   if (ImGui::Begin("Entities")) {
-    const ImGuiTreeNodeFlags base_flags =
-        ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
-
-    fennecs::EntityHandle selected_entity{fennecs::EntityHandle::Null()};
-
-    size_t index{};
+    size_t entity_counter{0};
 
     fennecs::EntityStream stream = scene.GetEntityWorld().Query<NameComponent>();
     for (fennecs::EntityHandle entity = stream.Next(); !entity.IsNull(); entity = stream.Next()) {
-      ImGuiTreeNodeFlags node_flags = base_flags;
-      if (entity.IsEqual(selected_entity_)) {
-        node_flags |= ImGuiTreeNodeFlags_Selected;
+      if (!entity.Has<HierarchyComponent>() || !entity.Get<HierarchyComponent>().parent.has_value()) {
+        NameComponent& name = entity.Get<NameComponent>();
+
+        fennecs::EntityHandle selected_entity = RenderEntity(entity, entity_counter);
+        if (!selected_entity.IsNull()) {
+          selected_entity_ = selected_entity;
+        }
       }
-
-      node_flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
-
-      ImGui::TreeNodeEx((void*)(intptr_t)index++, node_flags, "%s", entity.Get<NameComponent>().name.c_str());
-
-      if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
-        selected_entity = entity; 
-      }
-    }
-
-    if (!selected_entity.IsNull()) {
-      selected_entity_ = selected_entity;
     }
   }
 
   ImGui::End();
+}
+
+fennecs::EntityHandle EntitiesPanel::RenderEntity(fennecs::EntityHandle entity, size_t& entity_counter) {
+  const ImGuiTreeNodeFlags base_flags =
+      ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
+
+  fennecs::EntityHandle selected_entity{fennecs::EntityHandle::Null()};
+
+  ImGuiTreeNodeFlags node_flags = base_flags;
+  if (entity.IsEqual(selected_entity_)) {
+    node_flags |= ImGuiTreeNodeFlags_Selected;
+  }
+
+  if (!entity.Has<HierarchyComponent>() || entity.Get<HierarchyComponent>().children.empty()) {
+    node_flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+  }
+
+  bool open = ImGui::TreeNodeEx((void*)(intptr_t)entity_counter++, node_flags, "%s", entity.Get<NameComponent>().name.c_str());
+
+  if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
+    selected_entity = entity;
+  }
+
+  if (open && entity.Has<HierarchyComponent>() && !entity.Get<HierarchyComponent>().children.empty()) {
+    for (auto child : entity.Get<HierarchyComponent>().children) {
+      RenderEntity(child, entity_counter);
+    }
+
+    ImGui::TreePop();
+  }
+
+  return selected_entity;
 }
 
 void EntitiesPanel::SetSelectedEntity(fennecs::EntityHandle entity) {

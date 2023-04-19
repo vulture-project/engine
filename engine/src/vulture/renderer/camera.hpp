@@ -67,7 +67,7 @@ struct Camera {
   PerspectiveCameraSpecification  perspective_specification{};
   OrthographicCameraSpecification orthographic_specification{};
 
-  SharedPtr<Texture> render_texture{nullptr};
+  SharedPtr<Texture>             render_texture{nullptr};
 
  public:
   Camera() = default;
@@ -81,7 +81,7 @@ struct Camera {
   float             NearPlane()       const;
   float             FarPlane()        const;
 
-  void CalculateFrustumCorners(Array<glm::vec3, 8>& out_corners) const;
+  void CalculateFrustumCorners(glm::vec3* out_corners) const;
 
   void OnUpdateAspect(float aspect);
   void OnUpdateTransform(const Transform& transform);

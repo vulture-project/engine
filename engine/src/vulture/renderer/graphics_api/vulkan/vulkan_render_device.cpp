@@ -929,6 +929,7 @@ TextureHandle VulkanRenderDevice::CreateTexture(const TextureSpecification& spec
   /* Individual layer views */
   if (specification.individual_layers_accessible && layers > 0) {
     for (uint32_t i = 0; i < layers; ++i) {
+      view_info.viewType                        = VK_IMAGE_VIEW_TYPE_2D;
       view_info.subresourceRange.baseArrayLayer = i;
       view_info.subresourceRange.layerCount     = 1;
 

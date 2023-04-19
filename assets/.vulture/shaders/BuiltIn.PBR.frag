@@ -4,6 +4,7 @@
 #include "include/BuiltIn.FrameData.glsl"
 #include "include/BuiltIn.ViewData.glsl"
 #include "include/BuiltIn.SceneData.glsl"
+#include "include/BuiltIn.CascadedShadowMap.glsl"
 
 layout(set = 3, binding = 0) uniform MaterialData
 {
@@ -49,6 +50,8 @@ struct LightInfo {
     vec3 radiance;
 };
 
+float CalculateShadow();
+
 vec3 CalculateSurfaceColorFromMap();
 float CalculateMetallicFromMap();
 float CalculateRoughnessFromMap();
@@ -64,10 +67,8 @@ float GSF_Smith_Schlick_GGX(vec3 n, vec3 v, vec3 l, float k);
 
 vec3 FresnelSchlick(vec3 h, vec3 v, vec3 F0);
 
-void main()
-{
-    if (texture(uAlbedoMap, texCoords).a < 0.01)
-    {
+void main() {
+    if (texture(uAlbedoMap, texCoords).a < 0.01) {
         discard;
     }
 
@@ -86,8 +87,7 @@ void main()
 
     vec3 L0 = vec3(0.0);
 
-    for (int i = 0; i < uDirectionalLightsCount; ++i)
-    {
+    for (int i = 0; i < uDirectionalLightsCount; ++i) {
         LightInfo light;
 
         light.l = -normalize(directionalLights[i].directionWS);
@@ -95,11 +95,14 @@ void main()
 
         light.radiance = directionalLights[i].color * directionalLights[i].intensity;
 
-        L0 += CalculateLightContribution(point, light);
+        if (i == 0) {
+            L0 += (1.0 - CalculateShadow()) * CalculateLightContribution(point, light);
+        } else {
+            L0 += CalculateLightContribution(point, light);
+        }
     }
 
-    for (int i = 0; i < uPointLightsCount; ++i)
-    {
+    for (int i = 0; i < uPointLightsCount; ++i) {
         LightInfo light;
 
         light.l = normalize(pointLights[i].positionWS - point.p);
@@ -116,8 +119,7 @@ void main()
         // outColor += vec4(CalculatePointLight(pointLights[i], bumpNormalWS, toCameraWS), 0);
     }
 
-    // for (int i = 0; i < uSpotLightsCount; ++i)
-    // {
+    // for (int i = 0; i < uSpotLightsCount; ++i) {
     //     outColor += vec4(CalculateSpotLight(spotLights[i], bumpNormalWS, toCameraWS), 0);
     // }
 
@@ -127,7 +129,63 @@ void main()
     // gamma correct
     // L0 = pow(L0, vec3(1.0/2.2));
 
-    outColor = vec4(L0, 1.0);
+    const vec3 cascadeColor[CASCADES_COUNT] = {vec3(0, 0.25, 0), vec3(0.125, 0.125, 0), vec3(0, 0, 0.25), vec3(0.25, 0, 0)};
+
+    float clip_range = uCameraFarPlane - uCameraNearPlane;
+
+    // Cascade index
+    vec4 positionVS = uView * vec4(positionWS, 1.0);
+    float depthVS    = abs(positionVS.z);
+
+    int cascade = 0;
+    for (int i = 0; i < CASCADES_COUNT; ++i) {
+        if (depthVS < abs(uCameraNearPlane + clip_range * uCascadeSplits[i + 1])) {
+            cascade = i;
+            break;
+        }
+    }
+
+    outColor = vec4(L0 + cascadeColor[cascade], 1.0);
+
+    // outColor = vec4(vec3(texture(uCascadedShadowMap, vec3(gl_FragCoord.xy, 0)).r), 1.0);
+    // outColor = vec4(vec3(1.0 - CalculateShadow()), 1.0);
+    // outColor = vec4(L0, 1.0);
+}
+
+float CalculateShadow() {
+    float clip_range = uCameraFarPlane - uCameraNearPlane;
+
+    // Cascade index
+    vec4 positionVS = uView * vec4(positionWS, 1.0);
+    float depthVS    = abs(positionVS.z);
+
+    int cascade = 0;
+    for (int i = 0; i < CASCADES_COUNT; ++i) {
+        if (depthVS < uCameraNearPlane + clip_range * uCascadeSplits[i + 1]) {
+            cascade = i;
+            break;
+        }
+    }
+
+    // Depth in the chosen cascade space
+    vec4 positionCascadeSpace = uCascadeMatrices[cascade] * vec4(positionWS, 1.0);
+    positionCascadeSpace.xyz = positionCascadeSpace.xyz / positionCascadeSpace.w;
+    positionCascadeSpace = positionCascadeSpace * 0.5 + 0.5;  // Convert to [0,1] range
+
+    float depth = positionCascadeSpace.z;
+    if (depth > 1.0) {
+        return 0.0;
+    }
+
+    // Stored depth
+    float stored_depth = texture(uCascadedShadowMap, vec3(positionCascadeSpace.xy, cascade)).r;
+    // return stored_depth;
+
+    if (depth >= stored_depth) {
+        return 1.0;
+    }
+
+    return 0.0;
 }
 
 vec3 CalculateSurfaceColorFromMap() {

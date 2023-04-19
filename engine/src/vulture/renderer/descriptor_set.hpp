@@ -34,10 +34,7 @@ namespace vulture {
 class DescriptorSet {
  public:
   DescriptorSet() = default;
-  explicit DescriptorSet(RenderDevice* device);
   ~DescriptorSet();
-
-  void SetRenderDevice(RenderDevice* device);
 
   const DescriptorSetLayoutInfo& GetLayoutInfo() const;
   DescriptorSetLayoutHandle GetLayoutHandle() const;
@@ -45,7 +42,7 @@ class DescriptorSet {
 
   DescriptorSet& AddBinding(DescriptorType type, ShaderStageFlags shader_stages);
 
-  void Build();
+  void Build(RenderDevice& device);
 
  private:
   RenderDevice*             device_{nullptr};

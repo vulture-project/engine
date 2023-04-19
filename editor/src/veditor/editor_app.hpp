@@ -30,6 +30,7 @@
 #include <veditor/panels/entities_panel.hpp>
 #include <veditor/panels/inspector_panel.hpp>
 #include <veditor/panels/preview_panel.hpp>
+#include <veditor/panels/renderer_panel.hpp>
 #include <vulture/app/app.hpp>
 #include <vulture/event_system/event_system.hpp>
 #include <vulture/platform/event.hpp>
@@ -63,7 +64,7 @@ class EditorApp : public Application {
   void CreateRenderer();
 
   void Render();
-  void RenderUI(CommandBuffer& command_buffer, uint32_t texture_idx);
+  void RenderUI(CommandBuffer& command_buffer, uint32_t texture_idx, uint32_t frame_idx);
 
   void OnUpdateImGuiStyle();
 
@@ -105,6 +106,7 @@ class EditorApp : public Application {
   UniquePtr<PreviewPanel> preview_panel_;
   UniquePtr<EntitiesPanel> entities_panel_;
   UniquePtr<InspectorPanel> inspector_panel_;
+  UniquePtr<RendererPanel> renderer_panel_;
 };
 
 }  // namespace vulture
