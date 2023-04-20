@@ -8,6 +8,10 @@
 /build_Debug/
 /build_Release/
 
+# Visual Studio
+.vs/
+Debug/
+
 # Visual Studio Code directory
 .vscode/
 

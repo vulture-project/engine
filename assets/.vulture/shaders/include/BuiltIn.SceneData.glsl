@@ -1,8 +1,8 @@
 layout(set = 2, binding = 0) uniform LightEnvironment
 {
-  int uDirectionalLightsCount;
-  int uPointLightsCount;
-  int uSpotLightsCount;
+  uint uDirectionalLightsCount;
+  uint uPointLightsCount;
+  uint uSpotLightsCount;
 };
 
 layout(set = 2, binding = 1) readonly buffer DirectionalLightsData

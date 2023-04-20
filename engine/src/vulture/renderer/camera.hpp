@@ -42,7 +42,7 @@ enum class CameraProjectionType : uint32_t {
 struct PerspectiveCameraSpecification {
   float fov        {45.0f};
   float near_plane {0.5f};
-  float far_plane  {1000.0f};
+  float far_plane  {100.0f};
   float aspect     {0.0f};
 
   PerspectiveCameraSpecification(float aspect = 0.0f);

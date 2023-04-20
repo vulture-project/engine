@@ -14,6 +14,10 @@ set(ASSIMP_BUILD_GLTF_IMPORTER on)
 set(ASSIMP_BUILD_FBX_IMPORTER on)
 set(ASSIMP_BUILD_OBJ_IMPORTER on)
 
+set(YAML_BUILD_SHARED_LIBS off)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGLFW_INCLUDE_NONE")
+
 add_subdirectory(assimp)
 add_subdirectory(SPIRV-Cross)
 add_subdirectory(fennecs)

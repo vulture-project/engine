@@ -32,12 +32,20 @@
 
 namespace vulture {
 
-constexpr uint32_t kCascadedShadowMapCascadesCount = 4;
-constexpr float     kCascadeThresholds[kCascadedShadowMapCascadesCount] = {0.25f, 0.5f, 0.75f, 1.0f};
+constexpr uint32_t kCascadedShadowMapCascadesCount = 3;
 
 struct UBCSMData {
   glm::mat4 cascade_matrices[kCascadedShadowMapCascadesCount];
-  float      cascade_splits[kCascadedShadowMapCascadesCount + 1];
+
+  struct aligned_float {
+    alignas(16) float value;
+    aligned_float() = default;
+    aligned_float(float value) : value(value) {}
+
+    operator float() const { return value; }
+  };
+
+  aligned_float cascade_splits[kCascadedShadowMapCascadesCount + 1];
 };
 
 class CascadedShadowMapPass final : public IRenderQueuePass {
@@ -82,7 +90,7 @@ class CascadedShadowMapPass final : public IRenderQueuePass {
 
 class CascadedShadowMapRenderFeature : public IRenderFeature {
  public:
-  CascadedShadowMapRenderFeature(RenderDevice& device, uint32_t shadow_map_size = 1024)
+  CascadedShadowMapRenderFeature(RenderDevice& device, uint32_t shadow_map_size = 2048)
       : device_(device), shadow_map_size_(shadow_map_size) {
     VULTURE_ASSERT(shadow_map_size_ > 0, "Shadow map size cannot be zero, but shadow_map_size = {0}!",
                    shadow_map_size_);
@@ -98,11 +106,12 @@ class CascadedShadowMapRenderFeature : public IRenderFeature {
     shadow_map_ = CreateShared<Texture>(device_, specification);
 
     SamplerSpecification sampler_specification{};
-    sampler_specification.min_filter      = SamplerFilter::kNearest;
-    sampler_specification.mag_filter      = SamplerFilter::kNearest;
-    sampler_specification.address_mode_u = SamplerAddressMode::kClampToEdge;
-    sampler_specification.address_mode_v = SamplerAddressMode::kClampToEdge;
-    sampler_specification.address_mode_w = SamplerAddressMode::kClampToEdge;
+    sampler_specification.min_filter     = SamplerFilter::kNearest;
+    sampler_specification.mag_filter     = SamplerFilter::kNearest;
+    sampler_specification.address_mode_u = SamplerAddressMode::kClampToBorder;
+    sampler_specification.address_mode_v = SamplerAddressMode::kClampToBorder;
+    sampler_specification.address_mode_w = SamplerAddressMode::kClampToBorder;
+    sampler_specification.border_color = SamplerBorderColor::kFloatOpaqueWhite;
     shadow_map_sampler_ = CreateShared<Sampler>(device_, sampler_specification);
 
     const ShaderStageFlags stage_flags = kShaderStageBitVertex | kShaderStageBitFragment;
@@ -212,8 +221,8 @@ class CascadedShadowMapRenderFeature : public IRenderFeature {
       // Entire camera frustum to the current cascade frustum
       for (uint32_t i = 0; i < 4; ++i) {
         glm::vec3 dist = frustum_corners[i + 4] - frustum_corners[i];
-        frustum_corners[i]     = frustum_corners[i] + (dist * ub_csm_data.cascade_splits[cascade]);
-        frustum_corners[i + 4] = frustum_corners[i] + (dist * ub_csm_data.cascade_splits[cascade + 1]);
+        frustum_corners[i]     = frustum_corners[i] + (dist * ub_csm_data.cascade_splits[cascade].value);
+        frustum_corners[i + 4] = frustum_corners[i] + (dist * ub_csm_data.cascade_splits[cascade + 1].value);
       }
 
       // Frustum center
@@ -237,7 +246,7 @@ class CascadedShadowMapRenderFeature : public IRenderFeature {
       glm::vec3 cascade_position = frustum_center - light.direction * radius;
 
       glm::mat4 view = glm::lookAt(cascade_position, frustum_center, glm::vec3(0.0f, 1.0f, 0.0f));
-      glm::mat4 proj = glm::orthoLH(-radius, radius, -radius, radius, cascade_near, cascade_far);
+      glm::mat4 proj = glm::ortho(-radius, radius, -radius, radius, cascade_near, cascade_far);
 
       view_data_per_cascade[cascade].near_plane = cascade_near;
       view_data_per_cascade[cascade].far_plane  = cascade_far;
@@ -399,9 +408,9 @@ class CascadedShadowMapRenderFeature : public IRenderFeature {
   RenderDevice&               device_;
 
   uint32_t                    shadow_map_size_        {0};
-  float                        log_split_contribution_ {0.5f};
-  float                        cascade_near_offset_    {-50.0f};
-  float                        cascade_far_offset_     {50.0f};
+  float                       log_split_contribution_ {0.5f};
+  float                       cascade_near_offset_    {-50.0f};
+  float                       cascade_far_offset_     {5.0f};
 
   SharedPtr<Sampler>          shadow_map_sampler_     {nullptr};
   SharedPtr<Texture>          shadow_map_             {nullptr};

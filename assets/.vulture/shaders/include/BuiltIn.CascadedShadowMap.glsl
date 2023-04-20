@@ -1,4 +1,4 @@
-const int CASCADES_COUNT = 4;
+const int CASCADES_COUNT = 3;
 
 layout(set = 4, binding = 0) uniform sampler2DArray uCascadedShadowMap;
 layout(set = 4, binding = 1) uniform CSMData {

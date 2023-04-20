@@ -59,7 +59,7 @@ int EditorApp::Init() {
   InputEventManager::SetWindowAndDispatcher(&window_, &event_dispatcher_);
   event_dispatcher_.GetSink<QuitEvent>().Connect<&EditorApp::OnQuit>(*this);
 
-  device_.Init(&window_, nullptr, nullptr, true);
+  device_.Init(&window_, nullptr, nullptr, false);
 
   /* Register loaders FIXME: (tralf-strues) move somewhere else */
   AssetRegistry::Instance()->RegisterLoader(CreateShared<OBJLoader>(device_));
@@ -162,22 +162,21 @@ void EditorApp::Run() {
   camera = scene_.GetEntityWorld().Attach<ScriptComponent>(camera, new CameraMovementScript());
   camera.Get<CameraComponent>().camera.perspective_specification.far_plane = 1000.0f;
 
-  // fennecs::EntityHandle sponza = scene_.CreateEntity("Sponza");
-  // // sponza = scene_.GetEntityWorld().Attach<MeshComponent>(sponza, asset_registry.Load<Mesh>("meshes/sponza.obj"));
-  // sponza = scene_.GetEntityWorld().Attach<MeshComponent>(sponza, asset_registry.Load<Mesh>("meshes/sponza_pbr_new/sponza_pbr_new.gltf"));
-  // sponza = scene_.GetEntityWorld().Attach<TransformComponent>(sponza);
-  // // sponza.Get<TransformComponent>().transform.scale = glm::vec3(0.02);
-  // sponza.Get<TransformComponent>().transform.scale = glm::vec3(2);
-  // sponza.Get<TransformComponent>().transform.rotation = glm::quat(glm::vec3(0.0f, M_PI + M_PI_2, 0.0f));
-  // // sponza.Get<TransformComponent>().transform.rotation = glm::quat(glm::vec3(0.0f, M_PI_2, M_PI_2));
+   fennecs::EntityHandle sponza = scene_.CreateEntity("Sponza");
+   // sponza = scene_.GetEntityWorld().Attach<MeshComponent>(sponza, asset_registry.Load<Mesh>("meshes/sponza.obj"));
+   sponza = scene_.GetEntityWorld().Attach<MeshComponent>(sponza, asset_registry.Load<Mesh>("meshes/sponza_pbr_new/sponza_pbr_new.gltf"));
+   sponza = scene_.GetEntityWorld().Attach<TransformComponent>(sponza);
+   // sponza.Get<TransformComponent>().transform.scale = glm::vec3(0.02);
+   sponza.Get<TransformComponent>().transform.scale = glm::vec3(2);
+   sponza.Get<TransformComponent>().transform.rotation = glm::quat(glm::vec3(0.0f, M_PI + M_PI_2, 0.0f));
+   // sponza.Get<TransformComponent>().transform.rotation = glm::quat(glm::vec3(0.0f, M_PI_2, M_PI_2));
 
-  // // sponza.Get<TransformComponent>().transform.scale = glm::vec3(1);
-  // // sponza.Get<TransformComponent>().transform.Rotate(M_PI_2, kUp);
+   // sponza.Get<TransformComponent>().transform.scale = glm::vec3(1);
+   // sponza.Get<TransformComponent>().transform.Rotate(M_PI_2, kUp);
 
-  fennecs::EntityHandle plane = scene_.CreateEntity("Ground");
-  plane = scene_.GetEntityWorld().Attach<TransformComponent>(plane);
-  plane = scene_.GetEntityWorld().Attach<MeshComponent>(plane, asset_registry.Load<Mesh>("meshes/ground.gltf"));
-  // plane.Get<TransformComponent>().transform.scale = glm::vec3{10.0f, 0.1, 10.0f};
+  //fennecs::EntityHandle plane = scene_.CreateEntity("Ground");
+  //plane = scene_.GetEntityWorld().Attach<TransformComponent>(plane);
+  //plane = scene_.GetEntityWorld().Attach<MeshComponent>(plane, asset_registry.Load<Mesh>("meshes/ground.gltf"));
 
 
 
@@ -217,7 +216,7 @@ void EditorApp::Run() {
 
   fennecs::EntityHandle dir_light = scene_.CreateEntity("Sky light");
   dir_light = scene_.GetEntityWorld().Attach<DirectionalLightSpecification>(dir_light, glm::vec3{1.0, 1.0, 1.0}, 0.5);
-  dir_light = scene_.GetEntityWorld().Attach<TransformComponent>(dir_light, Transform(glm::vec3(0), glm::vec3(-0.5, 0, 0)));
+  dir_light = scene_.GetEntityWorld().Attach<TransformComponent>(dir_light, Transform(glm::vec3(0), glm::vec3(-0.5, M_PI_2, 0)));
 
   fennecs::EntityHandle point_light1 = scene_.CreateEntity("Point light1");
   point_light1 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light1, glm::vec3{1.0, 0.5, 0.1}, 1.5, 3);

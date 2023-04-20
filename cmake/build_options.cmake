@@ -1,3 +1,5 @@
+option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
+
 option(BUILD_WITH_ASAN "enable address sanitizer" OFF)
 
 option(BUILD_WITH_TSAN "enable thread sanitizer" OFF)

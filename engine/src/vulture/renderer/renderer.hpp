@@ -34,8 +34,8 @@
 namespace vulture {
 
 struct RendererBlackboardData {
-  float                    time                     {0.0f};
-  uint32_t                frame_in_flight           {0};
+  float                   time                     {0.0f};
+  uint32_t                frame_in_flight          {0};
   DescriptorSetHandle     descriptor_set_frame     {kInvalidRenderResourceHandle};
 
   const LightEnvironment* light_environment        {nullptr};
@@ -53,14 +53,14 @@ struct UBViewData {
               glm::mat4 view;
               glm::mat4 proj;
   alignas(16) glm::vec3 position;
-  alignas(4)  float      near_plane; 
-  alignas(4)  float      far_plane;
+  alignas(4)  float     near_plane; 
+  alignas(4)  float     far_plane;
 };
 
 struct UBLightData {
-  alignas(4) uint directional_lights_count{0};
-  alignas(4) uint point_lights_count{0};
-  alignas(4) uint spot_lights_count{0};
+  alignas(4) uint32_t directional_lights_count{0};
+  alignas(4) uint32_t point_lights_count{0};
+  alignas(4) uint32_t spot_lights_count{0};
 };
 
 class Renderer {

@@ -82,7 +82,7 @@ void RendererPanel::RenderCSMFeature(CascadedShadowMapRenderFeature& feature, ui
         cached.imgui_texture = imgui_implementation_.AddTextureUI(cached.texture, cascade);
       }
 
-      ImGui::Image(cached.imgui_texture, ImVec2{250, 250});
+      ImGui::Image(cached.imgui_texture, ImVec2{128, 128});
     }
 
     ImGui::TreePop();

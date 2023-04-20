@@ -39,7 +39,7 @@ OrthographicCameraSpecification::OrthographicCameraSpecification(float size, flo
     : size(size), aspect(aspect) {}
 
 glm::mat4 OrthographicCameraSpecification::CalculateProjectionMatrix() const {
-  return glm::orthoRH(-size * aspect, size * aspect, -size, size, near_plane, far_plane);
+  return glm::ortho(-size * aspect, size * aspect, -size, size, near_plane, far_plane);
 }
 
 Camera::Camera(const PerspectiveCameraSpecification& specs, SharedPtr<Texture> render_texture)
