@@ -96,7 +96,7 @@ void main() {
         light.radiance = directionalLights[i].color * directionalLights[i].intensity;
 
         if (i == 0) {
-            L0 += (1.0 - CalculateShadow(point.n, directionalLights[i].directionWS)) * CalculateLightContribution(point, light);
+            L0 += CalculateShadow(positionWS) * CalculateLightContribution(point, light);
         } else {
             L0 += CalculateLightContribution(point, light);
         }
@@ -115,98 +115,18 @@ void main() {
         light.radiance = pointLights[i].color * pointLights[i].intensity * attenuation;
 
         L0 += CalculateLightContribution(point, light);
-
-        // outColor += vec4(CalculatePointLight(pointLights[i], bumpNormalWS, toCameraWS), 0);
     }
 
     // for (int i = 0; i < uSpotLightsCount; ++i) {
     //     outColor += vec4(CalculateSpotLight(spotLights[i], bumpNormalWS, toCameraWS), 0);
     // }
 
-
 //    // HDR tonemapping
 //     L0 = L0 / (L0 + vec3(1.0));
 ////     gamma correct
 //     L0 = pow(L0, vec3(1.0/2.2));
 
-    const vec3 cascadeColor[CASCADES_COUNT] = {vec3(0, 0.25, 0), vec3(0.125, 0.125, 0), vec3(0, 0, 0.25)};
-//    const vec3 cascadeColor[CASCADES_COUNT] = {vec3(0, 0.25, 0), vec3(0.125, 0.125, 0), vec3(0, 0, 0.25), vec3(0.25, 0, 0)};
-
-    float clip_range = uCameraFarPlane - uCameraNearPlane;
-
-    // Cascade index
-    vec4 positionVS = uView * vec4(positionWS, 1.0);
-    float depthVS    = abs(positionVS.z);
-
-    int cascade = 0;
-    for (int i = 0; i < CASCADES_COUNT; ++i) {
-        if (depthVS < abs(uCameraNearPlane + clip_range * uCascadeSplits[i + 1])) {
-            cascade = i;
-            break;
-        }
-    }
-
-    // outColor = vec4(L0 + cascadeColor[cascade], 1.0);
-
-    // outColor = vec4(vec3(texture(uCascadedShadowMap, vec3(gl_FragCoord.xy, 0)).r), 1.0);
-//    outColor = vec4(vec3(CalculateShadow(point.n, directionalLights[0].directionWS)), 1.0);
-//    outColor = vec4(vec3(1.0 - CalculateShadow(point.n)), 1.0);
-     outColor = vec4(L0, 1.0);
-}
-
-float CalculateShadow(vec3 normalWS, vec3 lightDir) {
-    float clip_range = uCameraFarPlane - uCameraNearPlane;
-
-    // Cascade index
-    vec4 positionVS = uView * vec4(positionWS, 1.0);
-    float depthVS    = abs(positionVS.z);
-
-    int cascade = 0;
-    for (int i = 0; i < CASCADES_COUNT; ++i) {
-        if (depthVS < uCameraNearPlane + clip_range * uCascadeSplits[i + 1]) {
-            cascade = i;
-            break;
-        }
-    }
-//    cascade = 0;
-
-    // Depth in the chosen cascade space
-    vec4 positionCascadeSpace = uCascadeMatrices[cascade] * vec4(positionWS, 1.0);
-//    positionCascadeSpace.xyz = positionCascadeSpace.xyz / positionCascadeSpace.w;
-    positionCascadeSpace.xy = positionCascadeSpace.xy * 0.5 + 0.5;  // Convert to [0,1] range
-
-    float depth = positionCascadeSpace.z;
-//    return depth;
-    if (depth > 1.0) {
-        return 0.0;
-    }
-
-    // Stored depth
-//    float stored_depth = texture(uCascadedShadowMap, vec3(positionCascadeSpace.xy, cascade)).r;
-//    float stored_depth = texture(uCascadedShadowMap, vec3(positionCascadeSpace.x, 1.0 - positionCascadeSpace.y, cascade)).r;
-//    return stored_depth;
-
-//    float bias = 0.005;
-    float bias = 0.0;
-//    float bias = max(0.05 * (1.0 - dot(normalWS, -lightDir)), 0.005);
-
-    float shadow = 0.0;
-    vec2 texelSize = 1.0 / textureSize(uCascadedShadowMap, 0).xy;
-    vec2 baseTexel = vec2(positionCascadeSpace.x, 1.0 - positionCascadeSpace.y);
-    for(int x = -1; x <= 1; ++x) {
-        for(int y = -1; y <= 1; ++y) {
-            float pcfDepth = texture(uCascadedShadowMap, vec3(baseTexel + vec2(x, y) * texelSize, cascade)).r; 
-            shadow += (depth - bias > pcfDepth) ? 1.0 : 0.0;
-        }    
-    }
-    shadow /= 9.0;
-
-    return shadow;
-//    if (depth - 0.005 > stored_depth) {
-//        return 1.0;
-//    }
-//
-//    return 0.0;
+    outColor = vec4(L0, 1.0);
 }
 
 vec3 CalculateSurfaceColorFromMap() {

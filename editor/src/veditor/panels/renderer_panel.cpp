@@ -62,9 +62,12 @@ void RendererPanel::RenderCSMFeature(CascadedShadowMapRenderFeature& feature, ui
   void* code = (void*)typeid(CascadedShadowMapRenderFeature).hash_code();
   if (ImGui::TreeNodeEx(code, kComponentNodeBaseFlags, "Cascaded Shadow Mapping")) {
     ImGui::SeparatorText("Properties");
-    ImGui::DragFloat("Log split", &feature.GetLogSplitContribution(), 0.01f, 0.0f, 1.0f, "%.01f");
+    ImGui::DragFloat("Log split", &feature.GetLogSplitContribution(), 0.01f, 0.0f, 1.0f, "%.001f");
     ImGui::DragFloat("Near offset", &feature.GetCascadeNearOffset(), 1.0f, -500.0f, 500.0f, "%.0f");
     ImGui::DragFloat("Far offset", &feature.GetCascadeFarOffset(), 1.0f, -500.0f, 500.0f, "%.0f");
+    ImGui::ColorEdit3("Shadow color", reinterpret_cast<float*>(&feature.GetShadowColor()));
+    ImGui::Checkbox("Soft shadows", &feature.GetUseSoftShadows());
+    ImGui::DragFloat("Bias", &feature.GetBias(), 0.0001f, 0.0f, 1.0f);
 
     ImGui::SeparatorText("Cascades Debug");
     for (uint32_t cascade = 0; cascade < kCascadedShadowMapCascadesCount; ++cascade) {

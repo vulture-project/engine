@@ -46,6 +46,10 @@ struct UBCSMData {
   };
 
   aligned_float cascade_splits[kCascadedShadowMapCascadesCount + 1];
+
+  alignas(16) glm::vec3 shadow_color;
+  alignas(4)  uint32_t  soft_shadows;
+  alignas(4)  float     bias;
 };
 
 class CascadedShadowMapPass final : public IRenderQueuePass {
@@ -111,7 +115,7 @@ class CascadedShadowMapRenderFeature : public IRenderFeature {
     sampler_specification.address_mode_u = SamplerAddressMode::kClampToBorder;
     sampler_specification.address_mode_v = SamplerAddressMode::kClampToBorder;
     sampler_specification.address_mode_w = SamplerAddressMode::kClampToBorder;
-    sampler_specification.border_color = SamplerBorderColor::kFloatOpaqueWhite;
+    sampler_specification.border_color   = SamplerBorderColor::kFloatOpaqueWhite;
     shadow_map_sampler_ = CreateShared<Sampler>(device_, sampler_specification);
 
     const ShaderStageFlags stage_flags = kShaderStageBitVertex | kShaderStageBitFragment;
@@ -150,6 +154,9 @@ class CascadedShadowMapRenderFeature : public IRenderFeature {
   float& GetLogSplitContribution() { return log_split_contribution_; }
   float& GetCascadeNearOffset() { return cascade_near_offset_; }
   float& GetCascadeFarOffset() { return cascade_far_offset_; }
+  glm::vec3& GetShadowColor() { return shadow_color_; }
+  bool& GetUseSoftShadows() { return soft_shadows_; }
+  float& GetBias() { return bias_; }
 
   void SetupRenderPasses(rg::RenderGraph& render_graph) override {
     render_graph.GetBlackboard().Add<CascadedShadowMapPass::Data>();
@@ -175,8 +182,8 @@ class CascadedShadowMapRenderFeature : public IRenderFeature {
     float camera_near          = camera.NearPlane();
     float camera_far           = camera.FarPlane();
     float camera_clip_range    = camera_far - camera_near;
-    auto camera_proj_view     = camera.ProjMatrix() * camera.ViewMatrix();
-    auto camera_inv_proj_view = glm::inverse(camera_proj_view);
+    auto  camera_proj_view     = camera.ProjMatrix() * camera.ViewMatrix();
+    auto  camera_inv_proj_view = glm::inverse(camera_proj_view);
 
     /* Step 1. Calculate cascade splits */
     VULTURE_ASSERT(log_split_contribution_ >= 0.0f && log_split_contribution_ <= 1.0f,
@@ -241,12 +248,26 @@ class CascadedShadowMapRenderFeature : public IRenderFeature {
       radius = std::ceil(radius * 16.0f) / 16.0f;
 
       // Transforms
-      float      cascade_near     = 0.0f + cascade_near_offset_;
-      float      cascade_far      = 2.0f * radius + cascade_far_offset_;
+      float     cascade_near     = 0.0f + cascade_near_offset_;
+      float     cascade_far      = 2.0f * radius + cascade_far_offset_;
       glm::vec3 cascade_position = frustum_center - light.direction * radius;
 
       glm::mat4 view = glm::lookAt(cascade_position, frustum_center, glm::vec3(0.0f, 1.0f, 0.0f));
       glm::mat4 proj = glm::ortho(-radius, radius, -radius, radius, cascade_near, cascade_far);
+
+      // Get rid of shimmering (based on https://stackoverflow.com/questions/33499053/cascaded-shadow-map-shimmering)
+      glm::mat4 shadow_matrix = proj * view;
+      glm::vec4 shadow_origin = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+      shadow_origin = shadow_matrix * shadow_origin;
+      shadow_origin = shadow_origin * static_cast<float>(shadow_map_size_) / 2.0f;
+
+      glm::vec4 rounded_origin = glm::round(shadow_origin);
+      glm::vec4 round_offset = rounded_origin - shadow_origin;
+      round_offset = round_offset *  2.0f / static_cast<float>(shadow_map_size_);
+      round_offset.z = 0.0f;
+      round_offset.w = 0.0f;
+
+      proj[3] += round_offset;
 
       view_data_per_cascade[cascade].near_plane = cascade_near;
       view_data_per_cascade[cascade].far_plane  = cascade_far;
@@ -265,152 +286,27 @@ class CascadedShadowMapRenderFeature : public IRenderFeature {
       ub_csm_data.cascade_matrices[cascade] = view_data_per_cascade[cascade].proj * view_data_per_cascade[cascade].view;
     }
 
+    ub_csm_data.shadow_color = shadow_color_;
+    ub_csm_data.soft_shadows = soft_shadows_;
+    ub_csm_data.bias         = bias_;
+
     device_.LoadBufferData<UBCSMData>(ub_csm_[context.GetFrameIdx()], 0, 1, &ub_csm_data);
 
     pass_data.shadow_map     = shadow_map_;
     pass_data.shadow_map_set = shadow_map_set_[context.GetFrameIdx()].GetHandle();
     pass_data.render_queue   = &context.GetRenderQueue();
-
-    // /* HAZEL */
-    // auto viewProjection = camera.ProjMatrix() * camera.ViewMatrix();
-
-    // float cascadeSplits[kCascadedShadowMapCascadesCount];
-
-		// float nearClip = camera.NearPlane();
-		// float farClip = camera.FarPlane();
-		// float clipRange = farClip - nearClip;
-
-		// float minZ = nearClip;
-		// float maxZ = nearClip + clipRange;
-
-		// float range = maxZ - minZ;
-		// float ratio = maxZ / minZ;
-
-		// // Based on method presented in https://developer.nvidia.com/gpugems/GPUGems3/gpugems3_ch10.html
-		// for (uint32_t i = 0; i < kCascadedShadowMapCascadesCount; i++)
-		// {
-		// 	float p = (i + 1) / static_cast<float>(kCascadedShadowMapCascadesCount);
-		// 	float log = minZ * std::pow(ratio, p);
-		// 	float uniform = minZ + range * p;
-		// 	float d = 0.92f * (log - uniform) + uniform;
-		// 	cascadeSplits[i] = (d - nearClip) / clipRange;
-		// }
-
-    // cascadeSplits[0] = kCascadeThresholds[0];
-		// cascadeSplits[1] = kCascadeThresholds[1];
-		// cascadeSplits[2] = kCascadeThresholds[2];
-		// cascadeSplits[3] = kCascadeThresholds[3];
-
-    // // Calculate orthographic projection matrix for each cascade
-		// float lastSplitDist = 0.0;
-		// for (uint32_t i = 0; i < kCascadedShadowMapCascadesCount; i++)
-		// {
-		// 	float splitDist = cascadeSplits[i];
-
-		// 	glm::vec3 frustumCorners[8] =
-		// 	{
-		// 		glm::vec3(-1.0f,  1.0f, -1.0f),
-		// 		glm::vec3(1.0f,  1.0f, -1.0f),
-		// 		glm::vec3(1.0f, -1.0f, -1.0f),
-		// 		glm::vec3(-1.0f, -1.0f, -1.0f),
-		// 		glm::vec3(-1.0f,  1.0f,  1.0f),
-		// 		glm::vec3(1.0f,  1.0f,  1.0f),
-		// 		glm::vec3(1.0f, -1.0f,  1.0f),
-		// 		glm::vec3(-1.0f, -1.0f,  1.0f),
-		// 	};
-
-		// 	// Project frustum corners into world space
-		// 	glm::mat4 invCam = glm::inverse(viewProjection);
-		// 	for (uint32_t i = 0; i < 8; i++)
-		// 	{
-		// 		glm::vec4 invCorner = invCam * glm::vec4(frustumCorners[i], 1.0f);
-		// 		frustumCorners[i] = invCorner / invCorner.w;
-		// 	}
-
-		// 	for (uint32_t i = 0; i < 4; i++)
-		// 	{
-		// 		glm::vec3 dist = frustumCorners[i + 4] - frustumCorners[i];
-		// 		frustumCorners[i + 4] = frustumCorners[i] + (dist * splitDist);
-		// 		frustumCorners[i] = frustumCorners[i] + (dist * lastSplitDist);
-		// 	}
-
-		// 	// Get frustum center
-		// 	glm::vec3 frustumCenter = glm::vec3(0.0f);
-		// 	for (uint32_t i = 0; i < 8; i++)
-		// 		frustumCenter += frustumCorners[i];
-
-		// 	frustumCenter /= 8.0f;
-
-		// 	//frustumCenter *= 0.01f;
-
-		// 	float radius = 0.0f;
-		// 	for (uint32_t i = 0; i < 8; i++)
-		// 	{
-		// 		float distance = glm::length(frustumCorners[i] - frustumCenter);
-		// 		radius = glm::max(radius, distance);
-		// 	}
-		// 	radius = 5.0f * std::ceil(radius * 16.0f) / 16.0f;
-
-		// 	glm::vec3 maxExtents = glm::vec3(radius);
-		// 	glm::vec3 minExtents = -maxExtents;
-
-		// 	glm::vec3 lightDir = -light.direction;
-		// 	glm::mat4 lightViewMatrix = glm::lookAt(frustumCenter - lightDir * -minExtents.z, frustumCenter, glm::vec3(0.0f, 1.0f, 0.0f));
-		// 	glm::mat4 lightOrthoMatrix = glm::ortho(minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, 0.0f + -150.0f, maxExtents.z - minExtents.z + 300.0f);
-
-    //   // lightOrthoMatrix[3] += vec3(lightDir);
-
-		// 	// Offset to texel space to avoid shimmering (from https://stackoverflow.com/questions/33499053/cascaded-shadow-map-shimmering)
-		// 	glm::mat4 shadowMatrix = lightOrthoMatrix * lightViewMatrix;
-		// 	float ShadowMapResolution = (float)shadow_map_size_;
-		// 	glm::vec4 shadowOrigin = (shadowMatrix * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)) * ShadowMapResolution / 2.0f;
-		// 	glm::vec4 roundedOrigin = glm::round(shadowOrigin);
-		// 	glm::vec4 roundOffset = roundedOrigin - shadowOrigin;
-		// 	roundOffset = roundOffset * 2.0f / ShadowMapResolution;
-		// 	roundOffset.z = 0.0f;
-		// 	roundOffset.w = 0.0f;
-
-		// 	lightOrthoMatrix[3] += roundOffset;
-
-		// 	// Store split distance and matrix in cascade
-    //   view_data_per_cascade[i].view = lightViewMatrix;
-    //   view_data_per_cascade[i].proj = lightOrthoMatrix;
-    //   view_data_per_cascade[i].position = frustumCenter - lightDir * -minExtents.z;
-    //   // view_data_per_cascade[i].
-
-		// 	// cascades[i].SplitDepth = (nearClip + splitDist * clipRange) * -1.0f;
-		// 	// cascades[i].ViewProj = lightOrthoMatrix * lightViewMatrix;
-		// 	// cascades[i].View = lightViewMatrix;
-
-		// 	lastSplitDist = cascadeSplits[i];
-		// }
-
-    // /* HAZEL */
-
-
-
-
-
-
-    // for (uint32_t cascade = 0; cascade < kCascadedShadowMapCascadesCount; ++cascade) {
-    //   float near = (cascade == 0) ? camera.NearPlane() : camera.NearPlane() * kCascadeThresholds[cascade - 1];
-    //   float far  = camera.FarPlane() * kCascadeThresholds[cascade];
-
-    //   // UBViewData view_data = CalculateCascadeViewData(camera, light, near, far);
-    //   device_.LoadBufferData<UBViewData>(ub_view_per_cascade_[cascade][context.GetFrameIdx()], 0, 1, &view_data_per_cascade[cascade]);
-
-    //   pass_data.view_set[cascade] = view_set_per_cascade_[cascade][context.GetFrameIdx()].GetHandle();
-    //   ub_csm_data.cascade_matrices[cascade] = view_data_per_cascade[cascade].proj * view_data_per_cascade[cascade].view;
-    // }
   }
 
  private:
   RenderDevice&               device_;
 
   uint32_t                    shadow_map_size_        {0};
-  float                       log_split_contribution_ {0.5f};
-  float                       cascade_near_offset_    {-50.0f};
-  float                       cascade_far_offset_     {5.0f};
+  float                       log_split_contribution_ {0.65f};
+  float                       cascade_near_offset_    {-150.0f};
+  float                       cascade_far_offset_     {0.0f};
+  glm::vec3                   shadow_color_           {0.1f};
+  bool                        soft_shadows_           {true};
+  float                       bias_                   {0.000f};
 
   SharedPtr<Sampler>          shadow_map_sampler_     {nullptr};
   SharedPtr<Texture>          shadow_map_             {nullptr};

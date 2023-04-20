@@ -160,7 +160,7 @@ void EditorApp::Run() {
   camera = scene_.GetEntityWorld().Attach<CameraComponent>(camera, PerspectiveCameraSpecification(1600.0f / 900.0f), true);
   camera = scene_.GetEntityWorld().Attach<TransformComponent>(camera, glm::vec3(0, 3, 15));
   camera = scene_.GetEntityWorld().Attach<ScriptComponent>(camera, new CameraMovementScript());
-  camera.Get<CameraComponent>().camera.perspective_specification.far_plane = 1000.0f;
+  camera.Get<CameraComponent>().camera.perspective_specification.far_plane = 250.0f;
 
    fennecs::EntityHandle sponza = scene_.CreateEntity("Sponza");
    // sponza = scene_.GetEntityWorld().Attach<MeshComponent>(sponza, asset_registry.Load<Mesh>("meshes/sponza.obj"));
@@ -216,30 +216,30 @@ void EditorApp::Run() {
 
   fennecs::EntityHandle dir_light = scene_.CreateEntity("Sky light");
   dir_light = scene_.GetEntityWorld().Attach<DirectionalLightSpecification>(dir_light, glm::vec3{1.0, 1.0, 1.0}, 0.5);
-  dir_light = scene_.GetEntityWorld().Attach<TransformComponent>(dir_light, Transform(glm::vec3(0), glm::vec3(-0.5, M_PI_2, 0)));
+  dir_light = scene_.GetEntityWorld().Attach<TransformComponent>(dir_light, Transform(glm::vec3(0), glm::radians(glm::vec3(-85.0f, 90.0f, 0.0f))));
 
   fennecs::EntityHandle point_light1 = scene_.CreateEntity("Point light1");
-  point_light1 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light1, glm::vec3{1.0, 0.5, 0.1}, 1.5, 3);
+  point_light1 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light1, glm::vec3{1.0, 0.5, 0.1}, 4.5, 3);
   point_light1 = scene_.GetEntityWorld().Attach<TransformComponent>(point_light1, Transform(glm::vec3(-9.583, 8.256, 19.639)));
 
   fennecs::EntityHandle point_light2 = scene_.CreateEntity("Point light2");
-  point_light2 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light2, glm::vec3{1.0, 0.5, 0.1}, 1.5, 3);
+  point_light2 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light2, glm::vec3{1.0, 0.5, 0.1}, 4.5, 3);
   point_light2 = scene_.GetEntityWorld().Attach<TransformComponent>(point_light2, Transform(glm::vec3(-9.616, 8.256, -20.075)));
 
   fennecs::EntityHandle point_light3 = scene_.CreateEntity("Point light3");
-  point_light3 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light3, glm::vec3{1.0, 0.5, 0.1}, 1.5, 3);
+  point_light3 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light3, glm::vec3{1.0, 0.5, 0.1}, 4.5, 3);
   point_light3 = scene_.GetEntityWorld().Attach<TransformComponent>(point_light3, Transform(glm::vec3(9.479, 8.256, 19.635)));
 
   fennecs::EntityHandle point_light4 = scene_.CreateEntity("Point light4");
-  point_light4 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light4, glm::vec3{1.0, 0.5, 0.1}, 1.5, 3);
+  point_light4 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light4, glm::vec3{1.0, 0.5, 0.1}, 4.5, 3);
   point_light4 = scene_.GetEntityWorld().Attach<TransformComponent>(point_light4, Transform(glm::vec3(9.509, 8.256, -20.320)));
 
   fennecs::EntityHandle point_light5 = scene_.CreateEntity("Point light5");
-  point_light5 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light5, glm::vec3{1.0, 0.5, 0.1}, 1.5, 3);
+  point_light5 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light5, glm::vec3{1.0, 0.5, 0.1}, 4.5, 3);
   point_light5 = scene_.GetEntityWorld().Attach<TransformComponent>(point_light5, Transform(glm::vec3(1.845, 6.067, 31.221)));
 
   fennecs::EntityHandle point_light6 = scene_.CreateEntity("Point light6");
-  point_light6 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light6, glm::vec3{1.0, 0.5, 0.1}, 1.5, 3);
+  point_light6 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light6, glm::vec3{1.0, 0.5, 0.1}, 4.5, 3);
   point_light6 = scene_.GetEntityWorld().Attach<TransformComponent>(point_light6, Transform(glm::vec3(-0.129, 7.713, -27.196)));
 
   fennecs::EntityHandle skybox = scene_.CreateEntity("Skybox");
