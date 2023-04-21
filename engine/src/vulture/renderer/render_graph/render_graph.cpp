@@ -50,6 +50,27 @@ RenderGraph::RenderGraph(Blackboard& blackboard) : blackboard_(blackboard) {}
 
 Blackboard& RenderGraph::GetBlackboard() { return blackboard_; }
 
+TextureVersionId RenderGraph::FirstVersion(const std::string_view name) {
+  for (const auto& node : texture_nodes_) {
+    if (texture_entries_[node.actual_texture_idx].name == name) {
+      return node.version_id;
+    }
+  }
+
+  return kInvalidTextureVersionId;
+}
+
+TextureVersionId RenderGraph::LastVersion(const std::string_view name) {
+  TextureVersionId last_version = kInvalidTextureVersionId;
+  for (const auto& node : texture_nodes_) {
+    if (texture_entries_[node.actual_texture_idx].name == name) {
+      last_version = node.version_id;
+    }
+  }
+
+  return last_version;
+}
+
 TextureVersionId RenderGraph::ImportTexture(const std::string_view name, SharedPtr<Texture> texture,
                                             TextureLayout final_layout) {
   assert(texture);
@@ -708,13 +729,7 @@ RenderGraphBuilder::RenderGraphBuilder(RenderGraph& graph, PassNode& pass_node)
     : graph_(graph), pass_node_(pass_node) {}
 
 TextureVersionId RenderGraphBuilder::LastVersion(const std::string_view name) {
-  for (const auto& node : graph_.texture_nodes_) {
-    if (graph_.texture_entries_[node.actual_texture_idx].name == name) {
-      return node.version_id;
-    }
-  }
-
-  return kInvalidTextureVersionId;
+  return graph_.LastVersion(name);
 }
 
 TextureVersionId RenderGraphBuilder::CreateTexture(const std::string_view name,

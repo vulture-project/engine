@@ -142,6 +142,8 @@ class RenderGraph {
   template <typename RenderPassT, typename... RenderPassArgs>
   void AddPass(const std::string_view name, RenderPassArgs... args);
 
+  TextureVersionId FirstVersion(const std::string_view name);
+  TextureVersionId LastVersion(const std::string_view name);
   TextureVersionId ImportTexture(const std::string_view name, SharedPtr<Texture> texture, TextureLayout final_layout);
   TextureVersionId DeclareTexture(const std::string_view name, TextureLayout final_layout);
 

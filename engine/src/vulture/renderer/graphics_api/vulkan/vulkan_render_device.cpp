@@ -898,7 +898,7 @@ TextureHandle VulkanRenderDevice::CreateTexture(const TextureSpecification& spec
   image_info.usage         = vk_usage;
   image_info.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
   image_info.samples       = static_cast<VkSampleCountFlagBits>(specification.samples);
-  image_info.flags          = vk_image_flags;
+  image_info.flags         = vk_image_flags;
 
   VmaAllocationCreateInfo vma_alloc_info = {};
   vma_alloc_info.usage  = (specification.cpu_readable ? VMA_MEMORY_USAGE_AUTO : VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);

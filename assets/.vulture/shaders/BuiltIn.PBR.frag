@@ -6,8 +6,7 @@
 #include "include/BuiltIn.SceneData.glsl"
 #include "include/BuiltIn.CascadedShadowMap.glsl"
 
-layout(set = 3, binding = 0) uniform MaterialData
-{
+layout(set = 3, binding = 0) uniform MaterialData {
     vec3 albedo_color;
     float metallic;
     float roughness;
@@ -97,6 +96,7 @@ void main() {
 
         if (i == 0) {
             L0 += CalculateShadow(positionWS) * CalculateLightContribution(point, light);
+            // L0 += CalculateLightContribution(point, light);
         } else {
             L0 += CalculateLightContribution(point, light);
         }
@@ -131,7 +131,7 @@ void main() {
 
 vec3 CalculateSurfaceColorFromMap() {
     if (uMaterial.useAlbedoMap != 0) {
-        return ConvertSrgbToLinear(texture(uAlbedoMap, texCoords).rgb);
+        return texture(uAlbedoMap, texCoords).rgb;
     } else {
         return uMaterial.albedo_color;
     }

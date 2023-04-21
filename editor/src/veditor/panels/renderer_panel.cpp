@@ -69,6 +69,36 @@ void RendererPanel::RenderCSMFeature(CascadedShadowMapRenderFeature& feature, ui
     ImGui::Checkbox("Soft shadows", &feature.GetUseSoftShadows());
     ImGui::DragFloat("Bias", &feature.GetBias(), 0.0001f, 0.0f, 1.0f);
 
+    enum Resolution {
+      kResolution128,
+      kResolution256,
+      kResolution512,
+      kResolution1024,
+      kResolution2048,
+      kResolution4096,
+      kResolution8192,
+
+      kResolutionsCount
+    };
+    static int resolution = kResolution4096;
+    const char* kResolutionNames[kResolutionsCount] = {"128x128",   "256x256",   "512x512",  "1024x1024",
+                                                       "2048x2048", "4096x4096", "8192x8192"};
+    ImGui::SliderInt("Resolution", &resolution, 0, kResolutionsCount - 1, kResolutionNames[resolution]);
+
+    uint32_t actual_resolution = 0;
+    switch (resolution) {
+      case kResolution128:  { actual_resolution = 128;  break; }
+      case kResolution256:  { actual_resolution = 256;  break; }
+      case kResolution512:  { actual_resolution = 512;  break; }
+      case kResolution1024: { actual_resolution = 1024; break; }
+      case kResolution2048: { actual_resolution = 2048; break; }
+      case kResolution4096: { actual_resolution = 4096; break; }
+      case kResolution8192: { actual_resolution = 8192; break; }
+      default: { VULTURE_ASSERT(false, "Invalid shadow map resolution!"); }
+    }
+
+    feature.GetResolution() = actual_resolution;
+
     ImGui::SeparatorText("Cascades Debug");
     for (uint32_t cascade = 0; cascade < kCascadedShadowMapCascadesCount; ++cascade) {
       ImGui::Text("Cascade %u", cascade);

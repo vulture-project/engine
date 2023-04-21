@@ -94,20 +94,12 @@ class CascadedShadowMapPass final : public IRenderQueuePass {
 
 class CascadedShadowMapRenderFeature : public IRenderFeature {
  public:
-  CascadedShadowMapRenderFeature(RenderDevice& device, uint32_t shadow_map_size = 2048)
+  CascadedShadowMapRenderFeature(RenderDevice& device, uint32_t shadow_map_size = 4096)
       : device_(device), shadow_map_size_(shadow_map_size) {
     VULTURE_ASSERT(shadow_map_size_ > 0, "Shadow map size cannot be zero, but shadow_map_size = {0}!",
                    shadow_map_size_);
 
-    TextureSpecification specification{};
-    specification.format                       = DataFormat::kD32_SFLOAT;
-    specification.type                         = TextureType::kTexture2DArray;
-    specification.usage                        = kTextureUsageBitDepthAttachment | kTextureUsageBitSampled;
-    specification.width                        = shadow_map_size_;
-    specification.height                       = shadow_map_size_;
-    specification.array_layers                 = kCascadedShadowMapCascadesCount;
-    specification.individual_layers_accessible = true;
-    shadow_map_ = CreateShared<Texture>(device_, specification);
+    CreateShadowMap();
 
     SamplerSpecification sampler_specification{};
     sampler_specification.min_filter     = SamplerFilter::kNearest;
@@ -157,6 +149,7 @@ class CascadedShadowMapRenderFeature : public IRenderFeature {
   glm::vec3& GetShadowColor() { return shadow_color_; }
   bool& GetUseSoftShadows() { return soft_shadows_; }
   float& GetBias() { return bias_; }
+  uint32_t& GetResolution() { return shadow_map_size_; }
 
   void SetupRenderPasses(rg::RenderGraph& render_graph) override {
     render_graph.GetBlackboard().Add<CascadedShadowMapPass::Data>();
@@ -169,6 +162,10 @@ class CascadedShadowMapRenderFeature : public IRenderFeature {
   }
 
   void Execute(RenderContext& context) override {
+    if (shadow_map_size_ != shadow_map_->GetSpecification().width) {
+      OnResize(context.GetRenderGraph());
+    }
+
     RendererBlackboardData&      renderer_data = context.GetBlackboard().Get<RendererBlackboardData>();
     CascadedShadowMapPass::Data& pass_data     = context.GetBlackboard().Get<CascadedShadowMapPass::Data>();
 
@@ -295,6 +292,30 @@ class CascadedShadowMapRenderFeature : public IRenderFeature {
     pass_data.shadow_map     = shadow_map_;
     pass_data.shadow_map_set = shadow_map_set_[context.GetFrameIdx()].GetHandle();
     pass_data.render_queue   = &context.GetRenderQueue();
+  }
+
+ private:
+  void CreateShadowMap() {
+    TextureSpecification specification{};
+    specification.format                       = DataFormat::kD32_SFLOAT;
+    specification.type                         = TextureType::kTexture2DArray;
+    specification.usage                        = kTextureUsageBitDepthAttachment | kTextureUsageBitSampled;
+    specification.width                        = shadow_map_size_;
+    specification.height                       = shadow_map_size_;
+    specification.array_layers                 = kCascadedShadowMapCascadesCount;
+    specification.individual_layers_accessible = true;
+    shadow_map_ = CreateShared<Texture>(device_, specification);
+  }
+
+  void OnResize(rg::RenderGraph& render_graph) {
+    device_.WaitIdle();  // FIXME: make sure descriptor sets are not in use by the GPU
+    CreateShadowMap();
+    for (uint32_t frame = 0; frame < kFramesInFlight; ++frame) {
+      device_.WriteDescriptorSampler(shadow_map_set_[frame].GetHandle(), 0, shadow_map_->GetHandle(),
+                                     shadow_map_sampler_->GetHandle());
+    }
+
+    render_graph.ReimportTexture(render_graph.FirstVersion("cascaded_shadow_map"), shadow_map_);
   }
 
  private:
