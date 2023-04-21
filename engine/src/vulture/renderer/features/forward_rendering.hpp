@@ -59,9 +59,19 @@ class ForwardPass final : public IRenderQueuePass {
     depth_specification.usage = kTextureUsageBitDepthAttachment;
     depth_specification.width.SetDependency(data.input_color);
     depth_specification.height.SetDependency(data.input_color);
+    depth_specification.samples = 4;
     data.input_depth = builder.CreateTexture("forward_depth", depth_specification);
 
-    data.output_color = builder.AddColorAttachment(data.input_color, AttachmentLoad::kClear, AttachmentStore::kStore);
+    rg::DynamicTextureSpecification color_specification{};
+    color_specification.format.SetDependency(data.input_color);
+    color_specification.usage = kTextureUsageBitColorAttachment;
+    color_specification.width.SetDependency(data.input_color);
+    color_specification.height.SetDependency(data.input_color);
+    color_specification.samples = 4;
+    rg::TextureVersionId color = builder.CreateTexture("forward_color", color_specification);
+
+    builder.AddColorAttachment(color, AttachmentLoad::kClear, AttachmentStore::kDontCare);
+    data.output_color = builder.AddResolveAttachment(data.input_color, AttachmentLoad::kClear, AttachmentStore::kStore);
     data.output_depth = builder.SetDepthStencil(data.input_depth, AttachmentLoad::kClear, AttachmentStore::kStore);
   }
 
@@ -70,8 +80,7 @@ class ForwardPass final : public IRenderQueuePass {
     const auto& data        = blackboard.Get<Data>();
     const auto& shadow_data = blackboard.Get<CascadedShadowMapPass::Data>();
 
-    Render(command_buffer, blackboard, *data.render_queue, data.view_set, shadow_data.shadow_map_set, pass_id,
-           handle);
+    Render(command_buffer, blackboard, *data.render_queue, data.view_set, shadow_data.shadow_map_set, pass_id, handle);
   }
 };
 
