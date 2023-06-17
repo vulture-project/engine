@@ -1,10 +1,10 @@
-name: "BuiltIn.Forward"
-target_render_pass: "Forward Pass"
+name: "BuiltIn.GBuffer"
+target_render_pass: "GBuffer Pass"
 
-descriptor_sets: [Frame, View, Scene, Material]
+descriptor_sets: [Frame, View, Scene, Custom]
 
-vert_shader: ["assets/.vulture/shaders/BuiltIn.Forward.vert", "assets/.vulture/shaders/BuiltIn.Forward.vert.spv"]
-frag_shader: ["assets/.vulture/shaders/BuiltIn.Forward.frag", "assets/.vulture/shaders/BuiltIn.Forward.frag.spv"]
+vert_shader: ["assets/.vulture/shaders/BuiltIn.GBuffer.vert", "assets/.vulture/shaders/BuiltIn.GBuffer.vert.spv"]
+frag_shader: ["assets/.vulture/shaders/BuiltIn.GBuffer.frag", "assets/.vulture/shaders/BuiltIn.GBuffer.frag.spv"]
 
 # Vertex Format
 vertex_format: Vertex3D           # default: Vertex3D

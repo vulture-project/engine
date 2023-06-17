@@ -160,6 +160,10 @@ void RenderGraph::Execute(RenderDevice& device, CommandBuffer& command_buffer) {
   }
 }
 
+SharedPtr<Texture> RenderGraph::GetTexture(TextureVersionId version_id) {
+  return GetTextureEntry(version_id).texture;
+}
+
 void RenderGraph::ReimportTexture(TextureVersionId version, SharedPtr<Texture> texture) {
   assert(version != kInvalidTextureVersionId);
   assert(texture);
@@ -312,7 +316,7 @@ void RenderGraph::RecreateRenderPasses(RenderDevice& device) {
       attachment_description.load_op        = pass_node.depth_stencil_usage->load;
       attachment_description.store_op       = pass_node.depth_stencil_usage->store;
       attachment_description.initial_layout = initial_layout;
-      attachment_description.final_layout    = final_layout;
+      attachment_description.final_layout   = final_layout;
       built_pass.description.attachments[attachment] = attachment_description;
 
       subpass.depth_stencil_attachment = AttachmentReference{attachment, TextureLayout::kDepthStencilAttachment};

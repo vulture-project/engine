@@ -157,6 +157,7 @@ void Renderer::UpdateBuffers(uint32_t frame, const Camera& camera, float time) {
   main_view_data.position   = camera.Position();
   main_view_data.near_plane = camera.NearPlane();
   main_view_data.far_plane  = camera.FarPlane();
+  main_view_data.exposure   = camera.exposure;
 
   device_.LoadBufferData<UBViewData>(ub_main_view_[frame], 0, 1, &main_view_data);
 

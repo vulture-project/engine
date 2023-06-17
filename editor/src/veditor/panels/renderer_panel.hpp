@@ -27,7 +27,7 @@
 
 #pragma once
 
-#include <vulture/renderer/features/cascaded_shadow_mapping.hpp>
+#include <vulture/renderer/features/shadows/cascaded_shadow_mapping.hpp>
 #include <vulture/renderer/renderer.hpp>
 #include <vulture/ui/imgui_implementation.hpp>
 

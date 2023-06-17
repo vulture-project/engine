@@ -5,4 +5,6 @@ layout(set = 1, binding = 0) uniform ViewData
     vec3 uCameraWS;
     float uCameraNearPlane;
     float uCameraFarPlane;
+
+    float uCameraExposure;
 };

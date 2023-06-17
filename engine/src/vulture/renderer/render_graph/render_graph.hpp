@@ -157,6 +157,8 @@ class RenderGraph {
   /* Execute phase */
   void Execute(RenderDevice& device, CommandBuffer& command_buffer);
 
+  SharedPtr<Texture> GetTexture(TextureVersionId version_id);
+
   /* Update phase */
   void ReimportTexture(TextureVersionId version_id, SharedPtr<Texture> texture);
 

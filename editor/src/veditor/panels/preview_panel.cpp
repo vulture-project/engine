@@ -40,7 +40,7 @@ PreviewPanel::PreviewPanel(RenderDevice& device, ImGuiImplementation& imgui_impl
 
 void PreviewPanel::OnInit() {
   TextureSpecification specification{};
-  specification.format = DataFormat::kB8G8R8A8_SRGB;
+  specification.format = DataFormat::kR8G8B8A8_UNORM;
   specification.usage  = kTextureUsageBitColorAttachment | kTextureUsageBitSampled;
   specification.width  = 1600;
   specification.height = 900;

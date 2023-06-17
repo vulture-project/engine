@@ -4,7 +4,6 @@
 #include "include/BuiltIn.FrameData.glsl"
 #include "include/BuiltIn.ViewData.glsl"
 #include "include/BuiltIn.SceneData.glsl"
-#include "include/BuiltIn.CascadedShadowMap.glsl"
 #include "include/BuiltIn.PBR.glsl"
 
 layout(set = 3, binding = 0) uniform MaterialData {
@@ -30,73 +29,25 @@ layout(location = 0) in vec3 positionWS;
 layout(location = 1) in vec2 texCoords;
 layout(location = 2) in mat3 TBN;
 
-layout(location = 0) out vec4 outColor;
+layout(location = 0) out vec3 outGBufferPosition;
+layout(location = 1) out vec3 outGBufferNormal;
+layout(location = 2) out vec3 outGBufferAlbedo;
+layout(location = 3) out vec3 outGBufferAoMetalRough;
 
 vec3 CalculateSurfaceColorFromMap();
 float CalculateMetallicFromMap();
 float CalculateRoughnessFromMap();
 vec3 CalculateNormalFromMap();
-vec3 ConvertSrgbToLinear(vec3 value);
 
 void main() {
     if (texture(uAlbedoMap, texCoords).a < 0.01) {
         discard;
     }
 
-    SurfacePoint point;
-
-    point.n = CalculateNormalFromMap();
-    point.p = positionWS;
-    point.v = normalize(uCameraWS - positionWS);
-
-    point.surface_color = CalculateSurfaceColorFromMap();
-    point.metallic      = CalculateMetallicFromMap();
-    point.roughness     = CalculateRoughnessFromMap();
-
-    point.F0 = vec3(0.04);
-    point.F0 = mix(point.F0, point.surface_color, point.metallic);
-
-    vec3 L0 = vec3(0.0);
-
-    for (int i = 0; i < uDirectionalLightsCount; ++i) {
-        LightInfo light;
-
-        light.l = -normalize(directionalLights[i].directionWS);
-        light.h = normalize(point.v + light.l);
-
-        light.radiance = directionalLights[i].color * directionalLights[i].intensity;
-
-        if (i == 0) {
-            L0 += CalculateShadow(positionWS) * CalculateLightContribution(point, light);
-            // L0 += CalculateLightContribution(point, light);
-        } else {
-            L0 += CalculateLightContribution(point, light);
-        }
-    }
-
-    for (int i = 0; i < uPointLightsCount; ++i) {
-        LightInfo light;
-
-        light.l = normalize(pointLights[i].positionWS - point.p);
-        light.h = normalize(point.v + light.l);
-
-        // Attenuation
-        float dist = length(pointLights[i].positionWS - point.p);
-        float attenuation = 1.0 / (1.0 + (dist * dist) / (pointLights[i].range * pointLights[i].range));
-
-        light.radiance = pointLights[i].color * pointLights[i].intensity * attenuation;
-
-        L0 += CalculateLightContribution(point, light);
-    }
-
-    // for (int i = 0; i < uSpotLightsCount; ++i) {
-    //     outColor += vec4(CalculateSpotLight(spotLights[i], bumpNormalWS, toCameraWS), 0);
-    // }
-
-    // HDR exposure tonemapping
-    L0 = vec3(1.0) - exp(-L0 * uCameraExposure);
-
-    outColor = vec4(L0, 1.0);
+    outGBufferPosition     = positionWS;
+    outGBufferNormal       = CalculateNormalFromMap();
+    outGBufferAlbedo       = CalculateSurfaceColorFromMap();
+    outGBufferAoMetalRough = vec3(0, CalculateMetallicFromMap(), CalculateRoughnessFromMap());
 }
 
 vec3 CalculateSurfaceColorFromMap() {
@@ -146,8 +97,4 @@ vec3 CalculateNormalFromMap()
         bumpNormalWS = normalize(TBN * bumpNormalWS);
         return bumpNormalWS;
     }
-}
-
-vec3 ConvertSrgbToLinear(vec3 value) {
-    return pow(value, vec3(2.2));
 }

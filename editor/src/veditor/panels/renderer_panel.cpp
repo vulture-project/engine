@@ -67,7 +67,7 @@ void RendererPanel::RenderCSMFeature(CascadedShadowMapRenderFeature& feature, ui
     ImGui::DragFloat("Far offset", &feature.GetCascadeFarOffset(), 1.0f, -500.0f, 500.0f, "%.0f");
     ImGui::ColorEdit3("Shadow color", reinterpret_cast<float*>(&feature.GetShadowColor()));
     ImGui::Checkbox("Soft shadows", &feature.GetUseSoftShadows());
-    ImGui::DragFloat("Bias", &feature.GetBias(), 0.0001f, 0.0f, 1.0f);
+    ImGui::DragFloat("Bias", &feature.GetBias(), 0.0001f, -1.0f, 1.0f);
 
     enum Resolution {
       kResolution128,

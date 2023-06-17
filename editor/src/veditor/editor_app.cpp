@@ -37,8 +37,8 @@
 #include <vulture/asset/loaders/shader_loader.hpp>
 #include <vulture/asset/loaders/skybox_loader.hpp>
 #include <vulture/asset/loaders/tga_loader.hpp>
-#include <vulture/renderer/features/cascaded_shadow_mapping.hpp>
-#include <vulture/renderer/features/forward_rendering.hpp>
+#include <vulture/renderer/features/shadows/cascaded_shadow_mapping.hpp>
+#include <vulture/renderer/features/forward_rendering/forward_rendering.hpp>
 
 using namespace vulture;
 

@@ -163,13 +163,13 @@ void LoadMaterials(RenderDevice& device, const aiScene* scene, Vector<SharedPtr<
     /* Scalar values */
     float metallic{0.0f};
     if (aiGetMaterialFloat(assimp_material, AI_MATKEY_METALLIC_FACTOR, &metallic) == aiReturn_SUCCESS) {
-      LOG_DEBUG("Found metallic value = {}", metallic);
+      // LOG_DEBUG("Found metallic value = {}", metallic);
     }
     material_pass.GetProperty<float>("metallic") = metallic;
 
     float roughness{0.907};
     if (aiGetMaterialFloat(assimp_material, AI_MATKEY_ROUGHNESS_FACTOR, &roughness) == aiReturn_SUCCESS) {
-      LOG_DEBUG("Found roughness value = {}", roughness);
+      // LOG_DEBUG("Found roughness value = {}", roughness);
     }
     material_pass.GetProperty<float>("roughness") = roughness;
 
@@ -190,7 +190,7 @@ void LoadMaterials(RenderDevice& device, const aiScene* scene, Vector<SharedPtr<
     aiString albedo_map_path;
     if (assimp_material->GetTexture(AI_MATKEY_BASE_COLOR_TEXTURE, &albedo_map_path) == aiReturn_SUCCESS ||
         assimp_material->GetTexture(aiTextureType_DIFFUSE, 0, &albedo_map_path) == aiReturn_SUCCESS) {
-      LOG_DEBUG("Albedo map found {}", albedo_map_path.C_Str());
+      // LOG_DEBUG("Albedo map found {}", albedo_map_path.C_Str());
       albedo_map.texture = asset_registry->Load<Texture>(albedo_map_path.C_Str());
 
       if (albedo_map.texture) {
@@ -230,7 +230,7 @@ void LoadMaterials(RenderDevice& device, const aiScene* scene, Vector<SharedPtr<
     bool metallic_map_found = false;
     aiString metallic_map_path;
     if (assimp_material->GetTexture(aiTextureType_DIFFUSE_ROUGHNESS, 0, &metallic_map_path) == aiReturn_SUCCESS) {
-      LOG_DEBUG("Metallic map found {}", metallic_map_path.C_Str());
+      // LOG_DEBUG("Metallic map found {}", metallic_map_path.C_Str());
 
       metallic_map.texture = asset_registry->Load<Texture>(metallic_map_path.C_Str());
 
@@ -251,7 +251,7 @@ void LoadMaterials(RenderDevice& device, const aiScene* scene, Vector<SharedPtr<
     bool roughness_map_found = false;
     aiString roughness_map_path;
     if (assimp_material->GetTexture(aiTextureType_DIFFUSE_ROUGHNESS, 0, &roughness_map_path) == aiReturn_SUCCESS) {
-      LOG_DEBUG("Roughness map found {}", roughness_map_path.C_Str());
+      // LOG_DEBUG("Roughness map found {}", roughness_map_path.C_Str());
 
       roughness_map.texture = asset_registry->Load<Texture>(roughness_map_path.C_Str());
 
@@ -272,7 +272,7 @@ void LoadMaterials(RenderDevice& device, const aiScene* scene, Vector<SharedPtr<
     bool metallic_roughness_map_found = false;
     aiString metallic_roughness_map_path;
     if (assimp_material->GetTexture(AI_MATKEY_GLTF_PBRMETALLICROUGHNESS_METALLICROUGHNESS_TEXTURE, &metallic_roughness_map_path) == aiReturn_SUCCESS) {
-      LOG_DEBUG("Combined Metallic-Roughness map found {}", metallic_roughness_map_path.C_Str());
+      // LOG_DEBUG("Combined Metallic-Roughness map found {}", metallic_roughness_map_path.C_Str());
 
       metallic_roughness_map.texture = asset_registry->Load<Texture>(metallic_roughness_map_path.C_Str());
 

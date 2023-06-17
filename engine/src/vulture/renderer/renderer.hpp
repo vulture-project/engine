@@ -55,6 +55,7 @@ struct UBViewData {
   alignas(16) glm::vec3 position;
   alignas(4)  float     near_plane; 
   alignas(4)  float     far_plane;
+  alignas(4)  float     exposure;
 };
 
 struct UBLightData {
