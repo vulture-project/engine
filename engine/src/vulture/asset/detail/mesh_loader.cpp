@@ -195,6 +195,8 @@ void LoadMaterials(RenderDevice& device, const aiScene* scene, Vector<SharedPtr<
 
       if (albedo_map.texture) {
         albedo_map_found = true;
+
+        albedo_map.sampler = CreateShared<Sampler>(device, *albedo_map.texture);
       }
     }
 
@@ -215,6 +217,8 @@ void LoadMaterials(RenderDevice& device, const aiScene* scene, Vector<SharedPtr<
 
       if (normal_map.texture) {
         normal_map_found = true;
+
+        normal_map.sampler = CreateShared<Sampler>(device, *normal_map.texture);
       }
     }
 
@@ -236,6 +240,8 @@ void LoadMaterials(RenderDevice& device, const aiScene* scene, Vector<SharedPtr<
 
       if (metallic_map.texture) {
         metallic_map_found = true;
+
+        metallic_map.sampler = CreateShared<Sampler>(device, *metallic_map.texture);
       }
     }
 
@@ -257,6 +263,8 @@ void LoadMaterials(RenderDevice& device, const aiScene* scene, Vector<SharedPtr<
 
       if (roughness_map.texture) {
         roughness_map_found = true;
+
+        roughness_map.sampler = CreateShared<Sampler>(device, *roughness_map.texture);
       }
     }
 
@@ -278,6 +286,8 @@ void LoadMaterials(RenderDevice& device, const aiScene* scene, Vector<SharedPtr<
 
       if (metallic_roughness_map.texture) {
         metallic_roughness_map_found = true;
+
+        metallic_roughness_map.sampler = CreateShared<Sampler>(device, *metallic_roughness_map.texture);
       }
     }
 

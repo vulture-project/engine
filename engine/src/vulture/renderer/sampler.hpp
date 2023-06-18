@@ -29,6 +29,7 @@
 
 #include <vulture/asset/asset.hpp>
 #include <vulture/renderer/graphics_api/render_device.hpp>
+#include <vulture/renderer/texture.hpp>
 
 namespace vulture {
 
@@ -36,6 +37,7 @@ class Sampler : public IAsset {
  public:
   Sampler(RenderDevice& device, SamplerHandle handle);
   Sampler(RenderDevice& device, const SamplerSpecification& specification);
+  Sampler(RenderDevice& device, const Texture& texture);
   ~Sampler() override;
 
   Sampler(const Sampler& other) = delete;
@@ -50,8 +52,8 @@ class Sampler : public IAsset {
   void Recreate(const SamplerSpecification& specification);
 
  private:
-  RenderDevice&       device_;
-  SamplerHandle       handle_{kInvalidRenderResourceHandle};
+  RenderDevice&        device_;
+  SamplerHandle        handle_{kInvalidRenderResourceHandle};
   SamplerSpecification specification_;
 };
 
