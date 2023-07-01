@@ -54,6 +54,9 @@ void ForwardPass::Setup(rg::RenderGraphBuilder& builder, rg::Blackboard& blackbo
   rg::TextureVersionId color = builder.CreateTexture("forward_color", color_specification);
 
   builder.AddColorAttachment(color, AttachmentLoad::kClear, AttachmentStore::kDontCare);
+  for (uint32_t i = 0; i < kCascadedShadowMapCascadesCount; ++i) {
+    builder.AddSampledTexture(blackboard.Get<CascadedShadowMapPass::Data>().output_depth[i]);
+  }
   data.output_color = builder.AddResolveAttachment(data.input_color, AttachmentLoad::kClear, AttachmentStore::kStore);
   data.output_depth = builder.SetDepthStencil(data.input_depth, AttachmentLoad::kClear, AttachmentStore::kStore);
 }

@@ -207,7 +207,7 @@ void EditorApp::Run() {
 
   fennecs::EntityHandle sphere = scene_.CreateEntity("Sphere");
   sphere = scene_.GetEntityWorld().Attach<MeshComponent>(sphere, sphere_mesh);
-  sphere = scene_.GetEntityWorld().Attach<TransformComponent>(sphere, Transform(glm::vec3(-2.0f, 2.0f, 0.0f)));
+  sphere = scene_.GetEntityWorld().Attach<TransformComponent>(sphere, Transform(glm::vec3(-5.5f, 0.6f, -1.7f)));
   sphere.Get<TransformComponent>().transform.rotation = glm::quat(glm::vec3(M_PI_2, 0.0f, 0.0f));
 
 
@@ -215,8 +215,8 @@ void EditorApp::Run() {
 
 
   fennecs::EntityHandle dir_light = scene_.CreateEntity("Sky light");
-  dir_light = scene_.GetEntityWorld().Attach<DirectionalLightSpecification>(dir_light, glm::vec3{1.0, 1.0, 1.0}, 0.5);
-  dir_light = scene_.GetEntityWorld().Attach<TransformComponent>(dir_light, Transform(glm::vec3(0), glm::radians(glm::vec3(-85.0f, 90.0f, 0.0f))));
+  dir_light = scene_.GetEntityWorld().Attach<DirectionalLightSpecification>(dir_light, glm::vec3{1.0, 1.0, 1.0}, 1.0);
+  dir_light = scene_.GetEntityWorld().Attach<TransformComponent>(dir_light, Transform(glm::vec3(0), glm::radians(glm::vec3(-45.0f, 60.0f, 35.0f))));
 
   fennecs::EntityHandle point_light1 = scene_.CreateEntity("Point light1");
   point_light1 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light1, glm::vec3{1.0, 0.5, 0.1}, 2.5, 3);
