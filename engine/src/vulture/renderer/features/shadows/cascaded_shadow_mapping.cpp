@@ -140,7 +140,7 @@ void CascadedShadowMapRenderFeature::Execute(RenderContext& context) {
   for (uint32_t split_idx = 0; split_idx <= kCascadedShadowMapCascadesCount; ++split_idx) {
     float cur_ratio = static_cast<float>(split_idx) / static_cast<float>(kCascadedShadowMapCascadesCount);
 
-    float split_log = camera_near * std::powf(camera_far / camera_near, cur_ratio);
+    float split_log = camera_near * std::pow(camera_far / camera_near, cur_ratio);
     split_log *= log_split_contribution_;
 
     float split_uniform = camera_near + (camera_far - camera_near) * cur_ratio;
