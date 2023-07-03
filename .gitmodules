@@ -10,3 +10,20 @@
 [submodule "engine/third_party/fennecs"]
 	path = engine/third_party/fennecs
 	url = https://github.com/elisfromkirov/fennecs.git
+[submodule "engine/third_party/vma"]
+	path = engine/third_party/vma
+	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+[submodule "engine/third_party/yaml_cpp"]
+	path = engine/third_party/yaml_cpp
+	url = https://github.com/jbeder/yaml-cpp.git
+[submodule "engine/third_party/assimp"]
+	path = engine/third_party/assimp
+	url = https://github.com/assimp/assimp/
+	branch=v5.2.5
+[submodule "engine/third_party/SPIRV-Cross"]
+	path = engine/third_party/SPIRV-Cross
+	url = https://github.com/KhronosGroup/SPIRV-Cross.git
+	branch = sdk-1.3.243
+[submodule "engine/third_party/ImGuizmo"]
+	path = engine/third_party/ImGuizmo
+	url = https://github.com/tralf-strues/ImGuizmo.git

@@ -1,18 +1,23 @@
-set(ENGINE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-set(ENGINE_INCLUDE_DIR ${ENGINE_DIR}/include)
-set(ENGINE_SOURCE_DIR ${ENGINE_DIR}/src)
-
-add_library(vulture-engine)
-
-add_subdirectory(src)
+include("${CMAKE_HOME_DIRECTORY}/cmake/compile_options.cmake")
 add_subdirectory(third_party)
 
-target_link_libraries(vulture-engine
+include("${CMAKE_HOME_DIRECTORY}/cmake/compile_warnings_options.cmake")
+add_subdirectory(src)
+
+target_link_libraries(vulture
   PUBLIC
+    assimp
+    fennecs
     fmt
-    glad
     glfw
     glm
+    imgui
+    ImGuizmo
+    spirv-cross-core
+    spirv-cross-glsl
     stb_image
-    fennecs
+    ${Vulkan_LIBRARY}
+    ${Vulkan_LIBRARIES}
+    VulkanMemoryAllocator
+    yaml-cpp
   )

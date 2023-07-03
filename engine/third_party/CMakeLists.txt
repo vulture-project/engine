@@ -1,6 +1,32 @@
+find_package(Vulkan REQUIRED)
+
+SET(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+
+set(ASSIMP_BUILD_TESTS off)
+set(ASSIMP_BUILD_ASSIMP_TOOLS off)
+set(ASSIMP_INSTALL on)
+set(ASSIMP_WARNINGS_AS_ERRORS off)
+set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT off)
+set(ASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT off)
+
+set(ASSIMP_BUILD_COLLADA_IMPORTER on)
+set(ASSIMP_BUILD_GLTF_IMPORTER on)
+set(ASSIMP_BUILD_FBX_IMPORTER on)
+set(ASSIMP_BUILD_OBJ_IMPORTER on)
+
+set(YAML_BUILD_SHARED_LIBS off)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGLFW_INCLUDE_NONE")
+
+add_subdirectory(assimp)
+add_subdirectory(SPIRV-Cross)
 add_subdirectory(fennecs)
 add_subdirectory(fmt)
-add_subdirectory(glad)
+# add_subdirectory(glad)
 add_subdirectory(glfw)
 add_subdirectory(glm)
+add_subdirectory(imgui)
+add_subdirectory(ImGuizmo)
 add_subdirectory(stb_image)
+add_subdirectory(vma)
+add_subdirectory(yaml_cpp)
