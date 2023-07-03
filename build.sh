@@ -1,3 +1,7 @@
+if [ ! -f "imgui.ini" ]; then
+  cp imgui_default.ini imgui.ini
+fi
+
 mkdir -p log
 mkdir -p build_${1}
 cd build_${1}

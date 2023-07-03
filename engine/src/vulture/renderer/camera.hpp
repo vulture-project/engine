@@ -42,7 +42,7 @@ enum class CameraProjectionType : uint32_t {
 struct PerspectiveCameraSpecification {
   float fov        {45.0f};
   float near_plane {0.5f};
-  float far_plane  {1000.0f};
+  float far_plane  {100.0f};
   float aspect     {0.0f};
 
   PerspectiveCameraSpecification(float aspect = 0.0f);
@@ -63,11 +63,12 @@ struct OrthographicCameraSpecification {
 
 struct Camera {
  public:
-  CameraProjectionType           projection_type{CameraProjectionType::kPerspective};
+  CameraProjectionType            projection_type{CameraProjectionType::kPerspective};
   PerspectiveCameraSpecification  perspective_specification{};
   OrthographicCameraSpecification orthographic_specification{};
+  float                           exposure{1.0f};
 
-  SharedPtr<Texture> render_texture{nullptr};
+  SharedPtr<Texture>              render_texture{nullptr};
 
  public:
   Camera() = default;
@@ -78,10 +79,10 @@ struct Camera {
   const glm::mat4& ProjMatrix()      const;
   const glm::mat4& TransformMatrix() const;
   const glm::vec3& Position()        const;
-  float             NearPlane()       const;
-  float             FarPlane()        const;
+  float            NearPlane()       const;
+  float            FarPlane()        const;
 
-  void CalculateFrustumCorners(Array<glm::vec3, 8>& out_corners) const;
+  void CalculateFrustumCorners(glm::vec3* out_corners) const;
 
   void OnUpdateAspect(float aspect);
   void OnUpdateTransform(const Transform& transform);

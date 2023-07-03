@@ -320,17 +320,31 @@ void VulkanRenderDevice::PickPhysicalDevice(const DeviceFeatures* required_featu
   std::vector<VkPhysicalDevice> physical_devices(device_count);
   VULKAN_CALL(vkEnumeratePhysicalDevices(instance_, &device_count, physical_devices.data()));
 
+  std::vector<VkPhysicalDevice> suitable_devices;
+
   for (const auto& physical_device : physical_devices) {
     if (IsPhysicalDeviceSuitable(physical_device, required_features, required_properties)) {
-      DeviceProperties picked_properties = GetDeviceProperties(physical_device);
-      LOG_INFO("VULKAN: Using physical device {0}", picked_properties.name);
-      
+      suitable_devices.push_back(physical_device);
+    }
+  }
+
+  assert(!suitable_devices.empty());
+
+  physical_device_ = suitable_devices[0];
+  for (const auto& physical_device : suitable_devices) {
+    VkPhysicalDeviceProperties device_properties{};
+    vkGetPhysicalDeviceProperties(physical_device, &device_properties);
+
+    if (device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
       physical_device_ = physical_device;
       break;
     }
   }
 
   assert(physical_device_ != VK_NULL_HANDLE);
+
+  DeviceProperties picked_properties = GetDeviceProperties(physical_device_);
+  LOG_INFO("VULKAN: Using physical device {0}", picked_properties.name);
 }
 
 bool VulkanRenderDevice::IsPhysicalDeviceSuitable(VkPhysicalDevice physical_device,
@@ -884,7 +898,7 @@ TextureHandle VulkanRenderDevice::CreateTexture(const TextureSpecification& spec
   image_info.usage         = vk_usage;
   image_info.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
   image_info.samples       = static_cast<VkSampleCountFlagBits>(specification.samples);
-  image_info.flags          = vk_image_flags;
+  image_info.flags         = vk_image_flags;
 
   VmaAllocationCreateInfo vma_alloc_info = {};
   vma_alloc_info.usage  = (specification.cpu_readable ? VMA_MEMORY_USAGE_AUTO : VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE);
@@ -929,6 +943,7 @@ TextureHandle VulkanRenderDevice::CreateTexture(const TextureSpecification& spec
   /* Individual layer views */
   if (specification.individual_layers_accessible && layers > 0) {
     for (uint32_t i = 0; i < layers; ++i) {
+      view_info.viewType                        = VK_IMAGE_VIEW_TYPE_2D;
       view_info.subresourceRange.baseArrayLayer = i;
       view_info.subresourceRange.layerCount     = 1;
 

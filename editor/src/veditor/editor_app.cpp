@@ -37,6 +37,8 @@
 #include <vulture/asset/loaders/shader_loader.hpp>
 #include <vulture/asset/loaders/skybox_loader.hpp>
 #include <vulture/asset/loaders/tga_loader.hpp>
+#include <vulture/renderer/features/shadows/cascaded_shadow_mapping.hpp>
+#include <vulture/renderer/features/forward_rendering/forward_rendering.hpp>
 
 using namespace vulture;
 
@@ -57,7 +59,7 @@ int EditorApp::Init() {
   InputEventManager::SetWindowAndDispatcher(&window_, &event_dispatcher_);
   event_dispatcher_.GetSink<QuitEvent>().Connect<&EditorApp::OnQuit>(*this);
 
-  device_.Init(&window_, nullptr, nullptr, true);
+  device_.Init(&window_, nullptr, nullptr, false);
 
   /* Register loaders FIXME: (tralf-strues) move somewhere else */
   AssetRegistry::Instance()->RegisterLoader(CreateShared<OBJLoader>(device_));
@@ -82,6 +84,7 @@ int EditorApp::Init() {
   preview_panel_->OnInit();
   entities_panel_ = CreateUnique<EntitiesPanel>();
   inspector_panel_ = CreateUnique<InspectorPanel>();
+  renderer_panel_ = CreateUnique<RendererPanel>(*imgui_implementation_);
 
   CreateRenderer();
 
@@ -106,7 +109,8 @@ void EditorApp::DestroySwapchain() {
 }
 
 void EditorApp::CreateFrameData() {
-  for (auto& frame : frames_) {
+  for (uint32_t i = 0; i < kFramesInFlight; ++i) {
+    Frame& frame = frames_[i];
     frame.command_buffer                    = device_.CreateCommandBuffer(CommandBufferType::kGraphics);
     frame.fence_render_finished              = device_.CreateFence();
     frame.semaphore_render_finished          = device_.CreateSemaphore();
@@ -115,7 +119,9 @@ void EditorApp::CreateFrameData() {
 }
 
 void EditorApp::DestroyFrameData() {
-  for (auto& frame : frames_) {
+  for (uint32_t i = 0; i < kFramesInFlight; ++i) {
+    Frame& frame = frames_[i];
+
     if (frame.command_buffer) {
       delete frame.command_buffer;
     }
@@ -135,8 +141,13 @@ void EditorApp::DestroyFrameData() {
 }
 
 void EditorApp::CreateRenderer() {
+  /* Render Features */
+  Vector<UniquePtr<IRenderFeature>> features;
+  features.emplace_back(CreateUnique<CascadedShadowMapRenderFeature>(device_));
+  features.emplace_back(CreateUnique<ForwardRenderFeature>());
+
   /* Renderer */
-  renderer_ = CreateUnique<Renderer>(device_, preview_panel_->GetTexture());
+  renderer_ = CreateUnique<Renderer>(device_, std::move(features));
 }
 
 /************************************************************************************************
@@ -149,20 +160,23 @@ void EditorApp::Run() {
   camera = scene_.GetEntityWorld().Attach<CameraComponent>(camera, PerspectiveCameraSpecification(1600.0f / 900.0f), true);
   camera = scene_.GetEntityWorld().Attach<TransformComponent>(camera, glm::vec3(0, 3, 15));
   camera = scene_.GetEntityWorld().Attach<ScriptComponent>(camera, new CameraMovementScript());
+  camera.Get<CameraComponent>().camera.perspective_specification.far_plane = 250.0f;
 
-  fennecs::EntityHandle sponza = scene_.CreateEntity("Sponza");
-  // sponza = scene_.GetEntityWorld().Attach<MeshComponent>(sponza, asset_registry.Load<Mesh>("meshes/sponza.obj"));
-  sponza = scene_.GetEntityWorld().Attach<MeshComponent>(sponza, asset_registry.Load<Mesh>("meshes/sponza_pbr_new/sponza_pbr_new.gltf"));
-  sponza = scene_.GetEntityWorld().Attach<TransformComponent>(sponza);
-  // sponza.Get<TransformComponent>().transform.scale = glm::vec3(0.02);
-  sponza.Get<TransformComponent>().transform.scale = glm::vec3(2);
-  sponza.Get<TransformComponent>().transform.rotation = glm::quat(glm::vec3(0.0f, M_PI + M_PI_2, 0.0f));
-  // sponza.Get<TransformComponent>().transform.rotation = glm::quat(glm::vec3(0.0f, M_PI_2, M_PI_2));
+   fennecs::EntityHandle sponza = scene_.CreateEntity("Sponza");
+   // sponza = scene_.GetEntityWorld().Attach<MeshComponent>(sponza, asset_registry.Load<Mesh>("meshes/sponza.obj"));
+   sponza = scene_.GetEntityWorld().Attach<MeshComponent>(sponza, asset_registry.Load<Mesh>("meshes/sponza_pbr_new/sponza_pbr_new.gltf"));
+   sponza = scene_.GetEntityWorld().Attach<TransformComponent>(sponza);
+   // sponza.Get<TransformComponent>().transform.scale = glm::vec3(0.02);
+   sponza.Get<TransformComponent>().transform.scale = glm::vec3(2);
+   sponza.Get<TransformComponent>().transform.rotation = glm::quat(glm::vec3(0.0f, M_PI + M_PI_2, 0.0f));
+   // sponza.Get<TransformComponent>().transform.rotation = glm::quat(glm::vec3(0.0f, M_PI_2, M_PI_2));
 
-  // sponza.Get<TransformComponent>().transform.scale = glm::vec3(1);
-  // sponza.Get<TransformComponent>().transform.Rotate(M_PI_2, kUp);
+   // sponza.Get<TransformComponent>().transform.scale = glm::vec3(1);
+   // sponza.Get<TransformComponent>().transform.Rotate(M_PI_2, kUp);
 
-
+  //fennecs::EntityHandle plane = scene_.CreateEntity("Ground");
+  //plane = scene_.GetEntityWorld().Attach<TransformComponent>(plane);
+  //plane = scene_.GetEntityWorld().Attach<MeshComponent>(plane, asset_registry.Load<Mesh>("meshes/ground.gltf"));
 
 
 
@@ -171,6 +185,7 @@ void EditorApp::Run() {
 
   SharedPtr<Material> material = CreateShared<Material>(device_);
   material->AddShader(pbr_shader);
+  material->AddShader(asset_registry.Load<Shader>(".vulture/shaders/BuiltIn.DirShadow.shader"));
 
   MaterialPass& material_pass = material->GetMaterialPass(pbr_shader->GetTargetPassId());
   material_pass.GetProperty<uint32_t>("useAlbedoMap") = 1;
@@ -192,7 +207,7 @@ void EditorApp::Run() {
 
   fennecs::EntityHandle sphere = scene_.CreateEntity("Sphere");
   sphere = scene_.GetEntityWorld().Attach<MeshComponent>(sphere, sphere_mesh);
-  sphere = scene_.GetEntityWorld().Attach<TransformComponent>(sphere, Transform(glm::vec3(-2.0f, 2.0f, 0.0f)));
+  sphere = scene_.GetEntityWorld().Attach<TransformComponent>(sphere, Transform(glm::vec3(-5.5f, 0.6f, -1.7f)));
   sphere.Get<TransformComponent>().transform.rotation = glm::quat(glm::vec3(M_PI_2, 0.0f, 0.0f));
 
 
@@ -200,31 +215,31 @@ void EditorApp::Run() {
 
 
   fennecs::EntityHandle dir_light = scene_.CreateEntity("Sky light");
-  dir_light = scene_.GetEntityWorld().Attach<DirectionalLightSpecification>(dir_light, glm::vec3{1.0, 1.0, 1.0}, 0.5);
-  dir_light = scene_.GetEntityWorld().Attach<TransformComponent>(dir_light, Transform(glm::vec3(0), glm::vec3(-0.5, 0, 0)));
+  dir_light = scene_.GetEntityWorld().Attach<DirectionalLightSpecification>(dir_light, glm::vec3{1.0, 1.0, 1.0}, 1.0);
+  dir_light = scene_.GetEntityWorld().Attach<TransformComponent>(dir_light, Transform(glm::vec3(0), glm::radians(glm::vec3(-45.0f, 60.0f, 35.0f))));
 
   fennecs::EntityHandle point_light1 = scene_.CreateEntity("Point light1");
-  point_light1 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light1, glm::vec3{1.0, 0.5, 0.1}, 7.5, 3);
+  point_light1 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light1, glm::vec3{1.0, 0.5, 0.1}, 2.5, 3);
   point_light1 = scene_.GetEntityWorld().Attach<TransformComponent>(point_light1, Transform(glm::vec3(-9.583, 8.256, 19.639)));
 
   fennecs::EntityHandle point_light2 = scene_.CreateEntity("Point light2");
-  point_light2 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light2, glm::vec3{1.0, 0.5, 0.1}, 7.5, 3);
+  point_light2 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light2, glm::vec3{1.0, 0.5, 0.1}, 2.5, 3);
   point_light2 = scene_.GetEntityWorld().Attach<TransformComponent>(point_light2, Transform(glm::vec3(-9.616, 8.256, -20.075)));
 
   fennecs::EntityHandle point_light3 = scene_.CreateEntity("Point light3");
-  point_light3 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light3, glm::vec3{1.0, 0.5, 0.1}, 7.5, 3);
+  point_light3 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light3, glm::vec3{1.0, 0.5, 0.1}, 2.5, 3);
   point_light3 = scene_.GetEntityWorld().Attach<TransformComponent>(point_light3, Transform(glm::vec3(9.479, 8.256, 19.635)));
 
   fennecs::EntityHandle point_light4 = scene_.CreateEntity("Point light4");
-  point_light4 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light4, glm::vec3{1.0, 0.5, 0.1}, 7.5, 3);
+  point_light4 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light4, glm::vec3{1.0, 0.5, 0.1}, 2.5, 3);
   point_light4 = scene_.GetEntityWorld().Attach<TransformComponent>(point_light4, Transform(glm::vec3(9.509, 8.256, -20.320)));
 
   fennecs::EntityHandle point_light5 = scene_.CreateEntity("Point light5");
-  point_light5 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light5, glm::vec3{1.0, 0.5, 0.1}, 7.5, 3);
+  point_light5 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light5, glm::vec3{1.0, 0.5, 0.1}, 2.5, 3);
   point_light5 = scene_.GetEntityWorld().Attach<TransformComponent>(point_light5, Transform(glm::vec3(1.845, 6.067, 31.221)));
 
   fennecs::EntityHandle point_light6 = scene_.CreateEntity("Point light6");
-  point_light6 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light6, glm::vec3{1.0, 0.5, 0.1}, 7.5, 3);
+  point_light6 = scene_.GetEntityWorld().Attach<PointLightSpecification>(point_light6, glm::vec3{1.0, 0.5, 0.1}, 2.5, 3);
   point_light6 = scene_.GetEntityWorld().Attach<TransformComponent>(point_light6, Transform(glm::vec3(-0.129, 7.713, -27.196)));
 
   fennecs::EntityHandle skybox = scene_.CreateEntity("Skybox");
@@ -256,14 +271,19 @@ void EditorApp::Run() {
       const auto& specification = preview_panel_->GetTexture()->GetSpecification();
       scene_.OnViewportResize(specification.width, specification.height);
 
-      renderer_->GetRenderGraph().ReimportTexture(renderer_->GetBlackboard().Get<ColorOutput>().texture_id,
-                                                  preview_panel_->GetTexture());
+      // renderer_->GetRenderGraph().ReimportTexture(renderer_->GetBlackboard().Get<ColorOutput>().texture_id,
+      //                                             preview_panel_->GetTexture());
     }
+
+    auto main_camera_entity = scene_.GetMainCamera();
+    main_camera_entity.Get<CameraComponent>().camera.render_texture = preview_panel_->GetTexture();
 
     scene_.OnUpdate(current_timestep_);
     selected_entity_ = entities_panel_->GetSelectedEntity();
 
-    Render();
+    if (preview_panel_->GetTexture()->GetSpecification().width != 0 && preview_panel_->GetTexture()->GetSpecification().height != 0) {
+      Render();
+    }
 
     window_.SetFPSToTitle(1 / current_timestep_);
 
@@ -305,10 +325,10 @@ void EditorApp::Render() {
 
   {
     ScopedTimer trace_timer{"scene.Render()"};
-    scene_.Render(*renderer_, preview_panel_->GetTexture(), command_buffer, current_frame_idx, timer_.Elapsed());
+    scene_.Render(*renderer_, command_buffer, current_frame_idx, timer_.Elapsed());
   }
 
-  RenderUI(command_buffer, texture_idx);
+  RenderUI(command_buffer, texture_idx, current_frame_idx);
 
   {
     ScopedTimer trace_timer{"command_buffer.End() and Submit()"};
@@ -327,12 +347,13 @@ void EditorApp::Render() {
   }
 }
 
-void EditorApp::RenderUI(CommandBuffer& command_buffer, uint32_t texture_idx) {
+void EditorApp::RenderUI(CommandBuffer& command_buffer, uint32_t texture_idx, uint32_t frame_idx) {
   imgui_implementation_->FrameStart();
 
   preview_panel_->OnRender(scene_, selected_entity_);
   entities_panel_->OnRender(scene_);
   inspector_panel_->OnRender(selected_entity_);
+  renderer_panel_->OnRender(*renderer_, frame_idx);
 
   imgui_implementation_->Render(command_buffer, texture_idx);
   imgui_implementation_->FrameEnd();

@@ -285,8 +285,10 @@ void vulture::ShaderReflection::PrintData() const {
 
   fmt::print(fmt::emphasis::bold | fg(fmt::color::golden_rod), "====Push constants====\n");
   for (const auto& push_constant : push_constants_) {
-    fmt::println(((push_constant.shader_module == ShaderModuleType::kVertex) ? "Vertex Shader\n-------------"
-                                                                             : "Fragment Shader\n---------------"));
+    const char* stage_str = (push_constant.shader_module == ShaderModuleType::kVertex)
+                                ? "Vertex Shader\n-------------"
+                                : "Fragment Shader\n---------------";
+    fmt::println("{0}", stage_str);
     fmt::println("* {0} (size = {1}, offset = {2})",
                  fmt::styled(push_constant.name, fmt::emphasis::underline | fmt::emphasis::bold),
                  push_constant.size,

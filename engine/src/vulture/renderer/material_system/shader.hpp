@@ -81,6 +81,7 @@ class Shader : public IAsset {
     kViewSetBit     = 0x0000'0002,
     kSceneSetBit    = 0x0000'0004,
     kMaterialSetBit = 0x0000'0008,
+    kCustomSetBit   = 0x0000'0010,
   };
 
   using DescriptorSetUsage = uint32_t;

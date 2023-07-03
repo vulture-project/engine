@@ -133,12 +133,12 @@ struct SamplerSpecification {
   SamplerBorderColor border_color       {SamplerBorderColor::kIntOpaqueBlack};
 
   bool               anisotropy_enabled {false};
-  float               max_anisotropy     {0.0f};
+  float              max_anisotropy     {0.0f};
 
   SamplerMipmapMode  mipmap_mode        {SamplerMipmapMode::kLinear};
-  float               min_lod            {0.0f};
-  float               max_lod            {0.0f};
-  float               lod_bias           {0.0f};
+  float              min_lod            {0.0f};
+  float              max_lod            {0.0f};
+  float              lod_bias           {0.0f};
 
   /* TODO: compare operation */
   /* TODO: unnormalized coordinates */

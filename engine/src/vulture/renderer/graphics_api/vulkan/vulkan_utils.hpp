@@ -69,6 +69,8 @@ inline VkFormat GetVKFormat(DataFormat format) {
     /* Three-component */
     case (DataFormat::kR8G8B8_UNORM):        { return VK_FORMAT_R8G8B8_UNORM; }
     case (DataFormat::kR8G8B8_SRGB):         { return VK_FORMAT_R8G8B8_SRGB; }
+
+    case (DataFormat::kR16G16B16_SFLOAT):    { return VK_FORMAT_R16G16B16_SFLOAT; }
     case (DataFormat::kR32G32B32_SFLOAT):    { return VK_FORMAT_R32G32B32_SFLOAT; }
 
     /* Four-component */
@@ -101,6 +103,8 @@ inline DataFormat GetDataFormatFromVk(VkFormat vk_format) {
     /* Three-component */
     case (VK_FORMAT_R8G8B8_UNORM):        { return DataFormat::kR8G8B8_UNORM; }
     case (VK_FORMAT_R8G8B8_SRGB):         { return DataFormat::kR8G8B8_SRGB; }
+
+    case (VK_FORMAT_R16G16B16_SFLOAT):    { return DataFormat::kR16G16B16_SFLOAT; }
     case (VK_FORMAT_R32G32B32_SFLOAT):    { return DataFormat::kR32G32B32_SFLOAT; }
 
     /* Four-component */

@@ -406,7 +406,7 @@ void VulkanCommandBuffer::CmdPushConstants(PipelineHandle pipeline_handle, const
                                            uint32_t size, ShaderStageFlags shader_stages) {
   assert(device_.pipelines_.find(pipeline_handle) != device_.pipelines_.end());
   vkCmdPushConstants(vk_command_buffer_, device_.pipelines_.at(pipeline_handle).vk_pipeline_layout,
-                     reinterpret_cast<VkShaderStageFlags>(shader_stages), offset, size, data);
+                     *reinterpret_cast<VkShaderStageFlags*>(&shader_stages), offset, size, data);
 }
 
 /************************************************************************************************

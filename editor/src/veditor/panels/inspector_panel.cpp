@@ -32,7 +32,7 @@
 
 using namespace vulture;
 
-const ImGuiTreeNodeFlags kComponentNodeBaseFlags =
+constexpr ImGuiTreeNodeFlags kComponentNodeBaseFlags =
     ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth |
     ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_FramePadding;
 
@@ -88,6 +88,7 @@ void InspectorPanel::RenderCameraComponent(CameraComponent& camera_component) {
   if (ImGui::TreeNodeEx((void*)typeid(CameraComponent).hash_code(), kComponentNodeBaseFlags, "Camera")) {
     ImGui::Checkbox("Main", &camera_component.is_main);
     ImGui::Checkbox("Fixed aspect ratio", &camera_component.fixed_aspect);
+    ImGui::DragFloat("Exposure", &camera_component.camera.exposure, 0.01f, 0.0f, 10.0f, "%.2f");
 
     const char* type_names[] = {"Perspective", "Orthographic"};
     ImGui::Combo("Projection", reinterpret_cast<int*>(&camera_component.camera.projection_type), type_names,

@@ -4,6 +4,7 @@
 #include "include/BuiltIn.FrameData.glsl"
 #include "include/BuiltIn.ViewData.glsl"
 #include "include/BuiltIn.SceneData.glsl"
+#include "include/BuiltIn.CascadedShadowMap.glsl"
 
 /* Push constants */
 layout(push_constant) uniform ModelConstant

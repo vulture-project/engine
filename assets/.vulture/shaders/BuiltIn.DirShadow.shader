@@ -1,5 +1,5 @@
 name: "BuiltIn.DirShadow"
-target_render_pass: "Shadow Pass"
+target_render_pass: "Cascaded Shadow Map Pass"
 
 descriptor_sets: [Frame, View]
 

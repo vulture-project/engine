@@ -153,11 +153,18 @@ void VulkanImGuiImplementation::Render(CommandBuffer& command_buffer, uint32_t s
 
 void VulkanImGuiImplementation::FrameEnd() {}
 
-ImGuiTextureHandle VulkanImGuiImplementation::AddTextureUI(TextureHandle texture) {
+ImGuiTextureHandle VulkanImGuiImplementation::AddTextureUI(TextureHandle texture, uint32_t layer) {
   const VulkanTexture& vulkan_texture = device_.GetVulkanTexture(texture);
 
-  return ImGui_ImplVulkan_AddTexture(texture_ui_sampler_, vulkan_texture.vk_image_view,
-                                     VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+  VkImageLayout layout = IsDepthContainingDataFormat(vulkan_texture.specification.format)
+                             ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
+                             : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+  if (vulkan_texture.specification.individual_layers_accessible && vulkan_texture.specification.array_layers > 0) {
+    return ImGui_ImplVulkan_AddTexture(texture_ui_sampler_, vulkan_texture.vk_image_view_per_layer[layer], layout);
+  }
+
+  return ImGui_ImplVulkan_AddTexture(texture_ui_sampler_, vulkan_texture.vk_image_view, layout);
 }
 
 void VulkanImGuiImplementation::RemoveTextureUI(ImGuiTextureHandle imgui_texture) {

@@ -84,29 +84,12 @@ void Scene::OnUpdate(float timestep) {
   }
 }
 
-void Scene::Render(Renderer& renderer, SharedPtr<Texture> color_output, CommandBuffer& command_buffer,
+void Scene::Render(Renderer& renderer, CommandBuffer& command_buffer,
                    uint32_t current_frame, float time) {
-  /* Frame */
-  renderer.UpdateFrameData(time);
+  fennecs::EntityHandle main_camera_handle = GetMainCamera();
+  assert(!main_camera_handle.IsNull());
 
-  /* View */
-  bool main_camera_found = false;
-  fennecs::EntityStream camera_stream = world_.Query<CameraComponent>();
-  for (fennecs::EntityHandle entity = camera_stream.Next(); !entity.IsNull(); entity = camera_stream.Next()) {
-    CameraComponent& camera = entity.Get<CameraComponent>();
-    assert(entity.Has<TransformComponent>());
-
-    if (camera.is_main) {
-      if (!main_camera_found) {
-        renderer.UpdateViewData(camera.camera.ViewMatrix(), camera.camera.ProjMatrix(), camera.camera.Position(),
-                                camera.camera.NearPlane(), camera.camera.FarPlane());
-
-        main_camera_found = true;
-      } else {
-        LOG_WARN("Second main camera entity detected! Using the first main camera detected.");
-      }
-    }
-  }
+  const Camera& main_camera = main_camera_handle.Get<CameraComponent>().camera;
 
   /* Lights */
   LightEnvironment& lights = renderer.GetLightEnvironment();
@@ -138,19 +121,19 @@ void Scene::Render(Renderer& renderer, SharedPtr<Texture> color_output, CommandB
     lights.spot_lights.emplace_back(specs, transform.position, transform.CalculateForward());
   }
 
-  /* Meshes */
-  auto& main_render_queue = renderer.GetBlackboard().Get<RenderQueue<MainQueueTag>>();
-  main_render_queue.render_objects.resize(0);
+  /* Render Queue */
+  RenderQueue render_queue{};
 
   fennecs::EntityStream mesh_stream = world_.Query<MeshComponent, TransformComponent>();
   for (auto entity = mesh_stream.Next(); !entity.IsNull(); entity = mesh_stream.Next()) {
     MeshComponent& mesh_component = entity.Get<MeshComponent>();
     Transform&     transform      = entity.Get<TransformComponent>().transform;
 
-    main_render_queue.render_objects.emplace_back(RenderQueueObject{mesh_component.mesh, transform.CalculateMatrix()});
+    render_queue.renderables.emplace_back(
+        RenderQueue::Renderable{mesh_component.mesh, ComputeWorldSpaceMatrix(entity)});
   }
 
-  renderer.Render(command_buffer, current_frame);
+  renderer.Render(command_buffer, main_camera, std::move(render_queue), time, current_frame);
 }
 
 fennecs::EntityHandle Scene::CreateEntity(const std::string& name) {

@@ -37,6 +37,12 @@ Sampler::Sampler(RenderDevice& device, const SamplerSpecification& specification
   handle_ = device_.CreateSampler(specification);
 }
 
+Sampler::Sampler(RenderDevice& device, const Texture& texture)
+    : device_(device), specification_(SamplerSpecification{}) {
+  specification_.max_lod = texture.GetSpecification().mip_levels;
+  handle_ = device_.CreateSampler(specification_);
+}
+
 Sampler::~Sampler() {
   if (ValidRenderHandle(handle_)) {
     device_.DeleteSampler(handle_);

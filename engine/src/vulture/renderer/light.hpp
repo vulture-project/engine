@@ -32,6 +32,10 @@
 
 namespace vulture {
 
+constexpr uint32_t kMaxDirectionalLights = 8;
+constexpr uint32_t kMaxPointLights       = 128;
+constexpr uint32_t kMaxSpotLights        = 128;
+
 struct DirectionalLightSpecification {
   alignas(16) glm::vec3 color     {0};
   alignas(4)  float      intensity {1};

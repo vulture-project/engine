@@ -92,6 +92,7 @@ namespace detail {
 struct TextureEntry {
   std::string                 name{"unnamed"};
   SharedPtr<Texture>          texture{nullptr};
+  TextureHandle               prev_texture_handle{kInvalidRenderResourceHandle};
   DynamicTextureSpecification  specification{};
   bool                        imported{false};
   TextureLayout               final_layout{TextureLayout::kUndefined};  ///< After the last use
@@ -100,9 +101,11 @@ struct TextureEntry {
 
   TextureEntry(const std::string_view name, SharedPtr<Texture> texture,
                const DynamicTextureSpecification& specification, bool imported, TextureLayout final_layout,
-               uint32_t ref_count = 0, bool dirty = true)
+               uint32_t ref_count = 0, bool dirty = true,
+               TextureHandle prev_texture_handle = kInvalidRenderResourceHandle)
       : name(name),
         texture(texture),
+        prev_texture_handle(prev_texture_handle),
         specification(specification),
         imported(imported),
         final_layout(final_layout),
@@ -139,7 +142,10 @@ class RenderGraph {
   template <typename RenderPassT, typename... RenderPassArgs>
   void AddPass(const std::string_view name, RenderPassArgs... args);
 
+  TextureVersionId FirstVersion(const std::string_view name);
+  TextureVersionId LastVersion(const std::string_view name);
   TextureVersionId ImportTexture(const std::string_view name, SharedPtr<Texture> texture, TextureLayout final_layout);
+  TextureVersionId DeclareTexture(const std::string_view name, TextureLayout final_layout);
 
   Blackboard& GetBlackboard();
 
@@ -150,6 +156,8 @@ class RenderGraph {
 
   /* Execute phase */
   void Execute(RenderDevice& device, CommandBuffer& command_buffer);
+
+  SharedPtr<Texture> GetTexture(TextureVersionId version_id);
 
   /* Update phase */
   void ReimportTexture(TextureVersionId version_id, SharedPtr<Texture> texture);
@@ -203,6 +211,8 @@ class RenderGraph {
 class RenderGraphBuilder {
  public:
   RenderGraphBuilder(RenderGraph& graph, PassNode& pass_node);
+
+  TextureVersionId LastVersion(const std::string_view name);
 
   TextureVersionId CreateTexture(const std::string_view name, const DynamicTextureSpecification& specification,
                                  TextureLayout final_layout = TextureLayout::kUndefined);

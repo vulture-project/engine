@@ -39,7 +39,7 @@ OrthographicCameraSpecification::OrthographicCameraSpecification(float size, flo
     : size(size), aspect(aspect) {}
 
 glm::mat4 OrthographicCameraSpecification::CalculateProjectionMatrix() const {
-  return glm::orthoRH(-size * aspect, size * aspect, -size, size, near_plane, far_plane);
+  return glm::ortho(-size * aspect, size * aspect, -size, size, near_plane, far_plane);
 }
 
 Camera::Camera(const PerspectiveCameraSpecification& specs, SharedPtr<Texture> render_texture)
@@ -79,8 +79,22 @@ float Camera::FarPlane() const {
   return 0.0f;
 }
 
-void Camera::CalculateFrustumCorners(Array<glm::vec3, 8>& out_corners) const {
-  VULTURE_ASSERT(false, "Not implemented!");
+void Camera::CalculateFrustumCorners(glm::vec3* out_corners) const {
+  VULTURE_ASSERT(out_corners, "Nullptr output array");
+
+  // FIXME: (tralf-strues) find a better way to calculate the inverse matrix (or corners altogether)
+  const auto inverse = glm::inverse(ProjMatrix() * ViewMatrix());
+
+  const glm::vec3 kFrustumCornersNDC[8] = {
+      glm::vec3(-1.0f, 1.0f, 0.0f),  glm::vec3(1.0f, 1.0f, 0.0f),   glm::vec3(1.0f, -1.0f, 0.0f),
+      glm::vec3(-1.0f, -1.0f, 0.0f), glm::vec3(-1.0f, 1.0f, 1.0f),  glm::vec3(1.0f, 1.0f, 1.0f),
+      glm::vec3(1.0f, -1.0f, 1.0f),  glm::vec3(-1.0f, -1.0f, 1.0f),
+  };
+
+  for (uint32_t i = 0; i < 8; i++) {
+    glm::vec4 corner = inverse * glm::vec4(kFrustumCornersNDC[i], 1.0f);
+    out_corners[i] = corner / corner.w;
+  }
 }
 
 void Camera::OnUpdateAspect(float aspect) {

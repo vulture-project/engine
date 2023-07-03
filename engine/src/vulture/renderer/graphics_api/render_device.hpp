@@ -41,7 +41,21 @@ namespace vulture {
 constexpr uint32_t kFramesInFlight = 2;
 
 template<typename T>
-using PerFrameData = Array<T, kFramesInFlight>; 
+struct PerFrameData {
+  T data[kFramesInFlight];
+
+  T& operator[](size_t idx) {
+    assert(idx < size());
+    return data[idx];
+  }
+
+  const T& operator[](size_t idx) const {
+    assert(idx < size());
+    return data[idx];
+  }
+
+  size_t size() const { return kFramesInFlight; }
+};
 
 class Window;
 

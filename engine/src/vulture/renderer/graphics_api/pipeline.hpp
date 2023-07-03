@@ -260,7 +260,7 @@ struct PushConstantRange {
 
 /* Pipeline */
 constexpr uint32_t kMaxPipelineShaderModules      = 4;
-constexpr uint32_t kMaxPipelineDescriptorSets     = 4;
+constexpr uint32_t kMaxPipelineDescriptorSets     = 5;
 constexpr uint32_t kMaxPipelinePushConstantRanges = 4;
 
 struct PipelineDescription {

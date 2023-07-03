@@ -62,7 +62,7 @@ class ImGuiImplementation {
   virtual void Render(CommandBuffer& command_buffer, uint32_t swapchain_texture_idx) = 0;
   virtual void FrameEnd() = 0;
 
-  virtual ImGuiTextureHandle AddTextureUI(TextureHandle texture) = 0;
+  virtual ImGuiTextureHandle AddTextureUI(TextureHandle texture, uint32_t layer = 0) = 0;
   virtual void RemoveTextureUI(ImGuiTextureHandle imgui_texture) = 0;
 
   static UniquePtr<ImGuiImplementation> Create(Window& window, RenderDevice& device, SwapchainHandle swapchain);

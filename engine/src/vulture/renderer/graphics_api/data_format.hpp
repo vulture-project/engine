@@ -61,6 +61,7 @@ DECLARE_ENUM_TO_STR(DataFormat,
                     kR8G8B8_UNORM,
                     kR8G8B8_SRGB,
 
+                    kR16G16B16_SFLOAT,
                     kR32G32B32_SFLOAT,
 
                     /* Four-component */
@@ -94,6 +95,8 @@ inline uint32_t GetDataFormatSize(DataFormat format) {
     /* Three-component */
     case (DataFormat::kR8G8B8_UNORM):        { return 3; }
     case (DataFormat::kR8G8B8_SRGB):         { return 3; }
+
+    case (DataFormat::kR16G16B16_SFLOAT):    { return 6; }
     case (DataFormat::kR32G32B32_SFLOAT):    { return 12; }
 
     /* Four-component */
